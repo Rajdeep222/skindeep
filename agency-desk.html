@@ -203,6 +203,135 @@ select[data-s="approved"],select[data-s="done"]{border-color:color-mix(in srgb,v
 .thread .cm b{font-weight:500}
 .thread input[type=date]{flex:0 0 auto}
 .it.is-late{box-shadow:inset 3px 0 0 var(--bad);padding-left:12px}
+
+/* ---- v7: navigation, board, grid, followers, report ---- */
+main.wide{max-width:none}
+.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.search{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font-size:13px}
+.search:hover{border-color:var(--muted);color:var(--ink)}
+.search:focus-visible{outline:2px solid var(--accent)}
+.search span{flex:1}
+kbd{font-family:var(--m);font-size:10.5px;padding:1px 5px;border:1px solid var(--line);border-radius:4px;color:var(--muted);background:var(--sunk)}
+.nav button{padding:7px 10px}
+.nav button[aria-current="true"]{background:var(--surface);box-shadow:0 1px 2px rgb(0 0 0 / .06),inset 0 0 0 1px var(--line)}
+.nav .grp{display:flex;justify-content:space-between;align-items:center;margin-right:4px}
+.addc{all:unset;cursor:pointer;color:var(--muted);border-radius:5px;padding:2px;display:flex}
+.addc:hover{color:var(--accent);background:var(--sunk)}
+.addc:focus-visible{outline:2px solid var(--accent)}
+.crumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:10px}
+.crumb .lnk{font-weight:400}
+.stat{all:unset;box-sizing:border-box;cursor:pointer;padding:14px 18px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:4px;min-width:0;transition:background .15s}
+.stats > .stat:first-child{border-left:0}
+.stat:hover{background:var(--sunk)}
+.stat:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.stat .arr{opacity:0;transition:opacity .15s;color:var(--accent)}
+.stat:hover .arr,.stat:focus-visible .arr{opacity:1}
+button.alert{all:unset;box-sizing:border-box;cursor:pointer;margin-top:16px;display:flex;width:100%;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;padding:11px 16px;border-radius:10px;border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);background:color-mix(in srgb,var(--bad) 9%,var(--surface));color:var(--bad);font-weight:500}
+button.alert:hover{background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+button.alert:focus-visible{outline:2px solid var(--accent)}
+.kpi{all:unset;cursor:pointer;text-align:right;display:flex;flex-direction:column;gap:2px;align-items:flex-end;padding:4px 6px;border-radius:8px}
+.kpi:hover{background:color-mix(in srgb,var(--surface) 60%,transparent)}
+.kpi:focus-visible{outline:2px solid var(--accent)}
+.kpi b{font-family:var(--m);font-size:26px;font-weight:500;line-height:1;letter-spacing:-.02em}
+.kpi b small{font-size:15px;color:var(--muted)}
+.kpi > span{font-size:12px;color:var(--muted)}
+.b{display:inline-flex;align-items:center;gap:6px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.addline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.addline input[type=text]{flex:1 1 260px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.filters select{padding:5px 8px;font-size:13px}
+.fchip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 10px;border-radius:99px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);font-size:13px;font-weight:500}
+.fchip button{all:unset;cursor:pointer;padding:0 6px;border-radius:99px}
+.fchip button:hover{background:color-mix(in srgb,var(--accent) 20%,transparent)}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:12px;overflow-x:auto;margin-top:20px;padding-bottom:6px}
+.col{background:var(--sunk);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;min-height:180px;border:1px dashed transparent;transition:border-color .15s,background .15s}
+.col.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--sunk))}
+.colh{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;padding:2px 4px 4px}
+.colh .mono{margin-left:auto}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.s-editing{background:var(--accent)}.s-sent{background:var(--warn)}.s-approved,.s-done{background:var(--good)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;cursor:grab;box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.card:active{cursor:grabbing}
+.card.dragging{opacity:.4}
+.card .t{font-size:13.5px;overflow-wrap:anywhere}
+.card .s{font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cardf{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.bsel{font-size:12px;padding:3px 6px}
+.card .thread{margin-top:2px;padding:10px}
+.drophint{margin:0;color:var(--muted);font-size:12px;text-align:center;padding:18px 0;border:1px dashed var(--line);border-radius:8px}
+.av{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--sunk);border:1px solid var(--line);font-size:10px;font-weight:600;color:var(--ink);vertical-align:middle}
+.load{height:4px;border-radius:2px;background:var(--sunk);margin:8px 0 4px;max-width:260px;position:relative;overflow:hidden}
+.load i{position:absolute;inset:0 auto 0 0;border-radius:2px}
+.gridwrap{overflow-x:auto}
+.grid7{display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:680px}
+.gh{background:var(--sunk);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 8px}
+.cell{background:var(--surface);min-height:104px;padding:6px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.cell.off{background:var(--bg)}
+.cell.pastd{background:color-mix(in srgb,var(--surface) 70%,var(--bg))}
+.cell.now{box-shadow:inset 0 0 0 2px var(--accent)}
+.dn{font-family:var(--m);font-size:12px;color:var(--muted)}
+.cell.now .dn{color:var(--accent);font-weight:600}
+.gchip{all:unset;box-sizing:border-box;cursor:pointer;font-size:11px;line-height:1.3;padding:2px 6px;border-radius:5px;background:color-mix(in srgb,hsl(var(--h,220) 60% var(--cl)) 16%,var(--surface));border-left:3px solid hsl(var(--h,220) 60% var(--cl));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.gchip.ev{cursor:default;background:var(--sunk);border-left-color:var(--muted);color:var(--muted)}
+.gchip.done{text-decoration:line-through;opacity:.6}
+.gchip:focus-visible{outline:2px solid var(--accent)}
+.chartwrap{position:relative}
+.chart{width:100%;height:auto;display:block;touch-action:none}
+.ftip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:7px;line-height:1.35;white-space:nowrap}
+.ftip span{opacity:.7}
+.tl{display:flex;flex-direction:column;gap:14px;border-left:2px solid var(--line);margin-left:5px;padding-left:18px}
+.tli{position:relative;font-size:14px}
+.tld{position:absolute;left:-25px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.tli.now .tld{border-color:var(--accent);background:var(--accent)}
+.proposal{background:color-mix(in srgb,var(--accent) 6%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.k.ask{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent)}
+.it.dim .t{color:var(--muted)}
+.hf{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:var(--sunk)}
+.hfl{font-size:12px;font-weight:600;letter-spacing:.02em}
+.hf select{font-size:13px;padding:5px 8px}
+.gens{display:flex;flex-direction:column;gap:6px}
+.gen{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sk{display:block;height:12px;border-radius:6px;margin:8px 0;background:linear-gradient(90deg,var(--sunk),color-mix(in srgb,var(--sunk) 40%,var(--surface)),var(--sunk));background-size:200% 100%;animation:sk 1.2s ease-in-out infinite}
+@keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.cmdk{position:fixed;inset:0;z-index:20;background:rgb(10 12 16 / .38);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px}
+.cmdk[hidden]{display:none}
+.cmdbox{width:min(560px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px -12px rgb(0 0 0 / .35);overflow:hidden}
+.cmdin{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.cmdin input{flex:1;border:0;background:none;font-size:16px;padding:4px 0;outline:none}
+.cmdin input:focus-visible{outline:none}
+.cmdl{max-height:52vh;overflow-y:auto;padding:6px}
+.cmdi{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;font-size:14px}
+.cmdi .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdi .muted{font-size:12px}
+.cmdi[aria-selected="true"],.cmdi:hover{background:var(--sunk)}
+/* report: always light, fixed palette so the PDF looks the same for every viewer */
+.repwrap{overflow-x:auto;margin-top:18px;padding:18px;background:var(--sunk);border-radius:var(--r)}
+.rep{width:794px;margin:0 auto;background:#ffffff;color:#16181c;padding:48px 56px;font-family:var(--f);box-shadow:0 8px 30px -10px rgb(0 0 0 / .25)}
+.rep-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:2px solid hsl(var(--rh) 60% 42%)}
+.rep-brand{font-family:var(--m);font-size:15px;color:#16181c}
+.rep-sm{font-size:11.5px;color:#6b6f76;line-height:1.5}
+.rep-m{font-size:16px;font-weight:600;color:#16181c}
+.rep-client{margin:26px 0 8px}
+.rep-cn{font-size:30px;font-weight:600;letter-spacing:-.02em;color:#16181c;line-height:1.15}
+.rep-h{font-size:19px;font-weight:600;margin:22px 0 6px;color:#16181c}
+.rep-p{margin:0 0 6px;color:#3a3e45;font-size:14px;line-height:1.6}
+.rep-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 6px}
+.rep-tiles div{background:hsl(var(--rh) 60% 96%);border-radius:10px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:4px}
+.rep-tiles b{font-family:var(--m);font-size:24px;font-weight:500;color:#16181c;letter-spacing:-.02em}
+.rep-tiles b small{font-size:13px;color:#6b6f76}
+.rep-tiles span{font-size:11.5px;color:#565a61}
+.rep-s{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:hsl(var(--rh) 55% 36%);margin:24px 0 8px;font-weight:600}
+.rep-ul{margin:0;padding-left:18px;color:#26292e;font-size:14px;line-height:1.65}
+.rep-kinds{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:#3a3e45}
+.rep-kinds b{font-family:var(--m);font-weight:500;color:#16181c}
+.rep-t{width:100%;border-collapse:collapse;font-size:14px;color:#26292e}
+.rep-t td{padding:8px 6px;border-bottom:1px solid #eceef1;vertical-align:top}
+.rep-n{width:24px;font-family:var(--m);color:#6b6f76}
+.rep-v{text-align:right;font-family:var(--m);white-space:nowrap}
+.rep-chart{border:1px solid #eceef1;border-radius:10px;padding:10px}
+.rep-foot{display:flex;justify-content:space-between;margin-top:34px;padding-top:12px;border-top:1px solid #eceef1;font-size:11.5px;color:#6b6f76;font-family:var(--m)}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -212,8 +341,14 @@ select[data-s="approved"],select[data-s="done"]{border-color:color-mix(in srgb,v
   .side{display:none}
   .phone-only{display:block}
   main{max-width:none}
-  .tabs{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px);z-index:8}
-  .tabs button{all:unset;cursor:pointer;text-align:center;padding:9px 2px;border-radius:6px;color:var(--muted);font-size:13px}
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px);z-index:8}
+  .tabs button{all:unset;cursor:pointer;text-align:center;padding:7px 2px;border-radius:8px;color:var(--muted);font-size:11.5px;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .tabs .ic{width:19px;height:19px}
+  .g2{grid-template-columns:minmax(0,1fr)}
+  .stat{border-left:0;border-top:1px solid var(--line)}
+  .stats > .stat:nth-child(even){border-left:1px solid var(--line)}
+  .stats > .stat:nth-child(-n+2){border-top:0}
+  .kpi b{font-size:22px}
   .tabs button[aria-current="true"]{color:var(--ink);font-weight:600;background:var(--sunk)}
   .tabs button:focus-visible{outline:2px solid var(--accent)}
   .kv{grid-template-columns:minmax(0,1fr)}
@@ -236,6 +371,7 @@ select[data-s="approved"],select[data-s="done"]{border-color:color-mix(in srgb,v
 </div>
 <nav class="tabs" id="tabs" aria-label="Sections"></nav>
 <div class="toast" id="toast" hidden></div>
+<div class="cmdk" id="cmdk" hidden></div>
 <label class="vh" for="filePick">Choose screenshots</label>
 <input type="file" id="filePick" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
 
@@ -307,15 +443,15 @@ const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, {day:'n
 const monthName = now.toLocaleDateString(undefined, {month:'long'});
 
 /* ---------- state ---------- */
-let db = null, sample = null, assets = null, userNs = null;
+let db = null, sample = null, assets = null, userNs = null, mcp = null, downloads = null;
 let canImages = false, maxImages = 0, canTools = false;
 let role = 'admin', myUid = null, myMember = null;
-const S = {clients:[], tasks:[], team:[], insights:[], prompts:[]};
-const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false};
+const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[]};
+const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], editing:null, openTask:null, filt:{client:'', who:'', done:false}};
+  pending:[], editing:null, openTask:null, taskView:'list', calMode:'list', calOff:0, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
 
-const C = id => S.clients.find(c => c.id === id);
+const C = id => S.allClients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
 const hueStyle = c => c ? `--h:${c.hue ?? 220}` : '';
 const dot = c => c ? `<span class="dot" style="${hueStyle(c)}"></span>` : '';
@@ -343,7 +479,7 @@ function clientContext(c, opts = {}){
     client:{name:c.name, business:c.tag, instagram:c.handle, website:c.website, city:c.city, language:c.brand?.language || c.lang,
       contentSource:c.source, adBudgetPerMonth:c.ads?.budget, services:c.services, monthlyTarget:target(c), postedThisMonth:posted(c),
       nextAction:c.next, brand:c.brand, growthPlan:c.plan, research:c.research && {summary:c.research.summary, opportunities:c.research.opportunities, fixFirst:c.research.fixes},
-      competitors:c.competitors},
+      competitors:c.competitors, clientAsksAndUpdates:(c.asks || []).filter(x => x.status !== 'done').slice(0, 10).map(x => `${x.kind === 'ask' ? 'Client wants' : 'Client update'} (${new Date(x.at).toISOString().slice(0,10)}): ${x.text}`)},
     recentInsights:ins,
     openTasks:openTasks(c.id).slice(0, 15).map(t => `${t.title} [${SHORT[t.kind]||t.kind}, ${STATUS[t.status]}${t.due ? ', due ' + t.due : ''}]`),
     upcomingMoments:eventsFor(c.id).slice(0, 4).map(e => `${e.d} ${e.name}: ${e.prep}`)
@@ -375,31 +511,85 @@ function schedule(){
 document.addEventListener('focusout', () => setTimeout(() => { if (pendingRender && !typing()){ pendingRender = false; render(); } }, 60));
 
 /* ---------- render ---------- */
+const IC = {
+  today:'<path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/><circle cx="12" cy="12" r="4"/>',
+  tasks:'<path d="M10 6h10M10 12h10M10 18h10M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17"/>',
+  calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  clients:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 5.2a3 3 0 0 1 0 5.6M21 20c0-2.6-1.6-4.5-4-5.2"/>',
+  search:'<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  report:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>'
+};
+const ico = k => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IC[k] || ''}</svg>`;
+const LOADING = '<span class="sk"></span><span class="sk" style="width:72%"></span><span class="sk" style="width:86%"></span>';
+
 function render(){
+  $('#main').classList.toggle('wide', (ui.view === 'tasks' && ui.taskView === 'board') || (ui.view === 'calendar' && ui.calMode === 'grid') || ui.view === 'report');
   if (role === 'editor'){ $('#side').innerHTML = sideEditor(); $('#tabs').innerHTML = ''; $('#main').innerHTML = viewEditor(); return; }
   $('#side').innerHTML = side();
-  $('#tabs').innerHTML = [['today','Today'],['clients','Clients'],['calendar','Calendar'],['tasks','Tasks']].map(([v,l]) =>
-    `<button data-go="${v}" aria-current="${ui.view === v || (v === 'clients' && ui.view === 'client')}">${l}</button>`).join('');
-  const v = ui.view === 'client' && C(ui.cid) ? viewClient(C(ui.cid)) :
+  $('#tabs').innerHTML = [['today','Today'],['tasks','Tasks'],['clients','Pages'],['calendar','Calendar']].map(([v,l]) =>
+    `<button data-go="${v}" aria-current="${ui.view === v || (v === 'clients' && (ui.view === 'client' || ui.view === 'report'))}">${ico(v)}<span>${l}</span></button>`).join('') +
+    `<button data-act="cmd" aria-label="Search">${ico('search')}<span>Search</span></button>`;
+  const c = C(ui.cid);
+  const v = ui.view === 'client' && c ? viewClient(c) : ui.view === 'report' && c ? viewReport(c) :
     ui.view === 'clients' ? viewClients() : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
   $('#main').innerHTML = v;
+  if (ui.view === 'client' && c && ui.ctab === 'followers') wireChart();
 }
 
+const navBtn = (v, l, extra = '') => `<button data-go="${v}" aria-current="${ui.view === v || (v === 'clients' && ui.view === 'clients')}">${ico(v)}<span class="nm">${l}</span>${extra}</button>`;
 function side(){
-  const due = openTasks().filter(t => t.due && t.due <= today).length;
+  const od = openTasks().filter(t => t.due && t.due < today).length, open = openTasks().length;
   const me = M(myMember);
   return `<div class="mark">the.reach.story<span>desk</span></div>
+  <button class="search" data-act="cmd">${ico('search')}<span>Search</span><kbd>Ctrl K</kbd></button>
   <nav class="nav" aria-label="Sections">
-    <button data-go="today" aria-current="${ui.view==='today'}"><span class="nm">Today</span>${due ? `<span class="ct badge">${due}</span>` : ''}</button>
-    <button data-go="tasks" aria-current="${ui.view==='tasks'}"><span class="nm">Tasks</span></button>
-    <button data-go="calendar" aria-current="${ui.view==='calendar'}"><span class="nm">Calendar</span></button>
-    <div class="grp">Clients</div>
-    ${S.clients.map(c => `<button data-go="client" data-cid="${esc(c.id)}" aria-current="${ui.view==='client' && ui.cid===c.id}">${dot(c)}<span class="nm">${esc(c.name)}</span></button>`).join('')}
+    ${navBtn('today', 'Today', od ? `<span class="ct badge" title="${od} overdue">${od}</span>` : '')}
+    ${navBtn('tasks', 'Tasks', open ? `<span class="ct">${open}</span>` : '')}
+    ${navBtn('calendar', 'Calendar')}
+    ${navBtn('clients', 'All pages')}
+    <div class="grp"><span>Pages</span><button class="addc" data-act="newClient" aria-label="Add a client" title="Add a client">${ico('plus')}</button></div>
+    ${S.clients.map(c => { const p = pace(c); return `<button data-go="client" data-cid="${esc(c.id)}" aria-current="${(ui.view === 'client' || ui.view === 'report') && ui.cid === c.id}">${dot(c)}<span class="nm">${esc(c.name)}</span><span class="pdot ${p.cls}" title="${esc(p.label)}"></span></button>`; }).join('')}
   </nav>
   <details class="prefs"><summary>${me ? esc(me.name) : 'Settings'}<span class="muted"> · appearance</span></summary>
-    ${S.team.length ? `<label class="whoami">You are<select data-change="whoami">${S.team.filter(m => m.role !== 'editor').map(m => `<option value="${esc(m.id)}"${m.id===myMember?' selected':''}>${esc(m.name)}</option>`).join('')}</select></label>` : ''}
+    ${S.team.length ? `<label class="whoami">You are<select data-change="whoami">${S.team.filter(m => m.role !== 'editor').map(m => `<option value="${esc(m.id)}"${m.id === myMember ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>` : ''}
     ${lookPicker()}</details>`;
 }
+
+/* ---------- command bar ---------- */
+function cmdItems(){
+  const it = [
+    {l:'Today', k:'Go to', run:() => go('today')},
+    {l:'Tasks: list', k:'Go to', run:() => { ui.taskView = 'list'; go('tasks'); }},
+    {l:'Tasks: board', k:'Go to', run:() => { ui.taskView = 'board'; go('tasks'); }},
+    {l:'Overdue tasks', k:'Go to', run:() => { ui.filt = {client:'', who:'', done:false, preset:'overdue'}; go('tasks'); }},
+    {l:'Calendar: moments', k:'Go to', run:() => { ui.calMode = 'list'; go('calendar'); }},
+    {l:'Calendar: month grid', k:'Go to', run:() => { ui.calMode = 'grid'; go('calendar'); }},
+    {l:'All pages', k:'Go to', run:() => go('clients')},
+    {l:'Add a client', k:'Action', run:() => { ui.addClient = true; go('clients'); }},
+    {l:'Add a task', k:'Action', run:() => { ui.taskView = 'list'; go('tasks'); setTimeout(() => $('#t-title')?.focus(), 30); }}
+  ];
+  if (sample) it.push({l:'Plan my day with Claude', k:'Action', run:() => { go('today'); planDay(); }});
+  for (const c of S.clients){
+    it.push({l:c.name, k:'Page', c, run:() => go('client', c.id, 'overview')});
+    for (const [t, l] of CTABS) if (t !== 'overview') it.push({l:`${c.name} · ${l}`, k:'Page', c, run:() => go('client', c.id, t)});
+    it.push({l:`${c.name} · Monthly report`, k:'Report', c, run:() => { ui.rMonth = monthKey; go('report', c.id); }});
+  }
+  return it;
+}
+function cmdMatches(){
+  const q = (ui.cmd.q || '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+  return cmdItems().filter(i => q.every(w => (i.l + ' ' + i.k).toLowerCase().includes(w))).slice(0, 14);
+}
+function openCmd(){ ui.cmd = {open:true, q:'', sel:0}; const el = $('#cmdk'); el.hidden = false; el.innerHTML = `<div class="cmdbox" role="dialog" aria-modal="true" aria-label="Search or jump">
+    <div class="cmdin">${ico('search')}<label class="vh" for="cmdq">Search</label><input id="cmdq" type="text" placeholder="Type a page, client or action…" autocomplete="off"><kbd>Esc</kbd></div>
+    <div class="cmdl" id="cmdl" role="listbox"></div></div>`; renderCmd(); $('#cmdq').focus(); }
+function closeCmd(){ ui.cmd.open = false; $('#cmdk').hidden = true; $('#cmdk').innerHTML = ''; }
+function renderCmd(){
+  const m = cmdMatches(); ui.cmd.sel = Math.min(ui.cmd.sel, Math.max(0, m.length - 1));
+  $('#cmdl').innerHTML = m.length ? m.map((i, n) => `<button class="cmdi" role="option" data-cmd="${n}" aria-selected="${n === ui.cmd.sel}">${i.c ? dot(i.c) : ico(i.k === 'Action' ? 'plus' : i.k === 'Report' ? 'report' : 'search')}<span class="nm">${esc(i.l)}</span><span class="muted">${esc(i.k)}</span></button>`).join('') : '<p class="empty" style="padding:10px 14px">Nothing matches.</p>';
+}
+function runCmd(n){ const i = cmdMatches()[n]; closeCmd(); if (i) i.run(); }
 
 const ago = ms => { const d = Math.round((Date.now() - ms) / 864e5); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'; };
 function taskRow(t, opts = {}){
@@ -419,12 +609,7 @@ function taskRow(t, opts = {}){
       ${opts.editor ? '' : `<label class="vh" for="as-${esc(t.id)}">Assign</label><select id="as-${esc(t.id)}" data-change="assign">${whoOptions(t.assignee)}</select>
       <button class="x" data-act="delTask" aria-label="Delete task">×</button>`}
     </div>
-    ${open ? `<div class="thread">
-      ${cm.map(x => `<div class="cm"><b>${esc(M(x.who)?.name || 'Someone')}</b><span class="muted"> · ${esc(ago(x.at))}</span><div>${esc(x.text)}</div></div>`).join('')}
-      <form class="row" data-form="comment"><label class="vh" for="cm-${esc(t.id)}">Comment</label>
-        <input class="grow" type="text" id="cm-${esc(t.id)}" data-keep="cm-${esc(t.id)}" value="${esc(keep('cm-' + t.id))}" placeholder="${late ? 'Why is this late? e.g. waiting for clips from the client' : 'Add a comment'}">
-        ${late ? `<label class="vh" for="nd-${esc(t.id)}">New due date</label><input type="date" id="nd-${esc(t.id)}" title="New due date (optional)">` : ''}
-        <button class="b" type="submit">Post</button></form></div>` : ''}
+    ${open ? threadHtml(t, late) : ''}
   </div>`;
 }
 const whoOptions = sel => `<option value="">Unassigned</option>` + S.team.map(m => `<option value="${esc(m.id)}"${m.id===sel?' selected':''}>${esc(m.name)}</option>`).join('');
@@ -457,16 +642,17 @@ function viewToday(){
   ${statsStrip()}
   ${overdueAlert()}
   ${waiting ? `<div class="alert warn"><span>${waiting} screenshot${waiting===1?'':'s'} waiting to be read</span><span class="muted" style="font-weight:400">Read every morning at 7:50, or say “read new insights” in chat</span></div>` : ''}
+  ${paymentsDue()}
   ${showPlan ? `<div class="sec"><div class="lab">Today’s plan<span class="acts"><button class="lnk" data-act="closePlan">Close</button></span></div>
     ${busyOr('day', ui.out.day ? `<p class="empty">${esc(ui.out.day)}</p>` : suggestions('day', ui.dayPlan || []))}</div>` : ''}
 
   <div class="sec"><div class="lab">Due now</div>
-  <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Use “Plan my day” to line up work.' : 'Loading…'}</p>`}</div></div>
+  <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Use “Plan my day” to line up work.' : LOADING}</p>`}</div></div>
 
   <div class="sec"><div class="lab">Pages<span class="acts muted">posted this month</span></div>
   <div class="items">${S.clients.map(c => { const p = pace(c); return `<div class="it click" data-go="client" data-cid="${esc(c.id)}" tabindex="0" role="link">
     <div><div class="t" style="font-weight:500">${dot(c)} ${esc(c.name)}</div><div class="s"><span class="clamp">${esc(c.next || 'Set a next move on the client page')}</span></div></div>
-    <div class="c"><span class="count"><span class="pdot ${p.cls}" title="${esc(p.label)}"></span><span class="mono">${posted(c)}<span class="muted">/${target(c)}</span></span></span></div></div>`; }).join('') || `<p class="empty">${loaded.clients ? 'No clients yet.' : 'Loading…'}</p>`}</div></div>
+    <div class="c"><span class="count"><span class="pdot ${p.cls}" title="${esc(p.label)}"></span><span class="mono">${posted(c)}<span class="muted">/${target(c)}</span></span></span></div></div>`; }).join('') || `<p class="empty">${loaded.clients ? 'No clients yet.' : LOADING}</p>`}</div></div>
 
   <div class="sec"><div class="lab">Coming up<span class="acts"><button class="lnk" data-go="calendar">Calendar</button></span></div>
   <div class="items">${soon.map(e => `<div class="it"><div class="evrow"><span class="when mono"><b>${new Date(e.d+'T00:00:00').getDate()}</b>${esc(new Date(e.d+'T00:00:00').toLocaleDateString(undefined,{month:'short'}))}</span>
@@ -476,44 +662,76 @@ function viewToday(){
 function statsStrip(){
   const tot = S.clients.reduce((a,c) => a + target(c), 0), done = S.clients.reduce((a,c) => a + posted(c), 0);
   const od = openTasks().filter(t => t.due && t.due < today).length;
-  const cells = [[`${done}<small>/${tot}</small>`, 'Posted this month'], [openTasks().length, 'Open tasks'], [od, 'Overdue', od > 0],
-    [S.tasks.filter(t => t.status === 'sent').length, 'With client']];
-  return `<div class="stats">${cells.map(([n,l,hot]) => `<div class="${hot ? 'hot' : ''}"><b>${n}</b><span>${l}</span></div>`).join('')}</div>`;
+  const cells = [[`${done}<small>/${tot}</small>`, 'Posted this month', false, 'data-go="clients"'], [openTasks().length, 'Open tasks', false, 'data-go="tasks" data-preset="open"'], [od, 'Overdue', od > 0, 'data-go="tasks" data-preset="overdue"'],
+    [S.tasks.filter(t => t.status === 'sent').length, 'With client', false, 'data-go="tasks" data-preset="sent"']];
+  return `<div class="stats">${cells.map(([n,l,hot,go]) => `<button class="stat ${hot ? 'hot' : ''}" ${go}><b>${n}</b><span>${l} <span class="arr">→</span></span></button>`).join('')}</div>`;
 }
 function overdueAlert(){
   const od = openTasks().filter(t => t.due && t.due < today);
   if (!od.length) return '';
   const oldest = Math.max(...od.map(t => -daysTo(t.due)));
   const noReason = od.filter(t => !(t.comments || []).length).length;
-  return `<div class="alert"><span>${od.length} overdue · oldest ${oldest} day${oldest === 1 ? '' : 's'} late${noReason ? ` · ${noReason} without a reason` : ''}</span></div>`;
+  return `<button class="alert" data-go="tasks" data-preset="overdue"><span>${od.length} overdue · oldest ${oldest} day${oldest === 1 ? '' : 's'} late${noReason ? ` · ${noReason} without a reason` : ''}</span><span>Review →</span></button>`;
+}
+
+function paymentsDue(){
+  const due = S.clients.filter(c => c.fee && Number(c.billingDay) && day >= Number(c.billingDay) && c.paidMonth !== monthKey);
+  if (!due.length) return '';
+  return `<div class="sec"><div class="lab">Payments due</div><div class="items">${due.map(c => `<div class="it"><div><div class="t">${dot(c)} ${esc(c.name)} · ${esc(c.fee)}</div><div class="s"><span>Due on the ${esc(c.billingDay)}${['st','nd','rd'][((Number(c.billingDay) + 90) % 100 - 10) % 10 - 1] || 'th'}</span></div></div><div class="c"><button class="b" data-act="markPaid" data-cid="${esc(c.id)}">Mark paid</button></div></div>`).join('')}</div></div>`;
 }
 
 /* ----- Clients list ----- */
 function viewClients(){
-  return `<h1>Clients</h1><p class="sub">${monthName}: posted content against each monthly target.</p>
+  const arch = S.allClients.filter(c => c.status === 'archived');
+  return `<header class="top"><div><p class="eyebrow">${esc(monthName)} · posted content against each monthly target</p><h1>All pages</h1></div>
+    <button class="b pri" data-act="newClient">${ico('plus')} Add client</button></header>
+  ${ui.addClient ? `<div class="sec"><div class="lab">New client</div>
+    <form class="form" data-form="newClient">
+      <div class="g2">
+        <label>Name<input type="text" id="nc-name" required placeholder="e.g. Sharma Sweets"></label>
+        <label>What they do<input type="text" id="nc-tag" placeholder="e.g. Sweet shop and caterer, Khanna"></label>
+        <label>Instagram<input type="text" id="nc-handle" placeholder="@handle"></label>
+        <label>Website<input type="text" id="nc-web" placeholder="optional"></label>
+        <label>City<input type="text" id="nc-city" value="Khanna, Punjab"></label>
+        <label>Language<input type="text" id="nc-lang" value="Punjabi (Roman script), short English where natural"></label>
+        <label>Content per month<input type="number" id="nc-target" min="0" value="20"></label>
+        <label>Ad budget<input type="text" id="nc-budget" placeholder="e.g. ₹3,000/month"></label>
+      </div>
+      <label>Services and anything important<textarea id="nc-notes" rows="2" placeholder="e.g. reels from their clips + Meta ads; big season is Diwali and weddings"></textarea></label>
+      <div class="row"><button class="b pri" type="submit">Create client</button><button class="b" type="button" data-act="cancelNewClient">Cancel</button>
+      <span class="muted" style="font-size:12px">Claude can draft their growth plan and research on the next screen.</span></div>
+    </form></div>` : ''}
   <div class="sec"><div class="items">${S.clients.map(c => { const n = target(c), d = posted(c), p = pace(c);
     return `<div class="it click" data-go="client" data-cid="${esc(c.id)}" tabindex="0" role="link"><div>
-      <div class="prog"><div class="t">${dot(c)} <b style="font-weight:500">${esc(c.name)}</b> <span class="muted">· ${esc(c.tag || '')}</span></div><div class="mono">${d}/${n}</div></div>
+      <div class="prog"><div class="t">${dot(c)} <b style="font-weight:500">${esc(c.name)}</b> <span class="muted">· ${esc(c.tag || '')}</span></div><div class="mono">${d}<span class="muted">/${n}</span></div></div>
       <div class="bar"><i style="width:${n ? Math.min(100, d/n*100) : 0}%"></i><u style="left:${day/dim*100}%"></u></div>
-      <div class="s" style="margin-top:6px"><span class="pill ${p.cls}">${esc(p.label)}</span><span>${esc(c.next || '')}</span></div></div></div>`; }).join('') || '<p class="empty">Loading…</p>'}</div>
-  <p class="muted" style="font-size:12px;margin-top:10px">The orange tick marks where each page should be by today.</p></div>`;
+      <div class="s" style="margin-top:6px"><span class="pill ${p.cls}">${esc(p.label)}</span><span class="clamp">${esc(c.next || '')}</span></div></div></div>`; }).join('') || (loaded.clients ? '<p class="empty">No clients yet. Add your first one above.</p>' : `<p class="empty">${LOADING}</p>`)}</div>
+  <p class="muted" style="font-size:12px;margin:10px 0 0">The orange tick marks where each page should be by today.</p></div>
+  ${arch.length ? `<div class="sec"><div class="lab">Archived</div><div class="items">${arch.map(c => `<div class="it"><div class="t">${dot(c)} ${esc(c.name)} <span class="muted">· ${esc(c.tag || '')}</span></div><div class="c"><button class="lnk" data-act="unarchive" data-cid="${esc(c.id)}">Restore</button></div></div>`).join('')}</div></div>` : ''}`;
 }
 
 /* ----- Client ----- */
-const CTABS = [['overview','Overview'],['insights','Insights'],['prompts','Prompts'],['studio','Studio'],['ads','Ads'],['growth','Growth'],['brand','Brand']];
+const CTABS = [['overview','Overview'],['create','Create'],['followers','Followers'],['insights','Insights'],['ads','Ads'],['growth','Growth'],['settings','Settings']];
 function viewClient(c){
   const n = target(c), d = posted(c), p = pace(c);
-  const tab = ui.ctab;
-  const body = tab === 'insights' ? tabInsights(c) : tab === 'prompts' ? tabPrompts(c) : tab === 'studio' ? tabStudio(c) : tab === 'ads' ? tabAds(c) : tab === 'growth' ? tabGrowth(c) : tab === 'brand' ? tabBrand(c) : tabOverview(c);
-  return `<div class="hero" style="${hueStyle(c)}"><div class="row" style="justify-content:space-between;align-items:flex-start">
-    <div><h1>${dot(c)} ${esc(c.name)}</h1><p class="sub">${esc(c.tag || '')}</p></div>
-    <div style="text-align:right"><div class="big">${d}<span class="muted">/${n}</span></div><div><span class="pill ${p.cls}">${esc(p.label)}</span></div></div>
-  </div>
-  <div class="meta">${c.handle ? `<span>${esc(c.handle)}</span>` : ''}${c.website ? `<span>${esc(c.website)}</span>` : ''}<span>${esc(c.city || '')}</span><span>${esc(c.brand?.language || c.lang || '')}</span><span>Ads ${esc(c.ads?.budget || '—')}</span></div>
-  <div class="bar" style="margin-top:14px"><i style="width:${n ? Math.min(100, d/n*100) : 0}%"></i><u style="left:${day/dim*100}%"></u></div></div>
+  const tab = CTABS.some(([k]) => k === ui.ctab) ? ui.ctab : 'overview';
+  const body = tab === 'insights' ? tabInsights(c) : tab === 'create' ? tabPrompts(c) + tabStudio(c) : tab === 'followers' ? tabFollowers(c) :
+    tab === 'ads' ? tabAds(c) : tab === 'growth' ? tabGrowth(c) : tab === 'settings' ? tabSettings(c) : tabOverview(c);
+  const fl = (c.followers || []).slice().sort((a,b) => a.d.localeCompare(b.d)).at(-1);
+  return `<nav class="crumb" aria-label="Breadcrumb"><button class="lnk" data-go="clients">All pages</button><span>/</span><span>${esc(c.name)}</span></nav>
+  <div class="hero" style="${hueStyle(c)}"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:16px">
+    <div style="min-width:0"><h1>${dot(c)} ${esc(c.name)}</h1><p class="sub">${esc(c.tag || '')}</p></div>
+    <div class="row" style="gap:18px;align-items:flex-start">
+      ${fl ? `<button class="kpi" data-ctab="followers"><b>${fmtN(fl.n)}</b><span>followers</span></button>` : ''}
+      <button class="kpi" data-ctab="overview"><b>${d}<small>/${n}</small></b><span class="pill ${p.cls}">${esc(p.label)}</span></button>
+    </div></div>
+    <div class="meta">${c.handle ? `<span>${esc(c.handle)}</span>` : ''}${c.website ? `<span>${esc(c.website)}</span>` : ''}<span>${esc(c.city || '')}</span><span>${esc(c.brand?.language || '')}</span><span>Ads ${esc(c.ads?.budget || '—')}</span></div>
+    <div class="row" style="justify-content:space-between;margin-top:14px;gap:12px"><div class="bar grow" style="margin:0"><i style="width:${n ? Math.min(100, d/n*100) : 0}%"></i><u style="left:${day/dim*100}%"></u></div>
+    <button class="b" data-act="openReport">${ico('report')} Monthly report</button></div></div>
   <nav class="tabs2" aria-label="${esc(c.name)} sections">${CTABS.map(([k,l]) => `<button data-ctab="${k}" aria-current="${tab===k}">${l}${k==='insights' && clientInsights(c.id).length ? ` <span class="mono muted" style="font-size:11px">${clientInsights(c.id).length}</span>` : ''}</button>`).join('')}</nav>
   ${body}`;
 }
+const fmtN = n => Number(n || 0).toLocaleString('en-IN');
 
 function tabOverview(c){
   const pl = c.plan || {}, r = c.research || {}, tasks = openTasks(c.id).sort((a,b) => (a.due||'9').localeCompare(b.due||'9'));
@@ -523,6 +741,7 @@ function tabOverview(c){
     <input class="grow" type="text" id="next-${esc(c.id)}" data-keep="next-${esc(c.id)}" value="${esc(keep('next-'+c.id, c.next || ''))}" placeholder="The one thing that moves this page forward">
     <button class="b" type="submit">Save</button></form></div>
 
+  ${asksSection(c)}
   <div class="sec"><div class="lab">Open work<span class="acts">${sample ? `<button class="lnk" data-act="ideas">Content ideas</button>` : ''}</span></div>
     <div class="items">${tasks.length ? tasks.map(t => taskRow(t, {noClient:true, showWho:true})).join('') : '<p class="empty">No open tasks for this page.</p>'}</div>
     <form class="row" data-form="quickTask" style="margin-top:10px">
@@ -532,7 +751,14 @@ function tabOverview(c){
     ${ui.busy['ideas:'+c.id] || ui.ideas[c.id] || ui.out['ideas:'+c.id] ? `<div style="margin-top:16px">${busyOr('ideas:'+c.id, ui.out['ideas:'+c.id] ? `<p class="empty">${esc(ui.out['ideas:'+c.id])}</p>` : suggestions('ideas:'+c.id, ui.ideas[c.id] || []))}</div>` : ''}
   </div>
 
-  <div class="sec"><div class="lab">Growth plan<span class="acts">${ui.editing === 'plan' ? '' : `<button class="lnk" data-act="editPlan">Edit</button>`}</span></div>
+  ${!pl.goal && sample ? `<div class="sec"><div class="lab">Get started</div><p style="margin:0 0 12px">${esc(c.name)} has no growth plan yet. Claude can draft the plan, a research brief and a brand kit from what you entered.</p>
+    ${busyOr('draft:' + c.id, ui.out['draft:' + c.id] ? `<p class="empty">${esc(ui.out['draft:' + c.id])}</p>` : '')}<button class="b pri" data-act="draftPlan" ${ui.busy['draft:' + c.id] ? 'disabled' : ''}>Draft plan and research with Claude</button></div>` : ''}
+  <div class="sec"><div class="lab">Growth plan<span class="acts">${ui.editing === 'plan' ? '' : `${sample && pl.goal ? `<button class="lnk" data-act="reviewStrategy" ${ui.busy['review:' + c.id] ? 'disabled' : ''}>${ui.busy['review:' + c.id] ? 'Reviewing…' : 'Review with Claude'}</button>` : ''}<button class="lnk" data-act="editPlan">Edit</button>`}</span></div>
+    ${ui.out['review:' + c.id] ? `<p class="empty">${esc(ui.out['review:' + c.id])}</p>` : ''}
+    ${ui.review[c.id] ? (() => { const r = ui.review[c.id]; return `<div class="proposal"><p style="margin:0 0 8px"><b style="font-weight:600">Claude suggests:</b> ${esc(r.verdict || '')}</p>
+      ${(r.changes || []).length ? `<ul class="ls">${r.changes.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      <dl class="kv" style="margin-top:12px"><dt>Goal</dt><dd>${esc(r.plan.goal)}</dd><dt>Audience</dt><dd>${esc(r.plan.audience)}</dd><dt>Pillars</dt><dd>${esc((r.plan.pillars || []).join(' · '))}</dd><dt>Focus</dt><dd>${esc(r.plan.focus)}</dd><dt>Per month</dt><dd>${esc(r.target || target(c))}</dd></dl>
+      <div class="row" style="margin-top:12px"><button class="b pri" data-act="applyReview">Apply as new strategy</button><button class="b" data-act="dismissReview">Keep current</button></div></div>`; })() : ''}
     ${ui.editing === 'plan' ? `<form class="form" data-form="plan">
       <div class="row"><label style="flex:0 0 120px">Monthly content<input type="number" min="0" id="p-count" value="${esc(target(c))}"></label></div>
       <label>Goal<textarea id="p-goal" rows="2">${esc(pl.goal)}</textarea></label>
@@ -601,7 +827,7 @@ function tabStudio(c){
       <label class="vh" for="w-brief">Brief</label><textarea id="w-brief" rows="2" data-keep="w-brief-${esc(c.id)}" placeholder="What it’s about, e.g. new bridal set, 22k, Dhanteras offer">${esc(keep('w-brief-'+c.id))}</textarea>
       <div class="row"><button class="b pri" type="submit" ${sample && !ui.busy[outK] ? '' : 'disabled'}>Write</button>
       <button class="b" type="button" data-act="weekly" ${sample && !ui.busy[outK] ? '' : 'disabled'}>Weekly review</button>
-      <button class="b" type="button" data-act="report" ${sample && !ui.busy[outK] ? '' : 'disabled'}>Monthly client report</button></div>
+      <button class="b" type="button" data-act="openReport">Monthly client report</button></div>
     </form>
     <div style="margin-top:14px">${busyOr(outK, ui.out[outK] ? `<div class="out" id="out-${esc(c.id)}">${md(ui.out[outK])}</div><div class="row" style="margin-top:8px"><button class="lnk" data-act="copy" data-src="out-${esc(c.id)}">Copy</button></div>` : '')}</div>
   </div>`;
@@ -678,7 +904,9 @@ function promptCard(x, i, saved){
     ${x.negative ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Avoid:</b> ${esc(x.negative)}</p>` : ''}
     ${x.settings ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Settings:</b> ${esc(x.settings)}</p>` : ''}
     ${x.use ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Use it for:</b> ${esc(x.use)}</p>` : ''}
-    <div class="row"><button class="lnk" data-act="copy" data-src="${id}">Copy prompt</button><button class="lnk" data-act="promptTask">Add as task</button></div>
+    <div class="row"><button class="lnk" data-act="copy" data-src="${id}">Copy prompt</button><button class="lnk" data-act="promptTask">Add as task</button>
+      ${!saved && mcp && x.what !== 'edit' && x.what !== 'video' ? `<button class="lnk" data-act="hfGoNew">Generate with Higgsfield</button>` : ''}</div>
+    ${saved ? hfBlock(x, x.id) : ''}
   </div>`;
 }
 function tabPrompts(c){
@@ -704,45 +932,99 @@ function tabPrompts(c){
 
 /* ----- Calendar ----- */
 function viewCalendar(){
+  const mode = ui.calMode === 'grid' ? 'grid' : 'list';
+  return `<header class="top"><div><p class="eyebrow">Festive and wedding-season moments, and every task with a due date</p><h1>Calendar</h1></div>
+    <div class="seg" role="group" aria-label="Calendar view"><button data-cal="list" aria-pressed="${mode==='list'}">Moments</button><button data-cal="grid" aria-pressed="${mode==='grid'}">Month grid</button></div></header>
+  ${mode === 'grid' ? calGrid() : calList()}`;
+}
+function calList(){
   let last = '';
-  return `<h1>Calendar</h1><p class="sub">Festive and wedding-season moments, and when each page needs to start.</p>
-  <div class="sec">${EVENTS.map(e => { const m = new Date(e.d+'T00:00:00').toLocaleDateString(undefined,{month:'long', year:'numeric'}); const head = m !== last ? `<div class="lab" style="margin-top:${last ? 24 : 0}px">${esc(m)}</div>` : ''; last = m; const dt = daysTo(e.d);
+  return `<div class="sec">${EVENTS.map(e => { const m = new Date(e.d+'T00:00:00').toLocaleDateString(undefined,{month:'long', year:'numeric'}); const head = m !== last ? `<div class="lab" style="margin-top:${last ? 22 : 0}px">${esc(m)}</div>` : ''; last = m; const dt = daysTo(e.d);
     return head + `<div class="ev ${dt < 0 ? 'past' : ''}"><div class="dd"><b>${new Date(e.d+'T00:00:00').getDate()}</b>${esc(new Date(e.d+'T00:00:00').toLocaleDateString(undefined,{weekday:'short'}))}</div>
       <div><div class="row" style="justify-content:space-between"><b style="font-weight:500">${esc(e.name)}</b><span class="mono muted" style="font-size:12px">${dt < 0 ? 'passed' : dt === 0 ? 'today' : 'in ' + dt + ' days'}</span></div>
       <div class="s muted" style="font-size:13px;margin-top:4px">${esc(e.prep)}</div>
       <div class="row" style="margin-top:6px;gap:10px">${e.who.map(id => { const c = C(id); return c ? `<button class="lnk" style="color:var(--muted);font-weight:400;display:inline-flex;gap:5px;align-items:center" data-go="client" data-cid="${esc(id)}">${dot(c)}${esc(c.name)}</button>` : ''; }).join('')}</div></div></div>`; }).join('')}
   <p class="muted" style="font-size:12px;margin-top:14px">Lunar dates can shift by a day. Check the local panchang for Lohri and Dev Uthani.</p></div>`;
 }
+function calGrid(){
+  const base = new Date(now.getFullYear(), now.getMonth() + (ui.calOff || 0), 1);
+  const y = base.getFullYear(), m = base.getMonth(), days = new Date(y, m + 1, 0).getDate();
+  const lead = (base.getDay() + 6) % 7;
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push('<div class="cell off"></div>');
+  for (let d = 1; d <= days; d++){
+    const ds = `${y}-${pad(m+1)}-${pad(d)}`;
+    const evs = EVENTS.filter(e => e.d === ds), ts = S.tasks.filter(t => t.due === ds);
+    const chips = [...evs.map(e => `<span class="gchip ev">${esc(e.name)}</span>`), ...ts.map(t => { const c = C(t.client); return `<button class="gchip ${t.status === 'done' ? 'done' : ''}" style="${hueStyle(c)}" data-act="gridTask" data-tid="${esc(t.id)}" title="${esc(t.title)}">${esc(t.title)}</button>`; })];
+    cells.push(`<div class="cell ${ds === today ? 'now' : ''} ${ds < today ? 'pastd' : ''}"><span class="dn">${d}</span>${chips.slice(0, 4).join('')}${chips.length > 4 ? `<span class="muted" style="font-size:11px">+${chips.length - 4} more</span>` : ''}</div>`);
+  }
+  return `<div class="sec"><div class="row" style="justify-content:space-between;margin-bottom:12px"><b style="font-weight:600;font-size:16px">${esc(base.toLocaleDateString(undefined,{month:'long', year:'numeric'}))}</b>
+    <div class="row"><button class="b" data-act="calPrev" aria-label="Previous month">‹</button><button class="b" data-act="calNow">This month</button><button class="b" data-act="calNext" aria-label="Next month">›</button></div></div>
+    <div class="gridwrap"><div class="grid7">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div class="gh">${d}</div>`).join('')}${cells.join('')}</div></div>
+    <p class="muted" style="font-size:12px;margin:10px 0 0">Coloured chips are tasks by due date (click to open). Grey chips are festive moments.</p></div>`;
+}
 
 /* ----- Tasks ----- */
+function presetMatch(t){
+  const p = ui.filt.preset;
+  if (p === 'overdue') return t.status !== 'done' && t.due && t.due < today;
+  if (p === 'sent') return t.status === 'sent';
+  if (p === 'open') return t.status !== 'done';
+  return true;
+}
+const PRESETS = {overdue:'Overdue', sent:'With client', open:'Open'};
 function viewTasks(){
-  const f = ui.filt;
-  const list = S.tasks.filter(t => (f.done || t.status !== 'done') && (!f.client || t.client === f.client) && (!f.who || (f.who === 'none' ? !t.assignee : t.assignee === f.who)))
+  const f = ui.filt, board = ui.taskView === 'board';
+  const list = S.tasks.filter(t => presetMatch(t) && (board || f.done || f.preset || t.status !== 'done') && (!f.client || t.client === f.client) && (!f.who || (f.who === 'none' ? !t.assignee : t.assignee === f.who)))
+    .filter(t => !board || t.status !== 'done' || t.doneMonth === monthKey)
     .sort((a,b) => (a.due || '9999').localeCompare(b.due || '9999'));
-  return `<h1>Tasks</h1><p class="sub">Everything owed to clients, and who is on it. Pipeline: to do → editing → with client → approved → done.</p>
-  <div class="sec"><div class="lab">Add a task</div>
-    <form class="form" data-form="task">
-      <label class="vh" for="t-title">Task</label><input type="text" id="t-title" data-keep="t-title" value="${esc(keep('t-title'))}" placeholder="e.g. Edit 3 reels from Sunday’s wedding clips">
-      <div class="row">
-        <label class="vh" for="t-client">Client</label><select id="t-client">${S.clients.map(c => `<option value="${esc(c.id)}"${c.id===keep('t-client')?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
-        <label class="vh" for="t-kind">Type</label><select id="t-kind">${kindOptions(keep('t-kind','carousel'))}</select>
-        <label class="vh" for="t-who">Assign</label><select id="t-who">${whoOptions(keep('t-who'))}</select>
-        <label class="vh" for="t-due">Due</label><input type="date" id="t-due" value="${esc(keep('t-due', today))}">
-        <button class="b pri" type="submit">Add</button></div></form></div>
-
-  <div class="sec"><div class="lab">All tasks<span class="acts">
+  return `<header class="top"><div><p class="eyebrow">To do → editing → with client → approved → done</p><h1>Tasks</h1></div>
+    <div class="seg" role="group" aria-label="Task view"><button data-tv="list" aria-pressed="${!board}">List</button><button data-tv="board" aria-pressed="${board}">Board</button></div></header>
+  <div class="sec">
+    <form class="addline" data-form="task">
+      <label class="vh" for="t-title">Task</label><input type="text" id="t-title" data-keep="t-title" value="${esc(keep('t-title'))}" placeholder="Add a task… e.g. Edit 3 reels from Sunday’s wedding clips">
+      <label class="vh" for="t-client">Client</label><select id="t-client">${S.clients.map(c => `<option value="${esc(c.id)}"${c.id===keep('t-client')?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
+      <label class="vh" for="t-kind">Type</label><select id="t-kind">${kindOptions(keep('t-kind','carousel'))}</select>
+      <label class="vh" for="t-who">Assign</label><select id="t-who">${whoOptions(keep('t-who'))}</select>
+      <label class="vh" for="t-due">Due</label><input type="date" id="t-due" value="${esc(keep('t-due', today))}">
+      <button class="b pri" type="submit">Add</button></form>
+    <div class="filters">
+      ${f.preset ? `<span class="fchip">${esc(PRESETS[f.preset])}<button data-act="clearPreset" aria-label="Clear filter">×</button></span>` : ''}
       <label class="vh" for="f-client">Client</label><select id="f-client" data-change="filt" data-k="client"><option value="">All pages</option>${S.clients.map(c => `<option value="${esc(c.id)}"${c.id===f.client?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
       <label class="vh" for="f-who">Person</label><select id="f-who" data-change="filt" data-k="who"><option value="">Everyone</option><option value="none"${f.who==='none'?' selected':''}>Unassigned</option>${S.team.map(m => `<option value="${esc(m.id)}"${m.id===f.who?' selected':''}>${esc(m.name)}</option>`).join('')}</select>
-      <label class="row" style="gap:4px;color:var(--muted)"><input type="checkbox" id="f-done" data-change="filt" data-k="done" ${f.done?'checked':''}> Done</label></span></div>
-    <div class="items">${list.length ? list.map(t => taskRow(t, {showWho:false})).join('') : `<p class="empty">${loaded.tasks ? 'No tasks match.' : 'Loading…'}</p>`}</div></div>
-
-  <div class="sec"><div class="lab">Team</div>
-    <div class="items">${S.team.map(m => `<div class="it"><div><div class="t">${esc(m.name)}</div><div class="s"><span>${esc({owner:'Owner · sees everything', partner:'Partner · sees everything', editor:'Editor · sees only their tasks'}[m.role] || m.role)}</span><span>${openTasks().filter(t => t.assignee === m.id).length} open</span></div></div>
-      <div class="c">${m.role === 'owner' ? '' : `<button class="x" data-act="delMember" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button>`}</div></div>`).join('')}</div>
-    <form class="row" data-form="member" style="margin-top:10px"><label class="vh" for="m-name">Name</label><input type="text" id="m-name" placeholder="Name" style="flex:1 1 160px">
-      <label class="vh" for="m-role">Role</label><select id="m-role"><option value="editor">Editor (own tasks only)</option><option value="partner">Partner (everything)</option></select><button class="b" type="submit">Add member</button></form>
-    <p class="muted" style="font-size:12px;margin-top:8px">Share this page from the Share menu: partners as <b>Editor</b>, editors as <b>Contributor</b>. Contributors only ever see the task list.</p></div>
+      ${board ? '' : `<label class="row" style="gap:4px;color:var(--muted)"><input type="checkbox" id="f-done" data-change="filt" data-k="done" ${f.done?'checked':''}> Show done</label>`}
+      <span class="muted" style="margin-left:auto;font-size:12px">${list.length} task${list.length === 1 ? '' : 's'}</span>
+    </div>
+  </div>
+  ${board ? boardView(list) : `<div class="sec"><div class="items">${list.length ? list.map(t => taskRow(t, {showWho:true})).join('') : `<p class="empty">${loaded.tasks ? 'No tasks match.' : LOADING}</p>`}</div></div>`}
+  ${teamSection()}
   <div class="sec phone-only">${lookPicker()}</div>`;
+}
+const initials = m => m ? esc(m.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase()) : '';
+function boardView(list){
+  return `<div class="board">${Object.entries(STATUS).map(([k, l]) => { const col = list.filter(t => t.status === k);
+    return `<div class="col" data-col="${k}"><div class="colh"><span class="sdot s-${k}"></span>${l}<span class="mono muted">${col.length}</span></div>
+      ${col.map(t => { const c = C(t.client), late = t.status !== 'done' && t.due && t.due < today, m = M(t.assignee), cm = (t.comments || []).length;
+        return `<div class="card" draggable="true" data-tid="${esc(t.id)}">
+          <div class="t">${esc(t.title)}</div>
+          <div class="s"><span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span><span class="k">${esc(SHORT[t.kind] || t.kind)}</span></div>
+          <div class="cardf">${t.due ? `<span class="${late ? 'late' : 'muted'}">${late ? -daysTo(t.due) + 'd late' : esc(fmt(t.due))}</span>` : '<span></span>'}
+            <span class="row" style="gap:6px"><button class="cbtn ${late && !cm ? 'need' : ''}" data-act="toggleTask">${cm ? cm + ' ✎' : late ? 'Why late?' : 'Note'}</button>${m ? `<span class="av" title="${esc(m.name)}">${initials(m)}</span>` : ''}</span></div>
+          <label class="vh" for="bs-${esc(t.id)}">Status</label><select class="bsel" id="bs-${esc(t.id)}" data-change="status" data-s="${esc(t.status)}">${Object.entries(STATUS).map(([k2,v]) => `<option value="${k2}"${k2===t.status?' selected':''}>${v}</option>`).join('')}</select>
+          ${ui.openTask === t.id ? threadHtml(t, late) : ''}
+        </div>`; }).join('') || '<p class="drophint">Drop a card here</p>'}</div>`; }).join('')}</div>`;
+}
+function teamSection(){
+  const wk = iso(new Date(now.getTime() + 7 * 864e5));
+  return `<div class="sec"><div class="lab">Team and workload<span class="acts muted">due in the next 7 days</span></div>
+    <div class="items">${S.team.map(m => { const open = openTasks().filter(t => t.assignee === m.id), soon = open.filter(t => t.due && t.due <= wk).length, heavy = soon > 12;
+      return `<div class="it"><div><div class="t"><span class="av">${initials(m)}</span> ${esc(m.name)} <span class="muted" style="font-size:12px">· ${esc({owner:'Owner', partner:'Partner', editor:'Editor · sees only their tasks'}[m.role] || m.role)}</span></div>
+        <div class="load"><i style="width:${Math.min(100, soon / 15 * 100)}%;background:var(--${heavy ? 'bad' : soon > 8 ? 'warn' : 'good'})"></i></div>
+        <div class="s"><span>${open.length} open</span><span class="${heavy ? 'late' : ''}">${soon} due this week${heavy ? ' · overbooked, move some dates' : ''}</span></div></div>
+      <div class="c">${m.role === 'owner' ? '' : `<button class="x" data-act="delMember" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button>`}</div></div>`; }).join('')}</div>
+    <form class="row" data-form="member" style="margin-top:10px"><label class="vh" for="m-name">Name</label><input type="text" id="m-name" placeholder="Add a team member" style="flex:1 1 160px">
+      <label class="vh" for="m-role">Role</label><select id="m-role"><option value="editor">Editor (own tasks only)</option><option value="partner">Partner (everything)</option></select><button class="b" type="submit">Add</button></form>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Share from the Share menu: partners as <b>Editor</b>, editors as <b>Contributor</b>.</p></div>`;
 }
 
 /* ----- Editor (Contributor) view ----- */
@@ -752,7 +1034,7 @@ function viewEditor(){
   if (!myMember){
     const eds = S.team.filter(m => m.role === 'editor');
     return `<h1>Who are you?</h1><p class="sub">Pick your name once. This page will show only the tasks assigned to you.</p>
-      <div class="sec"><div class="row">${eds.map(m => `<button class="b" data-act="claim" data-id="${esc(m.id)}">${esc(m.name)}</button>`).join('') || `<p class="empty">${loaded.team ? 'Ask the owner to add you to the team.' : 'Loading…'}</p>`}</div></div>`;
+      <div class="sec"><div class="row">${eds.map(m => `<button class="b" data-act="claim" data-id="${esc(m.id)}">${esc(m.name)}</button>`).join('') || `<p class="empty">${loaded.team ? 'Ask the owner to add you to the team.' : LOADING}</p>`}</div></div>`;
   }
   const mine = S.tasks.filter(t => t.assignee === myMember).sort((a,b) => (a.status === 'done') - (b.status === 'done') || (a.due || '9').localeCompare(b.due || '9'));
   const open = mine.filter(t => t.status !== 'done');
@@ -785,7 +1067,7 @@ const itemSpec = `Never use the words film, shoot or record in a title: we only 
 
 function planDay(){
   run('day', async () => {
-    const data = S.clients.map(c => ({id:c.id, ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
+    const data = S.clients.filter(c => c.status !== 'paused').map(c => ({id:c.id, ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
       openTasks:openTasks(c.id).map(t => t.title).slice(0, 8), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
     const team = S.team.map(m => `${m.name} (${m.role})`);
     const arr = await sample.json(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). The Reach Story is our own studio page: grow it too, ideally with case studies from client results. Give 7 to 10 tasks, each finishable today. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, {cache:false});
@@ -906,6 +1188,8 @@ async function readInsight(c){
     const doc = {client:c.id, type, note, date: (r.date && /^\d{4}-\d\d-\d\d$/.test(r.date)) ? r.date : date, assets:ids,
       title:String(r.title || type), metrics: r.metrics && typeof r.metrics === 'object' ? r.metrics : {}, summary:String(r.summary || ''),
       learnings:Array.isArray(r.learnings) ? r.learnings.map(String).slice(0, 6) : [], next:Array.isArray(r.next) ? r.next.map(String).slice(0, 4) : [], unread:!!queue, createdAt:Date.now()};
+    const fk = Object.entries(doc.metrics).find(([k]) => /^followers$/i.test(k.trim()));
+    if (fk && Number.isFinite(num(fk[1])) && num(fk[1]) > 0){ const d_ = doc.date || today; await upd(c.id, {followers:[...(c.followers || []).filter(x => x.d !== d_), {d:d_, n:num(fk[1])}]}); }
     if (await write(() => db.collection('insights').add(doc), queue ? 'Saved. Waiting to be read' : 'Insight saved')){
       ui.pending.forEach(p => URL.revokeObjectURL(p.url)); ui.pending = []; ui.keep['i-note'] = ''; ui.keep['i-date'] = '';
     }
@@ -920,21 +1204,348 @@ function addPending(files){
   render();
 }
 
+/* ----- Followers ----- */
+const folSorted = c => (c.followers || []).filter(x => x && x.d && Number.isFinite(Number(x.n))).map(x => ({d:x.d, n:Number(x.n)})).sort((a,b) => a.d.localeCompare(b.d));
+function folStats(f){
+  if (!f.length) return null;
+  const last = f.at(-1), first = f[0];
+  const cut = iso(new Date(new Date(last.d + 'T00:00:00') - 30 * 864e5));
+  const base30 = [...f].reverse().find(x => x.d <= cut) || first;
+  const spanW = Math.max(1, (new Date(last.d) - new Date(first.d)) / (7 * 864e5));
+  const perWeek = f.length > 1 ? (last.n - first.n) / spanW : 0;
+  return {last, first, ch30:last.n - base30.n, pct30: base30.n ? (last.n - base30.n) / base30.n * 100 : 0, perWeek};
+}
+function chartSvg(f, opts = {}){
+  const W = opts.w || 720, H = opts.h || 220, L = 52, R = 16, T = 14, B = 28;
+  if (!f.length) return '';
+  const xs = f.map(p => new Date(p.d + 'T00:00:00').getTime());
+  const x0 = Math.min(...xs), x1 = Math.max(...xs) === x0 ? x0 + 864e5 : Math.max(...xs);
+  let y0 = Math.min(...f.map(p => p.n)), y1 = Math.max(...f.map(p => p.n));
+  const padY = Math.max(10, (y1 - y0) * .15); y0 = Math.max(0, Math.floor((y0 - padY) / 10) * 10); y1 = Math.ceil((y1 + padY) / 10) * 10;
+  const X = t => L + (t - x0) / (x1 - x0) * (W - L - R), Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+  const pts = f.map((p, i) => [X(xs[i]), Y(p.n)]);
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = line + ` L${pts.at(-1)[0].toFixed(1)} ${H - B} L${pts[0][0].toFixed(1)} ${H - B} Z`;
+  const ticks = [0, 1, 2, 3].map(i => y0 + (y1 - y0) * i / 3);
+  const ink = opts.ink || 'var(--muted)', grid = opts.grid || 'var(--line)', col = opts.color || 'hsl(var(--h) 60% var(--cl))', surf = opts.surface || 'var(--surface)';
+  const xl = [f[0], f[Math.floor((f.length - 1) / 2)], f.at(-1)].filter((p, i, a) => a.indexOf(p) === i);
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Followers from ${esc(fmt(f[0].d))} to ${esc(fmt(f.at(-1).d))}: ${fmtN(f[0].n)} to ${fmtN(f.at(-1).n)}" data-pts='${esc(JSON.stringify(f.map((p, i) => [pts[i][0], pts[i][1], p.d, p.n])))}'>
+    ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="${grid}" stroke-width="1"/><text x="${L - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="${ink}" font-family="Geist Mono, monospace">${fmtN(Math.round(v))}</text>`).join('')}
+    ${xl.map(p => { const x = X(new Date(p.d + 'T00:00:00').getTime()); return `<text x="${x.toFixed(1)}" y="${H - 8}" text-anchor="${x < L + 30 ? 'start' : x > W - R - 30 ? 'end' : 'middle'}" font-size="11" fill="${ink}">${esc(fmt(p.d))}</text>`; }).join('')}
+    <path d="${area}" fill="${col}" fill-opacity=".10" stroke="none"/>
+    <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${pts.at(-1)[0].toFixed(1)}" cy="${pts.at(-1)[1].toFixed(1)}" r="4.5" fill="${col}" stroke="${surf}" stroke-width="2"/>
+    ${opts.static ? '' : `<line class="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="${ink}" stroke-width="1" stroke-dasharray="3 3" opacity="0"/><circle class="hp" r="5" fill="${col}" stroke="${surf}" stroke-width="2" opacity="0"/><rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent" class="hit"/>`}
+  </svg>`;
+}
+function wireChart(){
+  const svg = document.querySelector('.chart'); if (!svg || !svg.dataset.pts) return;
+  const pts = JSON.parse(svg.dataset.pts), tip = document.getElementById('ftip'), xh = svg.querySelector('.xh'), hp = svg.querySelector('.hp');
+  const move = ev => {
+    const r = svg.getBoundingClientRect(), vx = (ev.clientX - r.left) / r.width * svg.viewBox.baseVal.width;
+    const p = pts.reduce((a, b) => Math.abs(b[0] - vx) < Math.abs(a[0] - vx) ? b : a);
+    xh.setAttribute('x1', p[0]); xh.setAttribute('x2', p[0]); xh.setAttribute('opacity', '.6');
+    hp.setAttribute('cx', p[0]); hp.setAttribute('cy', p[1]); hp.setAttribute('opacity', '1');
+    tip.hidden = false; tip.innerHTML = `<b>${fmtN(p[3])}</b> followers<br><span>${esc(fmt(p[2]))}</span>`;
+    const px = p[0] / svg.viewBox.baseVal.width * r.width, py = p[1] / svg.viewBox.baseVal.height * r.height;
+    tip.style.left = Math.min(r.width - 120, Math.max(0, px + 10)) + 'px'; tip.style.top = Math.max(0, py - 44) + 'px';
+  };
+  const hit = svg.querySelector('.hit');
+  hit.addEventListener('pointermove', move); hit.addEventListener('pointerdown', move);
+  hit.addEventListener('pointerleave', () => { tip.hidden = true; xh.setAttribute('opacity', '0'); hp.setAttribute('opacity', '0'); });
+}
+function tabFollowers(c){
+  const f = folSorted(c), st = folStats(f), goal = Number(c.followerGoal) || 0;
+  const eta = st && goal > st.last.n && st.perWeek > 0 ? Math.ceil((goal - st.last.n) / st.perWeek) : null;
+  const sign = n => (n > 0 ? '+' : '') + fmtN(Math.round(n));
+  return `<div class="stats" style="margin-top:20px">
+      <div><b>${st ? fmtN(st.last.n) : '—'}</b><span>Followers now${st ? ' · ' + esc(fmt(st.last.d)) : ''}</span></div>
+      <div><b>${st && f.length > 1 ? sign(st.ch30) : '—'}${st && f.length > 1 ? `<small> ${st.pct30.toFixed(1)}%</small>` : ''}</b><span>Last 30 days</span></div>
+      <div><b>${st && f.length > 1 ? sign(st.perWeek) : '—'}</b><span>Average per week</span></div>
+      <div><b>${goal ? fmtN(goal) : '—'}</b><span>${goal ? (st && st.last.n >= goal ? 'Goal reached' : eta ? `Goal · about ${eta} week${eta === 1 ? '' : 's'} away` : 'Goal') : 'No goal set'}</span></div>
+    </div>
+  <div class="sec"><div class="lab">Instagram followers</div>
+    ${f.length ? `<div class="chartwrap" style="${hueStyle(c)}">${chartSvg(f)}<div class="ftip" id="ftip" hidden></div></div>` : `<p class="empty">Add today’s follower count below. Add one every week or two and the growth line builds itself. Screenshots of “Account overview” in Insights are added here automatically.</p>`}
+    <form class="row" data-form="followers" style="margin-top:14px">
+      <label class="vh" for="fo-d">Date</label><input type="date" id="fo-d" value="${esc(today)}">
+      <label class="vh" for="fo-n">Followers</label><input type="number" id="fo-n" min="0" placeholder="Followers" style="flex:1 1 140px">
+      <button class="b pri" type="submit">Add count</button></form></div>
+  <div class="sec"><div class="lab">Goal</div>
+    <form class="row" data-form="folGoal"><label class="vh" for="fo-goal">Follower goal</label><input type="number" id="fo-goal" min="0" value="${esc(goal || '')}" placeholder="e.g. 5000" style="flex:0 1 160px"><button class="b" type="submit">Save goal</button>
+    <span class="muted" style="font-size:12px">The ETA uses the average weekly growth so far.</span></form></div>
+  ${f.length ? `<div class="sec"><div class="lab">History</div><div class="tbl"><table><thead><tr><th>Date</th><th>Followers</th><th>Change</th><th style="width:30px"></th></tr></thead><tbody>
+    ${[...f].reverse().map((p, i, a) => { const prev = a[i + 1]; return `<tr><td>${esc(fmt(p.d))}</td><td class="mono">${fmtN(p.n)}</td><td class="mono ${prev && p.n < prev.n ? 'late' : 'muted'}">${prev ? sign(p.n - prev.n) : '—'}</td><td><button class="x" data-act="delFol" data-d="${esc(p.d)}" aria-label="Delete entry">×</button></td></tr>`; }).join('')}
+    </tbody></table></div></div>` : ''}`;
+}
+
+/* ----- Settings: details, retainer, brand, strategy history ----- */
+function tabSettings(c){
+  const h = (c.history || []).slice().reverse();
+  const inp = (id, label, val, ph = '', type = 'text') => `<label>${label}<input type="${type}" id="${id}" value="${esc(val ?? '')}" placeholder="${esc(ph)}"></label>`;
+  return `<div class="sec"><div class="lab">Client details</div>
+    <form class="form" data-form="details"><div class="g2">
+      ${inp('d-name','Name', c.name)}${inp('d-tag','What they do', c.tag)}${inp('d-handle','Instagram', c.handle)}${inp('d-web','Website', c.website)}
+      ${inp('d-city','City', c.city)}${inp('d-source','Where content comes from', c.source)}
+      ${inp('d-fee','Retainer fee', c.fee, 'e.g. ₹15,000/month')}${inp('d-bill','Payment due day (1–28)', c.billingDay, 'e.g. 5', 'number')}
+    </div><div class="row"><button class="b pri" type="submit">Save details</button>
+      ${c.fee ? `<span class="muted" style="font-size:12px">${c.paidMonth === monthKey ? `Paid for ${esc(monthName)}` : `Not marked paid for ${esc(monthName)}`}</span>${c.paidMonth === monthKey ? '' : `<button class="lnk" type="button" data-act="markPaid" data-cid="${esc(c.id)}">Mark paid</button>`}` : ''}</div></form></div>
+  ${tabBrand(c)}
+  <div class="sec"><div class="lab">Strategy timeline<span class="acts muted">${h.length} earlier version${h.length === 1 ? '' : 's'}</span></div>
+    <div class="tl">
+      <div class="tli now"><span class="tld"></span><div><b>Now</b> · ${esc(target(c))} pieces a month<div class="muted" style="font-size:13px">${esc(c.plan?.goal || 'No goal yet')}</div><div class="muted" style="font-size:13px">Focus: ${esc(c.plan?.focus || '—')}</div></div></div>
+      ${h.map(v => `<div class="tli"><span class="tld"></span><div><b>${esc(new Date(v.at).toLocaleDateString(undefined,{day:'numeric', month:'short', year:'numeric'}))}</b>${v.target ? ` · ${esc(v.target)} a month` : ''}${v.note ? ` · <span class="muted">${esc(v.note)}</span>` : ''}
+        <div class="muted" style="font-size:13px">${esc(v.plan?.goal || '')}</div><div class="muted" style="font-size:13px">Focus: ${esc(v.plan?.focus || '—')}</div></div></div>`).join('')}
+    </div>
+    <p class="muted" style="font-size:12px;margin:10px 0 0">Every time the growth plan changes, the old version is kept here, so you can see how the brand has grown.</p></div>
+  <div class="sec"><div class="lab">Status</div><div class="row">
+    ${c.status === 'paused' ? `<button class="b" data-act="setStatus" data-s="active">Resume client</button>` : `<button class="b" data-act="setStatus" data-s="paused">Pause client</button>`}
+    <button class="b" data-act="setStatus" data-s="archived">Archive client</button>
+    <span class="muted" style="font-size:12px">Paused clients stay visible but get no daily plans. Archived clients are hidden and can be restored from All pages.</span></div></div>`;
+}
+function savePlanVersion(c, next, note){
+  const hist = [...(c.history || []), {at:Date.now(), target:target(c), plan:c.plan || {}, note:note || ''}].slice(-24);
+  return upd(c.id, {...next, history:hist}, 'Plan saved · earlier version kept');
+}
+
+/* ----- Claude: new-client plan and strategy review ----- */
+function draftPlan(c){
+  run('draft:' + c.id, async () => {
+    const r = await sample.json(`${preamble}\n\nA new client just joined The Reach Story. Draft their starting growth plan, a research brief and a brand kit from what we know. You cannot browse, so base it on the business type, city and notes, and flag assumptions in the summary.\n\nClient: ${JSON.stringify({name:c.name, business:c.tag, instagram:c.handle, website:c.website, city:c.city, language:c.brand?.language, adBudget:c.ads?.budget, notes:c.notes, contentPerMonth:target(c)})}\n\nReply with only JSON: {"next": "the single next move", "plan": {"goal": string, "audience": string, "pillars": [4 strings], "focus": string}, "research": {"summary": string, "fixes": [3 strings], "opportunities": [5 strings]}, "brand": {"tone": string, "look": string, "always": string, "never": string, "tags": string}}`, {cache:false});
+    if (!r || !r.plan) throw {code:'invalid_json'};
+    await upd(c.id, {next:String(r.next || c.next || ''), plan:r.plan, research:{...(r.research || {}), sources:[]}, brand:{...(r.brand || {}), language:c.brand?.language || ''}}, 'Plan drafted');
+  });
+}
+function reviewStrategy(c){
+  run('review:' + c.id, async () => {
+    const st = folStats(folSorted(c));
+    const r = await sample.json(`${preamble}\n\nReview the growth strategy for ${c.name}. Brands change as they grow: FIRST take into account the client’s open asks and updates (in the context) — they come straight from the client. Then use the insights, follower growth and delivery record to decide whether the goal, audience, pillars, focus or monthly content target should change for next month. Keep what works. Be specific.\n\nFollowers: ${JSON.stringify(st ? {now:st.last.n, last30:st.ch30, perWeek:Math.round(st.perWeek)} : null)}\nEarlier strategy versions: ${JSON.stringify((c.history || []).slice(-3).map(v => ({at:new Date(v.at).toISOString().slice(0,10), goal:v.plan?.goal, focus:v.plan?.focus})))}\nContext:\n${JSON.stringify(clientContext(c, {insights:10}))}\n\nReply with only JSON: {"verdict": "one sentence: keep, adjust or change, and why", "changes": ["what changes and why, 2-4 items"], "plan": {"goal": string, "audience": string, "pillars": [4 strings], "focus": string}, "target": number}`, {cache:false});
+    if (!r || !r.plan) throw {code:'invalid_json'};
+    ui.review[c.id] = r;
+    if (ui.ctab !== 'overview') ui.ctab = 'overview';
+  });
+}
+
+/* ----- Monthly report ----- */
+const REP_KEYS = [['Reach', /^(accounts )?reach(ed)?$/i], ['Views', /^(views|plays|impressions)$/i], ['Interactions', /^(interactions|engagement|accounts engaged)$/i], ['Likes', /^likes$/i], ['Comments', /^comments$/i], ['Shares', /^(shares|sends)$/i], ['Saves', /^saves$/i], ['Profile visits', /^profile (visits|activity)$/i], ['Leads / messages', /^(leads|results|messaging conversations( started)?|conversations|calls)$/i], ['Ad spend', /^(amount spent|spend)$/i]];
+const num = v => { if (typeof v === 'number') return v; const m = String(v).replace(/[,₹$\s]/g, '').match(/^(-?[\d.]+)([kKmM])?/); if (!m) return NaN; return Number(m[1]) * (m[2] ? (/k/i.test(m[2]) ? 1e3 : 1e6) : 1); };
+function reportData(c, mk){
+  const done = S.tasks.filter(t => t.client === c.id && t.status === 'done' && t.doneMonth === mk);
+  const byKind = {}; done.forEach(t => { const k = SHORT[t.kind] || 'Other'; byKind[k] = (byKind[k] || 0) + 1; });
+  const content = done.filter(t => CONTENT.includes(t.kind)).length;
+  const ins = S.insights.filter(i => i.client === c.id && !i.unread && i.type !== 'Competitor post' && (i.date || iso(new Date(i.createdAt || 0))).slice(0, 7) === mk);
+  const totals = {};
+  for (const i of ins) for (const [k, v] of Object.entries(i.metrics || {})) { const rk = REP_KEYS.find(([, re]) => re.test(k.trim())); const n = num(v); if (rk && Number.isFinite(n)) totals[rk[0]] = (totals[rk[0]] || 0) + n; }
+  const score = i => { for (const [k, v] of Object.entries(i.metrics || {})) if (/reach|views|plays/i.test(k) && Number.isFinite(num(v))) return num(v); return 0; };
+  const top = ins.filter(i => /post|reel|story/i.test(i.type)).map(i => ({title:i.title, s:score(i), learn:(i.learnings || [])[0] || ''})).filter(x => x.s).sort((a,b) => b.s - a.s).slice(0, 3);
+  const f = folSorted(c), start = [...f].reverse().find(x => x.d < mk + '-01') || f.find(x => x.d.slice(0,7) === mk), end = [...f].reverse().find(x => x.d.slice(0,7) <= mk);
+  const fol = start && end ? {start:start.n, end:end.n, gain:end.n - start.n, series:f.filter(x => x.d.slice(0,7) <= mk).slice(-12)} : null;
+  const learn = ins.flatMap(i => i.learnings || []).slice(0, 4);
+  return {done, byKind, content, target:target(c), ins, totals, top, fol, learn, next:eventsFor(c.id).filter(e => e.d.slice(0,7) > mk).slice(0, 3)};
+}
+function monthLabel(mk){ const [y, m] = mk.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString(undefined, {month:'long', year:'numeric'}); }
+function repNarrative(c, mk, d){
+  const saved = S.reports.find(r => r.id === `${c.id}_${mk}`);
+  if (saved && saved.narrative) return {...saved.narrative, ai:true};
+  const hl = [];
+  hl.push(`${d.content} piece${d.content === 1 ? '' : 's'} of content delivered against a plan of ${d.target}.`);
+  if (d.fol) hl.push(`Followers ${d.fol.gain >= 0 ? 'grew' : 'changed'} by ${d.fol.gain >= 0 ? '+' : ''}${fmtN(d.fol.gain)} to ${fmtN(d.fol.end)}.`);
+  if (d.totals.Reach) hl.push(`${fmtN(d.totals.Reach)} accounts reached across the posts we tracked.`);
+  if (d.totals['Leads / messages']) hl.push(`${fmtN(d.totals['Leads / messages'])} leads and messages from ads and posts.`);
+  return {headline:`${monthLabel(mk).split(' ')[0]} at a glance`, summary:c.plan?.focus ? `This month’s focus: ${c.plan.focus}` : '', highlights:hl,
+    next:d.next.map(e => `${e.name} (${fmt(e.d)}): ${e.prep}`).slice(0, 3), needs:['Photos and short clips of new work, products or events', 'Quick approvals on drafts we send on WhatsApp'], ai:false};
+}
+function viewReport(c){
+  const mk = ui.rMonth || monthKey, d = reportData(c, mk), nv = repNarrative(c, mk, d);
+  const months = [0, 1, 2, 3, 4, 5].map(i => iso(new Date(now.getFullYear(), now.getMonth() - i, 1)).slice(0, 7));
+  const tiles = [[`${d.content}<small>/${d.target}</small>`, 'Content delivered'], d.fol ? [`${d.fol.gain >= 0 ? '+' : ''}${fmtN(d.fol.gain)}`, `Followers · now ${fmtN(d.fol.end)}`] : null,
+    ...Object.entries(d.totals).slice(0, 4).map(([k, v]) => [k === 'Ad spend' ? '₹' + fmtN(Math.round(v)) : fmtN(Math.round(v)), k])].filter(Boolean).slice(0, 4);
+  const hue = c.hue ?? 220;
+  return `<nav class="crumb" aria-label="Breadcrumb"><button class="lnk" data-go="client" data-cid="${esc(c.id)}">${esc(c.name)}</button><span>/</span><span>Monthly report</span></nav>
+  <header class="top"><div><p class="eyebrow">A client-ready report built from your saved data. No AI needed; Claude can polish the wording.</p><h1>Monthly report</h1></div>
+    <div class="row"><label class="vh" for="rep-m">Month</label><select id="rep-m" data-change="repMonth">${months.map(m => `<option value="${m}"${m === mk ? ' selected' : ''}>${esc(monthLabel(m))}</option>`).join('')}</select></div></header>
+  <div class="row" style="margin-top:14px">
+    <button class="b pri" data-act="repPdf" ${ui.busy.pdf ? 'disabled' : ''}>${ui.busy.pdf ? 'Making PDF…' : 'Download PDF'}</button>
+    ${sample ? `<button class="b" data-act="repAi" ${ui.busy['rep:' + c.id] ? 'disabled' : ''}>${ui.busy['rep:' + c.id] ? 'Writing…' : nv.ai ? 'Rewrite with Claude' : 'Polish wording with Claude'}</button>` : ''}
+    <button class="b" data-act="repCopy">Copy WhatsApp summary</button>
+    ${ui.out['rep:' + c.id] ? `<span class="late" style="font-size:13px">${esc(ui.out['rep:' + c.id])}</span>` : ''}</div>
+  <div class="repwrap"><div class="rep" id="rep" style="--rh:${hue}">
+    <div class="rep-top"><div><div class="rep-brand">the.reach.story</div><div class="rep-sm">Marketing studio · Khanna, Punjab</div></div><div style="text-align:right"><div class="rep-sm">Monthly report</div><div class="rep-m">${esc(monthLabel(mk))}</div></div></div>
+    <div class="rep-client"><div class="rep-sm">Prepared for</div><div class="rep-cn">${esc(c.name)}</div><div class="rep-sm">${esc([c.tag, c.handle].filter(Boolean).join(' · '))}</div></div>
+    <h2 class="rep-h">${esc(nv.headline || '')}</h2>${nv.summary ? `<p class="rep-p">${esc(nv.summary)}</p>` : ''}
+    <div class="rep-tiles">${tiles.map(([n, l]) => `<div><b>${n}</b><span>${esc(l)}</span></div>`).join('')}</div>
+    ${nv.highlights?.length ? `<h3 class="rep-s">Highlights</h3><ul class="rep-ul">${nv.highlights.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${d.fol && d.fol.series.length > 1 ? `<h3 class="rep-s">Follower growth</h3><div class="rep-chart">${chartSvg(d.fol.series, {w:680, h:180, static:true, ink:'#6b6f76', grid:'#e6e7ea', color:`hsl(${hue} 60% 42%)`, surface:'#ffffff'})}</div>` : ''}
+    ${Object.keys(d.byKind).length ? `<h3 class="rep-s">What we delivered</h3><div class="rep-kinds">${Object.entries(d.byKind).map(([k, v]) => `<span><b>${v}</b> ${esc(k)}${v === 1 ? '' : 's'}</span>`).join('')}</div>` : ''}
+    ${d.top.length ? `<h3 class="rep-s">Top posts</h3><table class="rep-t"><tbody>${d.top.map((t, i) => `<tr><td class="rep-n">${i + 1}</td><td>${esc(t.title)}${t.learn ? `<div class="rep-sm">${esc(t.learn)}</div>` : ''}</td><td class="rep-v">${fmtN(t.s)}</td></tr>`).join('')}</tbody></table>` : ''}
+    ${nv.next?.length ? `<h3 class="rep-s">Next month</h3><ul class="rep-ul">${nv.next.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${nv.needs?.length ? `<h3 class="rep-s">What we need from you</h3><ul class="rep-ul">${nv.needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    <div class="rep-foot"><span>@the.reach.story</span><span>${esc(monthLabel(mk))} · ${esc(c.name)}</span></div>
+  </div></div>
+  ${!d.ins.length && !d.fol ? `<p class="muted" style="font-size:13px;margin-top:12px">Tip: add follower counts and insight screenshots during the month and this report fills in with real numbers.</p>` : ''}`;
+}
+let pdfLib = null;
+function loadPdfLib(){
+  if (window.html2pdf) return Promise.resolve();
+  if (pdfLib) return pdfLib;
+  pdfLib = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'; s.onload = res; s.onerror = () => { pdfLib = null; rej(new Error('load')); }; document.head.appendChild(s); });
+  return pdfLib;
+}
+async function reportPdf(c){
+  if (!downloads){ toast('Downloads aren’t available in this view. Open the desk in claude.ai in a browser.'); return; }
+  ui.busy.pdf = true; render();
+  try {
+    await loadPdfLib();
+    const el = document.getElementById('rep');
+    const blob = await window.html2pdf().set({margin:0, image:{type:'jpeg', quality:.95}, html2canvas:{scale:2, backgroundColor:'#ffffff', useCORS:true}, jsPDF:{unit:'px', format:[794, Math.max(1123, el.scrollHeight)], hotfixes:['px_scaling']}, pagebreak:{mode:['avoid-all']}}).from(el).outputPdf('blob');
+    await downloads.save({filename:`${c.name} - ${monthLabel(ui.rMonth || monthKey)} report.pdf`, data:blob});
+    toast('PDF ready');
+  } catch(e){ toast(e && e.code === 'declined' ? 'Download cancelled' : e && e.message === 'load' ? 'Couldn’t load the PDF maker. Check your connection and try again.' : 'Couldn’t make the PDF. Try again.'); }
+  ui.busy.pdf = false; render();
+}
+function reportAi(c){
+  const mk = ui.rMonth || monthKey, d = reportData(c, mk);
+  run('rep:' + c.id, async () => {
+    const r = await sample.json(`${preamble}\n\nWrite the wording for The Reach Story's ${monthLabel(mk)} report to ${c.name}. It goes to the client, so it must sound like a professional agency: warm, confident, specific, simple English. Use ONLY these numbers; never invent any.\n\nData: ${JSON.stringify({delivered:d.byKind, content:d.content, target:d.target, followers:d.fol && {start:d.fol.start, end:d.fol.end, gain:d.fol.gain}, totals:d.totals, topPosts:d.top, learnings:d.learn, upcoming:d.next.map(e => e.d + ' ' + e.name), focus:c.plan?.focus})}\n\nReply with only JSON: {"headline": "short title for the month", "summary": "2 sentences", "highlights": ["3-4 bullets with numbers"], "next": ["3 planned moves"], "needs": ["2-3 things we need from the client"]}`, {cache:false});
+    if (!r || !r.headline) throw {code:'invalid_json'};
+    await write(() => db.collection('reports').doc(`${c.id}_${mk}`).set({client:c.id, month:mk, narrative:{headline:String(r.headline), summary:String(r.summary || ''), highlights:(r.highlights || []).map(String), next:(r.next || []).map(String), needs:(r.needs || []).map(String)}, at:Date.now()}), 'Report wording saved');
+  });
+}
+function reportText(c){
+  const mk = ui.rMonth || monthKey, d = reportData(c, mk), nv = repNarrative(c, mk, d);
+  return [`*${c.name} · ${monthLabel(mk)} report*`, '', nv.summary, '', ...(nv.highlights || []).map(x => '• ' + x), '', '*Next month*', ...(nv.next || []).map(x => '• ' + x), '', '*What we need from you*', ...(nv.needs || []).map(x => '• ' + x), '', '— The Reach Story'].filter((x, i, a) => !(x === '' && a[i - 1] === '')).join('\n');
+}
+
+/* ----- Higgsfield ----- */
+const HF = 'Higgsfield';
+const HF_MODELS = {marketing_studio_image:'Product / ad', gpt_image_2_5:'General', soul_2:'People / fashion'};
+const hfErr = e => ({server_not_connected:'Connect Higgsfield in claude.ai → Settings → Connectors, then try again.', needs_reauth:'Reconnect Higgsfield in claude.ai → Settings → Connectors.', not_in_manifest:'Higgsfield isn’t allowed for this page. Allow it when asked, or reload.', selection_required:'Choose which Higgsfield connection to use when Claude asks.', blocked_by_policy:'Your organization blocks this Higgsfield tool.', server_unavailable:'Higgsfield didn’t answer. Try again in a minute.', tool_error:'Higgsfield refused: ' + (e && e.message || '').slice(0, 140)}[e && e.code] || 'Couldn’t reach Higgsfield. Try again.');
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+const payloadText = r => { try { return JSON.stringify(r.payload ?? r.structuredContent ?? r.content ?? r); } catch(e){ return ''; } };
+async function hfGenerate(c, x, docId, useUnlim){
+  const key = 'hf:' + docId;
+  ui.busy[key] = true; delete ui.hfAsk[key]; render();
+  try {
+    const model = ui.keep['hfm-' + docId] || (c.id === 'eroe' || /product|jewel|wheel|shirt|tee|hoodie/i.test(x.prompt) ? 'marketing_studio_image' : 'gpt_image_2_5');
+    const params = {model, prompt:x.prompt + (x.negative ? `\nAvoid: ${x.negative}` : ''), aspect_ratio:x.ratio || '4:5', count:1};
+    if (useUnlim !== undefined) params.use_unlim = useUnlim;
+    const r = await mcp.callTool(HF, 'generate_image', {params});
+    const txt = payloadText(r);
+    if (/unlim_choice/.test(txt) && useUnlim === undefined){ ui.hfAsk[key] = true; return; }
+    const job = (txt.match(UUID) || [])[0];
+    if (!job) throw {code:'tool_error', message:txt.slice(0, 160)};
+    let gens = [...(S.prompts.find(p => p.id === docId)?.gens || []), {job, model, status:'working', urls:[], at:Date.now()}];
+    await write(() => db.collection('prompts').doc(docId).update({gens}));
+    for (let i = 0; i < 8; i++){
+      const w = await mcp.callTool(HF, 'jobs_wait', {jobs:[{index:0, job_id:job}], timeout_seconds:15}, {cache:false});
+      const wt = payloadText(w);
+      const urls = [...new Set((wt.match(/https:\/\/[^"'\s\\)]+/g) || []).filter(u => !/higgsfield\.ai\/(docs|help|pricing)/i.test(u)))];
+      const failed = /"(failed|error|nsfw|canceled|cancelled)"/i.test(wt), finished = urls.length || failed || /"(completed|succeeded|done)"/i.test(wt);
+      if (finished){ gens = gens.map(g => g.job === job ? {...g, status: urls.length ? 'done' : failed ? 'failed' : 'done', urls:urls.slice(0, 4)} : g); break; }
+    }
+    gens = gens.map(g => g.job === job && g.status === 'working' ? {...g, status:'queued'} : g);
+    await write(() => db.collection('prompts').doc(docId).update({gens}), 'Higgsfield finished');
+  } catch(e){ toast(hfErr(e)); }
+  finally { ui.busy[key] = false; render(); }
+}
+function hfBlock(x, docId){
+  if (!mcp || x.what === 'edit' || x.what === 'video') return '';
+  const key = 'hf:' + docId, sel = ui.keep['hfm-' + docId] || '';
+  return `<div class="hf">
+    <div class="row"><span class="hfl">Higgsfield</span>
+      <label class="vh" for="hfm-${esc(docId)}">Model</label><select id="hfm-${esc(docId)}" data-change="hfModel" data-doc="${esc(docId)}"><option value="">Auto model</option>${Object.entries(HF_MODELS).map(([k,v]) => `<option value="${k}"${k===sel?' selected':''}>${v}</option>`).join('')}</select>
+      <button class="b pri" data-act="hfGo" data-doc="${esc(docId)}" ${ui.busy[key] ? 'disabled' : ''}>${ui.busy[key] ? 'Generating…' : 'Generate image'}</button></div>
+    ${ui.hfAsk[key] ? `<div class="row"><span style="font-size:13px">You have free generations. Use them?</span><button class="b" data-act="hfGo" data-doc="${esc(docId)}" data-unlim="1">Use free generations</button><button class="b" data-act="hfGo" data-doc="${esc(docId)}" data-unlim="0">Use credits</button></div>` : ''}
+    ${(x.gens || []).length ? `<div class="gens">${x.gens.slice().reverse().map(g => `<div class="gen"><span class="pill ${g.status === 'done' ? 'good' : g.status === 'failed' ? 'bad' : 'warn'}">${g.status === 'done' ? 'Ready' : g.status === 'failed' ? 'Failed' : 'Still rendering'}</span>
+      <span class="muted mono" style="font-size:11px">${esc(HF_MODELS[g.model] || g.model || '')} · ${esc(ago(g.at))}</span>
+      ${(g.urls || []).map((u, i) => `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener">Open image${g.urls.length > 1 ? ' ' + (i + 1) : ''} ↗</a>`).join('')}
+      ${g.status !== 'done' || !(g.urls || []).length ? `<span class="muted" style="font-size:12px">Find it in your Higgsfield library</span>` : ''}</div>`).join('')}</div>` : ''}
+    <p class="muted" style="font-size:11.5px;margin:0">Uses your Higgsfield credits. Images open in Higgsfield, because the desk can’t show pictures from other websites.</p></div>`;
+}
+
+/* ----- Client asks and updates ----- */
+function asksSection(c){
+  const a = (c.asks || []).slice().sort((x, y) => (x.status === 'done') - (y.status === 'done') || y.at - x.at);
+  const open = a.filter(x => x.status !== 'done');
+  return `<div class="sec"><div class="lab">Client asks and updates<span class="acts">${open.length && sample ? `<button class="lnk" data-act="reviewStrategy" ${ui.busy['review:' + c.id] ? 'disabled' : ''}>Update plan from these</button>` : ''}</span></div>
+    <form class="addline" data-form="ask">
+      <label class="vh" for="ask-k">Type</label><select id="ask-k"><option value="ask">They want</option><option value="update">Update from them</option></select>
+      <label class="vh" for="ask-t">What</label><input type="text" id="ask-t" data-keep="ask-${esc(c.id)}" value="${esc(keep('ask-' + c.id))}" placeholder="e.g. Wants more focus on bridal sets · New showroom opening 15 Nov · Budget up to ₹8,000">
+      <button class="b" type="submit">Add</button></form>
+    ${a.length ? `<div class="items" style="margin-top:6px">${a.slice(0, ui.allAsks === c.id ? 99 : 6).map(x => `<div class="it ${x.status === 'done' ? 'dim' : ''}" data-ask="${esc(x.id)}"><div><div class="t"><span class="k ${x.kind === 'ask' ? 'ask' : ''}">${x.kind === 'ask' ? 'Wants' : 'Update'}</span> ${esc(x.text)}</div>
+      <div class="s"><span>${esc(M(x.by)?.name || '')}</span><span>${esc(ago(x.at))}</span>${x.status === 'done' ? '<span>Handled</span>' : x.planned ? '<span>In the plan</span>' : ''}</div></div>
+      <div class="c">${x.status === 'done' ? `<button class="lnk" data-act="askReopen">Reopen</button>` : `<button class="lnk" data-act="askTask">Make task</button><button class="lnk" data-act="askDone">Handled</button>`}<button class="x" data-act="askDel" aria-label="Delete">×</button></div></div>`).join('')}</div>
+      ${a.length > 6 && ui.allAsks !== c.id ? `<button class="lnk" data-act="allAsks" style="margin-top:8px">Show all ${a.length}</button>` : ''}` : `<p class="empty" style="margin-top:4px">Log what the client asks for and news from them (a sale, a new product, a budget change). Claude uses these when it updates the plan.</p>`}
+  </div>`;
+}
+const saveAsks = (c, asks, ok) => upd(c.id, {asks}, ok);
+
+/* ----- shared thread ----- */
+function threadHtml(t, late){
+  const cm = t.comments || [];
+  return `<div class="thread">
+    ${cm.map(x => `<div class="cm"><b>${esc(M(x.who)?.name || 'Someone')}</b><span class="muted"> · ${esc(ago(x.at))}</span><div>${esc(x.text)}</div></div>`).join('')}
+    <form class="row" data-form="comment"><label class="vh" for="cm-${esc(t.id)}">Comment</label>
+      <input class="grow" type="text" id="cm-${esc(t.id)}" data-keep="cm-${esc(t.id)}" value="${esc(keep('cm-' + t.id))}" placeholder="${late ? 'Why is this late? e.g. waiting for clips from the client' : 'Add a comment'}">
+      ${late ? `<label class="vh" for="nd-${esc(t.id)}">New due date</label><input type="date" id="nd-${esc(t.id)}" title="New due date (optional)">` : ''}
+      <button class="b" type="submit">Post</button></form></div>`;
+}
+
 /* ---------- events ---------- */
+document.addEventListener('input', e => { if (e.target.id === 'cmdq'){ ui.cmd.q = e.target.value; ui.cmd.sel = 0; renderCmd(); return; } });
 document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.keep; if (k) ui.keep[k] = e.target.value; });
-document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.it.click')){ e.preventDefault(); e.target.click(); } });
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && role !== 'editor'){ e.preventDefault(); ui.cmd.open ? closeCmd() : openCmd(); return; }
+  if (ui.cmd.open){
+    if (e.key === 'Escape'){ e.preventDefault(); closeCmd(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); const n = cmdMatches().length; ui.cmd.sel = (ui.cmd.sel + (e.key === 'ArrowDown' ? 1 : -1) + n) % Math.max(1, n); renderCmd(); return; }
+    if (e.key === 'Enter' && e.target.id === 'cmdq'){ e.preventDefault(); runCmd(ui.cmd.sel); return; }
+  } if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.it.click')){ e.preventDefault(); e.target.click(); } });
 document.addEventListener('click', async e => {
   const g = e.target.closest('[data-go]');
-  if (g && !e.target.closest('select,input,button:not([data-go])')){ go(g.dataset.go, g.dataset.cid ?? ui.cid, g.dataset.go === 'client' && g.dataset.cid !== ui.cid ? 'overview' : undefined); return; }
+  if (g && !e.target.closest('select,input,button:not([data-go])')){ if (g.dataset.preset) ui.filt = {client:'', who:'', done:false, preset:g.dataset.preset}; else if (g.dataset.go === 'tasks') ui.filt.preset = ''; go(g.dataset.go, g.dataset.cid ?? ui.cid, g.dataset.go === 'client' && g.dataset.cid !== ui.cid ? 'overview' : undefined); return; }
   const t = e.target.closest('[data-ctab]'); if (t){ ui.ctab = t.dataset.ctab; ui.editing = null; try { localStorage.setItem('rsd-nav', JSON.stringify({view:ui.view, cid:ui.cid, ctab:ui.ctab})); } catch(_){} render(); return; }
+  if (e.target.closest('#cmdk') && !e.target.closest('.cmdbox')){ closeCmd(); return; }
+  const ci = e.target.closest('[data-cmd]'); if (ci){ runCmd(Number(ci.dataset.cmd)); return; }
+  const cal = e.target.closest('[data-cal]'); if (cal){ ui.calMode = cal.dataset.cal; render(); return; }
+  const tv = e.target.closest('[data-tv]'); if (tv){ ui.taskView = tv.dataset.tv; render(); return; }
   const sk = e.target.closest('[data-pick-skin]'); if (sk){ setLook('skin', sk.dataset.pickSkin); return; }
   const md_ = e.target.closest('[data-pick-mode]'); if (md_){ setLook('mode', md_.dataset.pickMode); return; }
   const b = e.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, c = C(ui.cid), tid = b.closest('[data-tid]')?.dataset.tid;
+  if (a === 'cmd'){ openCmd(); return; }
   if (a === 'toggleTask'){ ui.openTask = ui.openTask === tid ? null : tid; render(); const i = document.getElementById('cm-' + tid); if (i) i.focus(); return; }
   if (a === 'closePlan'){ ui.dayPlan = null; delete ui.out.day; render(); return; }
   if (a === 'delTask') await write(() => tasksCol().doc(tid).delete());
   else if (a === 'planDay') planDay();
+  else if (a === 'calPrev'){ ui.calOff = (ui.calOff || 0) - 1; render(); }
+  else if (a === 'calNext'){ ui.calOff = (ui.calOff || 0) + 1; render(); }
+  else if (a === 'calNow'){ ui.calOff = 0; render(); }
+  else if (a === 'gridTask'){ ui.filt = {client:'', who:'', done:true, preset:''}; ui.taskView = 'list'; ui.openTask = b.dataset.tid; go('tasks'); }
+  else if (a === 'clearPreset'){ ui.filt.preset = ''; render(); }
+  else if (a === 'newClient'){ ui.addClient = true; go('clients'); setTimeout(() => $('#nc-name')?.focus(), 30); }
+  else if (a === 'cancelNewClient'){ ui.addClient = false; render(); }
+  else if (a === 'unarchive') await upd(b.dataset.cid, {status:'active'}, 'Client restored');
+  else if (a === 'openReport'){ ui.rMonth = ui.rMonth || monthKey; go('report', c.id); }
+  else if (a === 'repPdf') reportPdf(c);
+  else if (a === 'repAi') reportAi(c);
+  else if (a === 'repCopy'){ const t = reportText(c); try { await navigator.clipboard.writeText(t); toast('Summary copied'); } catch(_){ toast('Copy isn’t allowed here. Select the report text instead.'); } }
+  else if (a === 'hfGo'){ const x = S.prompts.find(p => p.id === b.dataset.doc); if (x) hfGenerate(c, x, x.id, b.dataset.unlim === undefined ? undefined : b.dataset.unlim === '1'); }
+  else if (a === 'hfGoNew'){ const i = Number(b.closest('[data-gi]').dataset.gi), x = (ui.gen[c.id] || [])[i]; if (!x) return;
+    try { const ref = await db.collection('prompts').add({client:c.id, title:x.title, prompt:x.prompt, negative:x.negative, settings:x.settings, use:x.use, what:x.what, tool:x.tool, ratio:x.ratio, createdAt:Date.now()}); x.saved = true; toast('Saved to Saved prompts'); render(); setTimeout(() => hfGenerate(c, {...x, gens:[]}, ref.id), 400); } catch(_){ toast('Could not save. Try again.'); } }
+  else if (a === 'delFol') await upd(c.id, {followers:(c.followers || []).filter(x => x.d !== b.dataset.d)}, 'Entry deleted');
+  else if (a === 'markPaid') await upd(b.dataset.cid, {paidMonth:monthKey}, 'Marked paid');
+  else if (a === 'setStatus'){ await upd(c.id, {status:b.dataset.s}, b.dataset.s === 'archived' ? 'Client archived' : b.dataset.s === 'paused' ? 'Client paused' : 'Client resumed'); if (b.dataset.s === 'archived') go('clients'); }
+  else if (a === 'draftPlan') draftPlan(c);
+  else if (a === 'reviewStrategy') reviewStrategy(c);
+  else if (a === 'dismissReview'){ delete ui.review[c.id]; render(); }
+  else if (a === 'applyReview'){ const r = ui.review[c.id]; if (!r) return;
+    const asks = (c.asks || []).map(x => x.status !== 'done' ? {...x, planned:true} : x);
+    if (await savePlanVersion(c, {plan:{goal:String(r.plan.goal || ''), audience:String(r.plan.audience || ''), pillars:(r.plan.pillars || []).map(String), focus:String(r.plan.focus || '')}, target:{count:Math.max(0, Number(r.target) || target(c))}, asks}, 'Updated with Claude: ' + String(r.verdict || '').slice(0, 120))){ delete ui.review[c.id]; render(); } }
+  else if (a === 'allAsks'){ ui.allAsks = c.id; render(); }
+  else if (a === 'askDone' || a === 'askReopen' || a === 'askDel' || a === 'askTask'){ const id = b.closest('[data-ask]').dataset.ask, x = (c.asks || []).find(q => q.id === id); if (!x) return;
+    if (a === 'askTask'){ if (await addTask({title:(x.kind === 'ask' ? 'Client ask: ' : 'Act on update: ') + x.text, client:c.id, kind:'strategy'})) toast('Task added'); return; }
+    const asks = a === 'askDel' ? c.asks.filter(q => q.id !== id) : c.asks.map(q => q.id === id ? {...q, status: a === 'askDone' ? 'done' : 'open'} : q);
+    await saveAsks(c, asks); }
   else if (a === 'ideas') ideas(c);
   else if (a === 'addSug' || a === 'addAllSug'){
     const key = a === 'addSug' ? b.closest('[data-sug]').dataset.sug : b.dataset.key;
@@ -980,6 +1591,8 @@ document.addEventListener('change', async e => {
   if (k === 'status') await write(() => tasksCol().doc(tid).update({status:el.value, doneMonth: el.value === 'done' ? monthKey : ''}));
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
   else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
+  else if (k === 'repMonth'){ ui.rMonth = el.value; render(); }
+  else if (k === 'hfModel'){ ui.keep['hfm-' + el.dataset.doc] = el.value; }
   else if (k === 'filt'){ ui.filt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); }
   else if (k === 'local'){ const c = C(ui.cid); const items = (c.local?.items || []).map((it, n) => n === Number(el.dataset.n) ? {...it, done:el.checked} : it); await upd(c.id, {local:{items}}); }
 });
@@ -987,6 +1600,25 @@ document.addEventListener('submit', async e => {
   const f = e.target.closest('[data-form]'); if (!f) return;
   e.preventDefault();
   const k = f.dataset.form, c = C(ui.cid), v = id => (document.getElementById(id)?.value ?? '').trim();
+  if (k === 'newClient'){
+    const name = v('nc-name'); if (!name) return;
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'client';
+    const uid = S.allClients.some(x => x.id === id) ? id + '-' + Date.now().toString(36).slice(-4) : id;
+    const used = S.allClients.map(x => x.hue), hue = [340, 95, 180, 300, 60, 230, 0, 130].find(h => !used.includes(h)) ?? Math.floor(Math.random() * 360);
+    const local = (S.allClients.find(x => x.local?.items)?.local.items || []).map(x => ({t:x.t, done:false}));
+    const doc = {name, tag:v('nc-tag'), handle:v('nc-handle'), website:v('nc-web'), city:v('nc-city'), notes:v('nc-notes'), order:(Math.max(0, ...S.allClients.map(x => x.order || 0)) + 1), hue,
+      target:{count:Math.max(0, Number(v('nc-target')) || 0)}, ads:{budget:v('nc-budget'), status:v('nc-budget') ? 'Planned' : 'Not set'}, brand:{language:v('nc-lang')}, plan:{}, next:'Draft the growth plan', status:'active', local:{items:local}, competitors:[], createdAt:Date.now()};
+    if (await write(() => db.collection('clients').doc(uid).set(doc), 'Client added')){ ui.addClient = false; go('client', uid, 'overview'); }
+    return;
+  }
+  if (k === 'ask'){ const text = v('ask-t'); if (!text) return;
+    if (await saveAsks(c, [...(c.asks || []), {id:Date.now().toString(36), kind:v('ask-k'), text:text.slice(0, 400), by:myMember || '', at:Date.now(), status:'open'}].slice(-60), 'Added')){ ui.keep['ask-' + c.id] = ''; render(); }
+    return;
+  }
+  if (k === 'followers'){ const n = Number(v('fo-n')), d_ = v('fo-d') || today; if (!(n >= 0) || v('fo-n') === '') return;
+    await upd(c.id, {followers:[...(c.followers || []).filter(x => x.d !== d_), {d:d_, n}].sort((a,b) => a.d.localeCompare(b.d)).slice(-200)}, 'Count added'); return; }
+  if (k === 'folGoal'){ await upd(c.id, {followerGoal:Math.max(0, Number(v('fo-goal')) || 0)}, 'Goal saved'); return; }
+  if (k === 'details'){ await upd(c.id, {name:v('d-name') || c.name, tag:v('d-tag'), handle:v('d-handle'), website:v('d-web'), city:v('d-city'), source:v('d-source'), fee:v('d-fee'), billingDay:Math.min(28, Math.max(0, Number(v('d-bill')) || 0))}, 'Details saved'); return; }
   if (k === 'comment'){
     const tid = f.closest('[data-tid]').dataset.tid, t = S.tasks.find(x => x.id === tid); const text = v('cm-' + tid), nd = v('nd-' + tid);
     if (!t || !text) return;
@@ -999,7 +1631,7 @@ document.addEventListener('submit', async e => {
   else if (k === 'quickTask'){ const title = v('qt-' + c.id); if (!title) return; if (await addTask({title, client:c.id, kind:v('qk-' + c.id)})){ ui.keep['qt-' + c.id] = ''; toast('Task added'); render(); } }
   else if (k === 'task'){ const title = v('t-title'); if (!title) return; ['t-client','t-kind','t-who'].forEach(id => ui.keep[id] = v(id));
     if (await addTask({title, client:v('t-client'), kind:v('t-kind'), assignee:v('t-who'), due:v('t-due')})){ ui.keep['t-title'] = ''; toast('Task added'); render(); } }
-  else if (k === 'plan'){ const ok = await upd(c.id, {target:{count:Math.max(0, Number(v('p-count')) || 0)}, plan:{goal:v('p-goal'), audience:v('p-aud'), focus:v('p-focus'), pillars:v('p-pil').split(',').map(s => s.trim()).filter(Boolean)}}, 'Plan saved'); if (ok){ ui.editing = null; render(); } }
+  else if (k === 'plan'){ const ok = await savePlanVersion(c, {target:{count:Math.max(0, Number(v('p-count')) || 0)}, plan:{goal:v('p-goal'), audience:v('p-aud'), focus:v('p-focus'), pillars:v('p-pil').split(',').map(s => s.trim()).filter(Boolean)}}, 'Edited by hand'); if (ok){ ui.editing = null; render(); } }
   else if (k === 'insight') readInsight(c);
   else if (k === 'chat'){ const t = v('chat-' + c.id); if (t && sample && !ui.busy['chat:' + c.id]) chat(c, t); }
   else if (k === 'prompts'){ if (sample) makePrompts(c); }
@@ -1017,6 +1649,12 @@ document.addEventListener('paste', e => {
   const files = [...(e.clipboardData?.files || [])].filter(f => /^image\//.test(f.type));
   if (files.length){ e.preventDefault(); addPending(files); }
 });
+document.addEventListener('dragstart', e => { const cd = e.target.closest && e.target.closest('.card[data-tid]'); if (cd){ e.dataTransfer.setData('text/plain', cd.dataset.tid); e.dataTransfer.effectAllowed = 'move'; cd.classList.add('dragging'); } });
+document.addEventListener('dragend', e => { document.querySelectorAll('.dragging,.col.over').forEach(x => x.classList.remove('dragging', 'over')); });
+document.addEventListener('dragover', e => { const col = e.target.closest && e.target.closest('.col[data-col]'); if (col){ e.preventDefault(); document.querySelectorAll('.col.over').forEach(x => x !== col && x.classList.remove('over')); col.classList.add('over'); } });
+document.addEventListener('drop', async e => { const col = e.target.closest && e.target.closest('.col[data-col]'); if (!col) return; e.preventDefault(); col.classList.remove('over');
+  const tid = e.dataTransfer.getData('text/plain'), t = S.tasks.find(x => x.id === tid); if (!t || t.status === col.dataset.col) return;
+  await write(() => tasksCol().doc(tid).update({status:col.dataset.col, doneMonth: col.dataset.col === 'done' ? monthKey : ''}), 'Moved to ' + STATUS[col.dataset.col]); });
 document.addEventListener('dragover', e => { const d = e.target.closest && e.target.closest('#drop'); if (d){ e.preventDefault(); d.classList.add('on'); } });
 document.addEventListener('dragleave', e => { const d = e.target.closest && e.target.closest('#drop'); if (d) d.classList.remove('on'); });
 document.addEventListener('drop', e => { const d = e.target.closest && e.target.closest('#drop'); if (d){ e.preventDefault(); addPending(e.dataTransfer.files); } });
@@ -1026,6 +1664,7 @@ function listen(name, sort){
   db.collection(name).onSnapshot(snap => {
     S[name] = snap.docs.map(d => ({id:d.id, ...d.data()}));
     if (sort) S[name].sort(sort);
+    if (name === 'clients'){ S.allClients = S.clients; S.clients = S.allClients.filter(c => c.status !== 'archived'); }
     loaded[name] = true; schedule();
   }, () => { loaded[name] = true; schedule(); });
 }
@@ -1045,10 +1684,13 @@ async function boot(){
   listen('clients', (a,b) => (a.order ?? 99) - (b.order ?? 99));
   listen('insights');
   listen('prompts');
+  listen('reports');
   render();
   try { sample = await claude.use('sample'); } catch(e){}
   if (sample){ try { const l = await sample.limits(); canImages = !!l.images; maxImages = l.images ? l.images.maxCount : 0; canTools = !!l.tools; } catch(e){} }
   try { assets = await claude.use('assets'); } catch(e){}
+  try { downloads = await claude.use('downloads'); } catch(e){}
+  try { mcp = await claude.use('mcp'); } catch(e){}
   render();
 }
 if (window.claude) boot(); else $('#main').innerHTML = '<h1>Reach Story Desk</h1><p class="sub">Open this page from Claude to load your desk.</p>';
