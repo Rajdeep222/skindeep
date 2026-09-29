@@ -307,7 +307,7 @@ button.alert:focus-visible{outline:2px solid var(--accent)}
 .cmdi .muted{font-size:12px}
 .cmdi[aria-selected="true"],.cmdi:hover{background:var(--sunk)}
 /* report: always light, fixed palette so the PDF looks the same for every viewer */
-.repwrap{overflow-x:auto;margin-top:18px;padding:18px;background:var(--sunk);border-radius:var(--r)}
+.repwrap{overflow:hidden;margin-top:18px;padding:18px;background:var(--sunk);border-radius:var(--r)}
 .rep{width:794px;margin:0 auto;background:#ffffff;color:#16181c;padding:48px 56px;font-family:var(--f);box-shadow:0 8px 30px -10px rgb(0 0 0 / .25)}
 .rep-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:2px solid hsl(var(--rh) 60% 42%)}
 .rep-brand{font-family:var(--m);font-size:15px;color:#16181c}
@@ -332,6 +332,38 @@ button.alert:focus-visible{outline:2px solid var(--accent)}
 .rep-v{text-align:right;font-family:var(--m);white-space:nowrap}
 .rep-chart{border:1px solid #eceef1;border-radius:10px;padding:10px}
 .rep-foot{display:flex;justify-content:space-between;margin-top:34px;padding-top:12px;border-top:1px solid #eceef1;font-size:11.5px;color:#6b6f76;font-family:var(--m)}
+
+/* ---- v8: report editor ---- */
+.mark.home{all:unset;cursor:pointer;display:block;font-family:var(--m);font-size:13px;border-radius:6px;padding:2px 4px;margin:-2px -4px}
+.mark.home:hover{color:var(--accent)}
+.mark.home:focus-visible{outline:2px solid var(--accent)}
+.repgrid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start;margin-top:6px}
+.repside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);max-height:calc(100vh - 32px);overflow-y:auto;display:flex;flex-direction:column;padding-bottom:8px}
+.repside .sec{padding:14px 16px}
+.repgrid .repwrap{margin-top:0}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.col2 .b{justify-content:center;white-space:normal;text-align:center}
+.col2 .b.pri{grid-column:1/-1}
+.chk{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px}
+.chk .cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none;color:var(--accent-ink)}
+.chk.ok .cb{background:var(--good);border-color:var(--good)}
+.chk.ok .grow{color:var(--muted)}
+.anform{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.anform label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--muted);min-width:0}
+.anform input{font-family:var(--m);font-size:13px;padding:6px 8px;width:100%}
+.secs{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.secs .check{padding:4px 0;font-size:13px}
+.rep-note{margin:16px 0 4px;padding:14px 16px;border-left:3px solid hsl(var(--rh) 60% 42%);background:#fafafa;font-size:14px;line-height:1.6;color:#26292e;font-style:italic}
+.rep-an{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rep-an > div{border:1px solid #eceef1;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;background:#ffffff}
+.rep-al{font-size:11.5px;color:#565a61}
+.rep-an b{font-family:var(--m);font-size:22px;font-weight:500;color:#16181c;letter-spacing:-.02em;line-height:1.15}
+.rep-an b small{font-size:13px;color:#6b6f76}
+.rep-ch{font-size:11.5px;color:#6b6f76;font-family:var(--m)}
+.rep-ch.up{color:#17794a}
+.rep-ch.down{color:#c2302a}
+.rep-der{margin:10px 0 0;font-size:13px;color:#3a3e45;background:hsl(var(--rh) 60% 96%);border-radius:8px;padding:9px 12px}
+@media (max-width:1100px){.repgrid{grid-template-columns:minmax(0,1fr)}.repside{position:static;max-height:none}}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -512,7 +544,8 @@ document.addEventListener('focusout', () => setTimeout(() => { if (pendingRender
 
 /* ---------- render ---------- */
 const IC = {
-  today:'<path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/><circle cx="12" cy="12" r="4"/>',
+  today:'<path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10M10 20v-5h4v5"/>',
+  reports:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 17v-3M13 17v-5M16 17v-2"/>',
   tasks:'<path d="M10 6h10M10 12h10M10 18h10M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17"/>',
   calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
   clients:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 5.2a3 3 0 0 1 0 5.6M21 20c0-2.6-1.6-4.5-4-5.2"/>',
@@ -524,29 +557,33 @@ const ico = k => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IC[k]
 const LOADING = '<span class="sk"></span><span class="sk" style="width:72%"></span><span class="sk" style="width:86%"></span>';
 
 function render(){
-  $('#main').classList.toggle('wide', (ui.view === 'tasks' && ui.taskView === 'board') || (ui.view === 'calendar' && ui.calMode === 'grid') || ui.view === 'report');
+  $('#main').classList.toggle('wide', (ui.view === 'tasks' && ui.taskView === 'board') || (ui.view === 'calendar' && ui.calMode === 'grid') || ui.view === 'report' || ui.view === 'reports' && false);
   if (role === 'editor'){ $('#side').innerHTML = sideEditor(); $('#tabs').innerHTML = ''; $('#main').innerHTML = viewEditor(); return; }
   $('#side').innerHTML = side();
-  $('#tabs').innerHTML = [['today','Today'],['tasks','Tasks'],['clients','Pages'],['calendar','Calendar']].map(([v,l]) =>
+  $('#tabs').innerHTML = [['today','Home'],['tasks','Tasks'],['clients','Pages'],['reports','Reports']].map(([v,l]) =>
     `<button data-go="${v}" aria-current="${ui.view === v || (v === 'clients' && (ui.view === 'client' || ui.view === 'report'))}">${ico(v)}<span>${l}</span></button>`).join('') +
     `<button data-act="cmd" aria-label="Search">${ico('search')}<span>Search</span></button>`;
   const c = C(ui.cid);
   const v = ui.view === 'client' && c ? viewClient(c) : ui.view === 'report' && c ? viewReport(c) :
-    ui.view === 'clients' ? viewClients() : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
+    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
   $('#main').innerHTML = v;
   if (ui.view === 'client' && c && ui.ctab === 'followers') wireChart();
+  if (ui.view === 'report') fitRep();
 }
+function fitRep(){ const el = document.getElementById('rep'), w = el && el.parentElement; if (!el) return; el.style.zoom = ''; const z = Math.min(1, (w.clientWidth - 36) / 794); if (z < 1) el.style.zoom = z.toFixed(3); }
+addEventListener('resize', () => { if (ui.view === 'report') fitRep(); });
 
 const navBtn = (v, l, extra = '') => `<button data-go="${v}" aria-current="${ui.view === v || (v === 'clients' && ui.view === 'clients')}">${ico(v)}<span class="nm">${l}</span>${extra}</button>`;
 function side(){
   const od = openTasks().filter(t => t.due && t.due < today).length, open = openTasks().length;
   const me = M(myMember);
-  return `<div class="mark">the.reach.story<span>desk</span></div>
+  return `<button class="mark home" data-go="today" aria-label="Home">the.reach.story<span>desk</span></button>
   <button class="search" data-act="cmd">${ico('search')}<span>Search</span><kbd>Ctrl K</kbd></button>
   <nav class="nav" aria-label="Sections">
-    ${navBtn('today', 'Today', od ? `<span class="ct badge" title="${od} overdue">${od}</span>` : '')}
+    ${navBtn('today', 'Home', od ? `<span class="ct badge" title="${od} overdue">${od}</span>` : '')}
     ${navBtn('tasks', 'Tasks', open ? `<span class="ct">${open}</span>` : '')}
     ${navBtn('calendar', 'Calendar')}
+    ${navBtn('reports', 'Reports')}
     ${navBtn('clients', 'All pages')}
     <div class="grp"><span>Pages</span><button class="addc" data-act="newClient" aria-label="Add a client" title="Add a client">${ico('plus')}</button></div>
     ${S.clients.map(c => { const p = pace(c); return `<button data-go="client" data-cid="${esc(c.id)}" aria-current="${(ui.view === 'client' || ui.view === 'report') && ui.cid === c.id}">${dot(c)}<span class="nm">${esc(c.name)}</span><span class="pdot ${p.cls}" title="${esc(p.label)}"></span></button>`; }).join('')}
@@ -559,7 +596,8 @@ function side(){
 /* ---------- command bar ---------- */
 function cmdItems(){
   const it = [
-    {l:'Today', k:'Go to', run:() => go('today')},
+    {l:'Home', k:'Go to', run:() => go('today')},
+    {l:'Reports', k:'Go to', run:() => go('reports')},
     {l:'Tasks: list', k:'Go to', run:() => { ui.taskView = 'list'; go('tasks'); }},
     {l:'Tasks: board', k:'Go to', run:() => { ui.taskView = 'board'; go('tasks'); }},
     {l:'Overdue tasks', k:'Go to', run:() => { ui.filt = {client:'', who:'', done:false, preset:'overdue'}; go('tasks'); }},
@@ -1182,7 +1220,7 @@ async function readInsight(c){
     let r = {};
     if (sample && !queue){
       const useImg = canImages && files.length;
-      r = await sample.json(`${preamble}\n\nYou are the analyst for ${c.name}. ${useImg ? `Read the attached screenshot(s): ${type}.` : `Here are notes/numbers the owner typed: ${type}.`} ${note ? 'Owner’s note: ' + note : ''}\n${type === 'Competitor post' ? 'This is a COMPETITOR or reference account. Learnings = what we should borrow for our client and how to do it better.' : 'Extract every number you can see. Judge performance against an account of this size and against earlier insights.'}\n\nEarlier insights: ${JSON.stringify(clientInsights(c.id).slice(0, 6).map(i => ({date:i.date, title:i.title, metrics:i.metrics})))}\nClient: ${JSON.stringify(clientContext(c, {insights:0}).client)}\n\nReply with only JSON: {"title": "short label, e.g. Carousel: bridal set · 3 Oct", "date": "YYYY-MM-DD if visible else empty", "metrics": {"Reach": 1234, "...": "..."}, "summary": "2 sentences", "learnings": ["3 specific, reusable learnings"], "next": ["2 concrete next actions"]}`,
+      r = await sample.json(`${preamble}\n\nYou are the analyst for ${c.name}. ${useImg ? `Read the attached screenshot(s): ${type}.` : `Here are notes/numbers the owner typed: ${type}.`} ${note ? 'Owner’s note: ' + note : ''}\n${type === 'Competitor post' ? 'This is a COMPETITOR or reference account. Learnings = what we should borrow for our client and how to do it better.' : (type === 'Account overview' ? 'This is the Instagram account overview for a period. Use exactly these metric names when visible: Accounts reached, Non-followers (the % of reach from non-followers), Accounts engaged, Interactions, Views, Profile visits, External link taps, New followers (net follows), Followers (total). Put the period in the title and set date to the last day of the period. ' : '') + 'Extract every number you can see. Judge performance against an account of this size and against earlier insights.'}\n\nEarlier insights: ${JSON.stringify(clientInsights(c.id).slice(0, 6).map(i => ({date:i.date, title:i.title, metrics:i.metrics})))}\nClient: ${JSON.stringify(clientContext(c, {insights:0}).client)}\n\nReply with only JSON: {"title": "short label, e.g. Carousel: bridal set · 3 Oct", "date": "YYYY-MM-DD if visible else empty", "metrics": {"Reach": 1234, "...": "..."}, "summary": "2 sentences", "learnings": ["3 specific, reusable learnings"], "next": ["2 concrete next actions"]}`,
         useImg ? {cache:false, images:files.slice(0, maxImages || 5)} : {cache:false});
     }
     const doc = {client:c.id, type, note, date: (r.date && /^\d{4}-\d\d-\d\d$/.test(r.date)) ? r.date : date, assets:ids,
@@ -1326,62 +1364,155 @@ function reviewStrategy(c){
 }
 
 /* ----- Monthly report ----- */
-const REP_KEYS = [['Reach', /^(accounts )?reach(ed)?$/i], ['Views', /^(views|plays|impressions)$/i], ['Interactions', /^(interactions|engagement|accounts engaged)$/i], ['Likes', /^likes$/i], ['Comments', /^comments$/i], ['Shares', /^(shares|sends)$/i], ['Saves', /^saves$/i], ['Profile visits', /^profile (visits|activity)$/i], ['Leads / messages', /^(leads|results|messaging conversations( started)?|conversations|calls)$/i], ['Ad spend', /^(amount spent|spend)$/i]];
-const num = v => { if (typeof v === 'number') return v; const m = String(v).replace(/[,₹$\s]/g, '').match(/^(-?[\d.]+)([kKmM])?/); if (!m) return NaN; return Number(m[1]) * (m[2] ? (/k/i.test(m[2]) ? 1e3 : 1e6) : 1); };
+const num = v => { if (typeof v === 'number') return v; const m = String(v ?? '').replace(/[,₹$\s]/g, '').match(/^(-?[\d.]+)([kKmM])?/); if (!m) return NaN; return Number(m[1]) * (m[2] ? (/k/i.test(m[2]) ? 1e3 : 1e6) : 1); };
+const AN = [
+  {k:'reached', l:'Accounts reached', re:/^(accounts )?reach(ed)?$/i},
+  {k:'nonFollowerPct', l:'Reach from non-followers', re:/non.?followers?/i, pct:true},
+  {k:'newFollowers', l:'New followers', re:/^(new followers|follows|followers gained|net followers|net follows)$/i},
+  {k:'views', l:'Views', re:/^(views|plays|impressions)$/i, add:true},
+  {k:'engaged', l:'Accounts engaged', re:/^accounts engaged$/i},
+  {k:'interactions', l:'Interactions', re:/^(interactions|content interactions|engagement)$/i, add:true},
+  {k:'profileVisits', l:'Profile visits', re:/^profile (visits|activity)$/i, add:true},
+  {k:'linkTaps', l:'Link and website taps', re:/(external )?link taps|website taps|link clicks/i, add:true},
+  {k:'leads', l:'Leads and messages', re:/^(leads|results|messaging conversations( started)?|conversations|calls)$/i, add:true},
+  {k:'adSpend', l:'Ad spend', re:/^(amount spent|spend|ad spend)$/i, money:true, add:true}
+];
+const insMonth = i => (i.date || iso(new Date(i.createdAt || 0))).slice(0, 7);
+const prevMonth = mk => { const [y, m] = mk.split('-').map(Number); return iso(new Date(y, m - 2, 1)).slice(0, 7); };
+const repDoc = (c, mk) => S.reports.find(r => r.id === `${c.id}_${mk}`) || null;
+function monthStats(c, mk){
+  const ins = S.insights.filter(i => i.client === c.id && !i.unread && i.type !== 'Competitor post' && insMonth(i) === mk);
+  const overview = ins.filter(i => i.type === 'Account overview').sort((a,b) => (b.createdAt||0) - (a.createdAt||0))[0];
+  const auto = {}, src = {};
+  if (overview) for (const a of AN) for (const [k, v] of Object.entries(overview.metrics || {})) if (a.re.test(k.trim()) && Number.isFinite(num(v))){ auto[a.k] = num(v); src[a.k] = 'Account overview'; }
+  for (const a of AN.filter(a => a.add)) if (auto[a.k] === undefined){
+    let sum = 0, hit = false;
+    for (const i of ins.filter(i => i !== overview)) for (const [k, v] of Object.entries(i.metrics || {})) if (a.re.test(k.trim()) && Number.isFinite(num(v))){ sum += num(v); hit = true; }
+    if (hit){ auto[a.k] = sum; src[a.k] = 'added up from tracked posts and ads'; }
+  }
+  const f = folSorted(c), start = [...f].reverse().find(x => x.d < mk + '-01'), end = [...f].reverse().find(x => x.d.slice(0,7) <= mk);
+  if (auto.newFollowers === undefined && start && end && end.d.slice(0,7) === mk){ auto.newFollowers = end.n - start.n; src.newFollowers = 'your follower log'; }
+  const manual = repDoc(c, mk)?.stats || {}, val = {};
+  for (const a of AN){ const m = manual[a.k]; if (m !== undefined && m !== '' && Number.isFinite(num(m))){ val[a.k] = num(m); src[a.k] = 'entered by you'; } else if (auto[a.k] !== undefined) val[a.k] = auto[a.k]; }
+  const der = {};
+  if (val.reached && (val.engaged || val.interactions)) der.engRate = (val.engaged || val.interactions) / val.reached * 100;
+  if (val.adSpend && val.leads) der.cpl = val.adSpend / val.leads;
+  return {val, auto, src, der, overview, ins, end};
+}
 function reportData(c, mk){
   const done = S.tasks.filter(t => t.client === c.id && t.status === 'done' && t.doneMonth === mk);
   const byKind = {}; done.forEach(t => { const k = SHORT[t.kind] || 'Other'; byKind[k] = (byKind[k] || 0) + 1; });
   const content = done.filter(t => CONTENT.includes(t.kind)).length;
-  const ins = S.insights.filter(i => i.client === c.id && !i.unread && i.type !== 'Competitor post' && (i.date || iso(new Date(i.createdAt || 0))).slice(0, 7) === mk);
-  const totals = {};
-  for (const i of ins) for (const [k, v] of Object.entries(i.metrics || {})) { const rk = REP_KEYS.find(([, re]) => re.test(k.trim())); const n = num(v); if (rk && Number.isFinite(n)) totals[rk[0]] = (totals[rk[0]] || 0) + n; }
+  const cur = monthStats(c, mk), prev = monthStats(c, prevMonth(mk));
   const score = i => { for (const [k, v] of Object.entries(i.metrics || {})) if (/reach|views|plays/i.test(k) && Number.isFinite(num(v))) return num(v); return 0; };
-  const top = ins.filter(i => /post|reel|story/i.test(i.type)).map(i => ({title:i.title, s:score(i), learn:(i.learnings || [])[0] || ''})).filter(x => x.s).sort((a,b) => b.s - a.s).slice(0, 3);
-  const f = folSorted(c), start = [...f].reverse().find(x => x.d < mk + '-01') || f.find(x => x.d.slice(0,7) === mk), end = [...f].reverse().find(x => x.d.slice(0,7) <= mk);
-  const fol = start && end ? {start:start.n, end:end.n, gain:end.n - start.n, series:f.filter(x => x.d.slice(0,7) <= mk).slice(-12)} : null;
-  const learn = ins.flatMap(i => i.learnings || []).slice(0, 4);
-  return {done, byKind, content, target:target(c), ins, totals, top, fol, learn, next:eventsFor(c.id).filter(e => e.d.slice(0,7) > mk).slice(0, 3)};
+  const top = cur.ins.filter(i => /post|reel|story/i.test(i.type)).map(i => ({title:i.title, s:score(i), learn:(i.learnings || [])[0] || ''})).filter(x => x.s).sort((a,b) => b.s - a.s).slice(0, 3);
+  const f = folSorted(c), series = f.filter(x => x.d.slice(0,7) <= mk).slice(-12);
+  return {done, byKind, content, target:target(c), cur, prev, top, series, followersNow:cur.end ? cur.end.n : null,
+    learn:cur.ins.flatMap(i => i.learnings || []).slice(0, 4), next:eventsFor(c.id).filter(e => e.d.slice(0,7) > mk).slice(0, 3)};
 }
 function monthLabel(mk){ const [y, m] = mk.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString(undefined, {month:'long', year:'numeric'}); }
-function repNarrative(c, mk, d){
-  const saved = S.reports.find(r => r.id === `${c.id}_${mk}`);
-  if (saved && saved.narrative) return {...saved.narrative, ai:true};
-  const hl = [];
-  hl.push(`${d.content} piece${d.content === 1 ? '' : 's'} of content delivered against a plan of ${d.target}.`);
-  if (d.fol) hl.push(`Followers ${d.fol.gain >= 0 ? 'grew' : 'changed'} by ${d.fol.gain >= 0 ? '+' : ''}${fmtN(d.fol.gain)} to ${fmtN(d.fol.end)}.`);
-  if (d.totals.Reach) hl.push(`${fmtN(d.totals.Reach)} accounts reached across the posts we tracked.`);
-  if (d.totals['Leads / messages']) hl.push(`${fmtN(d.totals['Leads / messages'])} leads and messages from ads and posts.`);
-  return {headline:`${monthLabel(mk).split(' ')[0]} at a glance`, summary:c.plan?.focus ? `This month’s focus: ${c.plan.focus}` : '', highlights:hl,
-    next:d.next.map(e => `${e.name} (${fmt(e.d)}): ${e.prep}`).slice(0, 3), needs:['Photos and short clips of new work, products or events', 'Quick approvals on drafts we send on WhatsApp'], ai:false};
+const chg = (a, b) => (Number.isFinite(a) && Number.isFinite(b) && b > 0) ? (a - b) / b * 100 : null;
+const fmtV = (a, v) => v === undefined || v === null || !Number.isFinite(v) ? '—' : a.pct ? v.toFixed(v < 10 ? 1 : 0) + '%' : a.money ? '₹' + fmtN(Math.round(v)) : (a.k === 'newFollowers' && v > 0 ? '+' : '') + fmtN(Math.round(v));
+function autoHighlights(c, mk, d){
+  const v = d.cur.val, p = d.prev.val, h = [];
+  const say = (k, text) => { const x = chg(v[k], p[k]); return text + (x !== null ? `, ${x >= 0 ? 'up' : 'down'} ${Math.abs(x).toFixed(0)}% on last month` : '') + '.'; };
+  if (v.reached) h.push(say('reached', `Reached ${fmtN(v.reached)} accounts`) + (v.nonFollowerPct ? ` ${v.nonFollowerPct.toFixed(0)}% of them didn’t follow ${c.name} yet.` : ''));
+  if (v.newFollowers) h.push(say('newFollowers', `${v.newFollowers > 0 ? 'Gained' : 'Changed by'} ${fmtN(v.newFollowers)} followers`));
+  if (v.leads) h.push(say('leads', `${fmtN(v.leads)} leads and messages`) + (d.cur.der.cpl ? ` Each lead cost about ₹${fmtN(Math.round(d.cur.der.cpl))}.` : ''));
+  h.push(`${d.content} piece${d.content === 1 ? '' : 's'} of content delivered against a plan of ${d.target}.`);
+  return h.slice(0, 4);
 }
+// Only the part of a calendar note that is about this client, never other clients' names.
+function ownPrep(c, e){
+  const others = S.allClients.filter(x => x.id !== c.id).map(x => x.name.split(' ')[0].replace(/'s$/i, '')).concat(['RK', 'DJ', 'Om', 'Eroe', 'Master', 'Reach']).filter(n => !c.name.startsWith(n));
+  const parts = e.prep.split(/(?<=\.)\s+/).filter(sn => !others.some(n => new RegExp('\\b' + n + '\\b').test(sn)));
+  const txt = parts.join(' ').replace(new RegExp('^' + c.name.split(' ')[0] + '[^:]*:\\s*'), '').trim();
+  return txt || 'Festive content and offers planned around this date.';
+}
+function repNarrative(c, mk, d){
+  const saved = repDoc(c, mk)?.narrative;
+  if (saved) return {...saved, ai:true};
+  return {headline:`${monthLabel(mk).split(' ')[0]} at a glance`, summary:c.plan?.focus ? `This month’s focus: ${c.plan.focus}` : '', highlights:autoHighlights(c, mk, d),
+    next:d.next.map(e => `${e.name} (${fmt(e.d)}): ${ownPrep(c, e)}`).slice(0, 3), needs:['Photos and short clips of new work, products or events', 'Quick approvals on drafts we send on WhatsApp'], ai:false};
+}
+function readiness(c, mk, d){
+  return [
+    {ok:!!d.cur.overview, l:'Account overview screenshot for the month', fix:'addOverview', fixL:'Add screenshot'},
+    {ok:!!(d.cur.end && d.cur.end.d.slice(0,7) === mk), l:'A follower count logged this month', fix:'goFollowers', fixL:'Log count'},
+    {ok:d.content > 0, l:'Delivered content marked Done', fix:'goTasks', fixL:'Open tasks'},
+    {ok:!!repDoc(c, mk)?.narrative, l:'Wording polished (optional)', fix:sample ? 'repAi' : '', fixL:'Polish'}
+  ];
+}
+const REP_SECTIONS = [['analytics','Analytics'],['highlights','Highlights'],['followers','Follower growth'],['delivered','What we delivered'],['top','Top posts'],['next','Next month'],['needs','What we need'],['note','Note from us']];
+async function saveRep(c, mk, patch, ok){
+  const cur = repDoc(c, mk); const base = cur ? Object.fromEntries(Object.entries(cur).filter(([k]) => k !== 'id')) : {client:c.id, month:mk, status:'draft'};
+  return write(() => db.collection('reports').doc(`${c.id}_${mk}`).set({...base, ...patch, at:Date.now()}), ok);
+}
+const repMonths = () => [0, 1, 2, 3, 4, 5].map(i => iso(new Date(now.getFullYear(), now.getMonth() - i, 1)).slice(0, 7));
+
+/* Reports hub */
+function viewReports(){
+  const mk = ui.rMonth || monthKey;
+  return `<header class="top"><div><p class="eyebrow">One report per client per month · built from your saved data</p><h1>Reports</h1></div>
+    <label class="vh" for="rh-m">Month</label><select id="rh-m" data-change="repMonth">${repMonths().map(m => `<option value="${m}"${m === mk ? ' selected' : ''}>${esc(monthLabel(m))}</option>`).join('')}</select></header>
+  <div class="sec"><div class="items">${S.clients.map(c => { const d = reportData(c, mk), r = repDoc(c, mk), rd = readiness(c, mk, d), ready = rd.slice(0, 3).filter(x => x.ok).length;
+    const st = r?.status === 'sent' ? ['good', 'Sent ' + (r.sentAt ? fmt(iso(new Date(r.sentAt))) : '')] : r ? ['warn', 'Draft'] : ['neutral', 'Not started'];
+    return `<div class="it click" data-act="openReportFor" data-cid="${esc(c.id)}" tabindex="0" role="link"><div>
+      <div class="t" style="font-weight:500">${dot(c)} ${esc(c.name)} <span class="pill ${st[0]}" style="margin-left:6px">${esc(st[1])}</span></div>
+      <div class="s"><span>${ready}/3 data ready</span><span>${d.content}/${d.target} content</span>${d.cur.val.reached ? `<span>${fmtN(d.cur.val.reached)} reached</span>` : ''}${d.cur.val.newFollowers ? `<span>${fmtV(AN[2], d.cur.val.newFollowers)} followers</span>` : ''}</div></div>
+      <div class="c"><span class="lnk">Open →</span></div></div>`; }).join('') || `<p class="empty">${LOADING}</p>`}</div>
+  <p class="muted" style="font-size:12px;margin:10px 0 0">Best routine: on the 1st, paste each client’s Instagram “Account overview” (last 30 days) screenshot into Insights. The reports fill themselves.</p></div>`;
+}
+
+/* Report editor */
 function viewReport(c){
-  const mk = ui.rMonth || monthKey, d = reportData(c, mk), nv = repNarrative(c, mk, d);
-  const months = [0, 1, 2, 3, 4, 5].map(i => iso(new Date(now.getFullYear(), now.getMonth() - i, 1)).slice(0, 7));
-  const tiles = [[`${d.content}<small>/${d.target}</small>`, 'Content delivered'], d.fol ? [`${d.fol.gain >= 0 ? '+' : ''}${fmtN(d.fol.gain)}`, `Followers · now ${fmtN(d.fol.end)}`] : null,
-    ...Object.entries(d.totals).slice(0, 4).map(([k, v]) => [k === 'Ad spend' ? '₹' + fmtN(Math.round(v)) : fmtN(Math.round(v)), k])].filter(Boolean).slice(0, 4);
-  const hue = c.hue ?? 220;
-  return `<nav class="crumb" aria-label="Breadcrumb"><button class="lnk" data-go="client" data-cid="${esc(c.id)}">${esc(c.name)}</button><span>/</span><span>Monthly report</span></nav>
-  <header class="top"><div><p class="eyebrow">A client-ready report built from your saved data. No AI needed; Claude can polish the wording.</p><h1>Monthly report</h1></div>
-    <div class="row"><label class="vh" for="rep-m">Month</label><select id="rep-m" data-change="repMonth">${months.map(m => `<option value="${m}"${m === mk ? ' selected' : ''}>${esc(monthLabel(m))}</option>`).join('')}</select></div></header>
-  <div class="row" style="margin-top:14px">
-    <button class="b pri" data-act="repPdf" ${ui.busy.pdf ? 'disabled' : ''}>${ui.busy.pdf ? 'Making PDF…' : 'Download PDF'}</button>
-    ${sample ? `<button class="b" data-act="repAi" ${ui.busy['rep:' + c.id] ? 'disabled' : ''}>${ui.busy['rep:' + c.id] ? 'Writing…' : nv.ai ? 'Rewrite with Claude' : 'Polish wording with Claude'}</button>` : ''}
-    <button class="b" data-act="repCopy">Copy WhatsApp summary</button>
-    ${ui.out['rep:' + c.id] ? `<span class="late" style="font-size:13px">${esc(ui.out['rep:' + c.id])}</span>` : ''}</div>
+  const mk = ui.rMonth || monthKey, d = reportData(c, mk), nv = repNarrative(c, mk, d), r = repDoc(c, mk) || {}, hide = r.hide || [];
+  const show = k => !hide.includes(k), rd = readiness(c, mk, d), hue = c.hue ?? 220;
+  const tiles = AN.filter(a => d.cur.val[a.k] !== undefined).slice(0, 8);
+  const der = [d.cur.der.engRate ? `Engagement rate ${d.cur.der.engRate.toFixed(1)}%` : '', d.cur.val.nonFollowerPct ? `${d.cur.val.nonFollowerPct.toFixed(0)}% of reach was new people` : '', d.cur.der.cpl ? `Cost per lead ₹${fmtN(Math.round(d.cur.der.cpl))}` : ''].filter(Boolean);
+  return `<nav class="crumb" aria-label="Breadcrumb"><button class="lnk" data-go="reports">Reports</button><span>/</span><button class="lnk" data-go="client" data-cid="${esc(c.id)}">${esc(c.name)}</button><span>/</span><span>${esc(monthLabel(mk))}</span></nav>
+  <div class="repgrid">
+  <aside class="repside">
+    <div class="sec" style="margin-top:0">
+      <div class="row" style="justify-content:space-between"><label class="vh" for="rep-m">Month</label><select id="rep-m" data-change="repMonth">${repMonths().map(m => `<option value="${m}"${m === mk ? ' selected' : ''}>${esc(monthLabel(m))}</option>`).join('')}</select>
+      <span class="pill ${r.status === 'sent' ? 'good' : r.at ? 'warn' : 'neutral'}">${r.status === 'sent' ? 'Sent' : r.at ? 'Draft' : 'Not started'}</span></div>
+      <div class="col2">
+        <button class="b pri" data-act="repPdf" ${ui.busy.pdf ? 'disabled' : ''}>${ui.busy.pdf ? 'Making PDF…' : 'Download PDF'}</button>
+        <button class="b" data-act="repCopy">Copy for WhatsApp</button>
+        ${sample ? `<button class="b" data-act="repAi" ${ui.busy['rep:' + c.id] ? 'disabled' : ''}>${ui.busy['rep:' + c.id] ? 'Writing…' : nv.ai ? 'Rewrite wording' : 'Polish wording with Claude'}</button>` : ''}
+        ${r.status === 'sent' ? `<button class="b" data-act="repStatus" data-s="draft">Back to draft</button>` : `<button class="b" data-act="repStatus" data-s="sent">Mark as sent</button>`}
+      </div>
+      ${ui.out['rep:' + c.id] ? `<p class="late" style="font-size:13px;margin:8px 0 0">${esc(ui.out['rep:' + c.id])}</p>` : ''}
+    </div>
+    <div class="sec"><div class="lab">Ready to send?</div>
+      ${rd.map(x => `<div class="chk ${x.ok ? 'ok' : ''}"><span class="cb">${x.ok ? '✓' : ''}</span><span class="grow">${esc(x.l)}</span>${!x.ok && x.fix ? `<button class="lnk" data-act="${x.fix}">${esc(x.fixL)}</button>` : ''}</div>`).join('')}</div>
+    <div class="sec"><div class="lab">Analytics<span class="acts muted">vs ${esc(monthLabel(prevMonth(mk)).split(' ')[0])}</span></div>
+      <form class="anform" data-form="repStats">${AN.map(a => { const auto = d.cur.auto[a.k], man = r.stats?.[a.k];
+        return `<label><span>${esc(a.l)}${a.pct ? ' (%)' : a.money ? ' (₹)' : ''}</span><input type="text" inputmode="decimal" id="an-${a.k}" value="${esc(man ?? '')}" placeholder="${auto !== undefined ? esc(String(Math.round(auto * 10) / 10)) + ' auto' : '—'}" title="${esc(d.cur.src[a.k] ? 'From ' + d.cur.src[a.k] : 'No data yet')}"></label>`; }).join('')}
+        <p class="muted" style="font-size:11.5px;margin:0;grid-column:1/-1">Grey numbers are filled in automatically. Type a number only to correct one.</p>
+        <button class="b" type="submit" style="grid-column:1/-1">Save numbers</button></form></div>
+    <div class="sec"><div class="lab">Sections</div><div class="secs">
+      ${REP_SECTIONS.map(([k, l]) => `<label class="check"><input type="checkbox" data-change="repSec" data-k="${k}" ${show(k) ? 'checked' : ''}><span>${esc(l)}</span></label>`).join('')}</div></div>
+    <div class="sec"><div class="lab">Note from us</div>
+      <form class="form" data-form="repNote"><label class="vh" for="rep-note">Personal note</label><textarea id="rep-note" rows="3" data-keep="rep-note-${esc(c.id)}-${mk}" placeholder="e.g. Thank you for sending clips so quickly this month. Diwali is our big push next.">${esc(keep('rep-note-' + c.id + '-' + mk, r.note || ''))}</textarea><div><button class="b" type="submit">Save note</button></div></form></div>
+  </aside>
   <div class="repwrap"><div class="rep" id="rep" style="--rh:${hue}">
     <div class="rep-top"><div><div class="rep-brand">the.reach.story</div><div class="rep-sm">Marketing studio · Khanna, Punjab</div></div><div style="text-align:right"><div class="rep-sm">Monthly report</div><div class="rep-m">${esc(monthLabel(mk))}</div></div></div>
     <div class="rep-client"><div class="rep-sm">Prepared for</div><div class="rep-cn">${esc(c.name)}</div><div class="rep-sm">${esc([c.tag, c.handle].filter(Boolean).join(' · '))}</div></div>
     <h2 class="rep-h">${esc(nv.headline || '')}</h2>${nv.summary ? `<p class="rep-p">${esc(nv.summary)}</p>` : ''}
-    <div class="rep-tiles">${tiles.map(([n, l]) => `<div><b>${n}</b><span>${esc(l)}</span></div>`).join('')}</div>
-    ${nv.highlights?.length ? `<h3 class="rep-s">Highlights</h3><ul class="rep-ul">${nv.highlights.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
-    ${d.fol && d.fol.series.length > 1 ? `<h3 class="rep-s">Follower growth</h3><div class="rep-chart">${chartSvg(d.fol.series, {w:680, h:180, static:true, ink:'#6b6f76', grid:'#e6e7ea', color:`hsl(${hue} 60% 42%)`, surface:'#ffffff'})}</div>` : ''}
-    ${Object.keys(d.byKind).length ? `<h3 class="rep-s">What we delivered</h3><div class="rep-kinds">${Object.entries(d.byKind).map(([k, v]) => `<span><b>${v}</b> ${esc(k)}${v === 1 ? '' : 's'}</span>`).join('')}</div>` : ''}
-    ${d.top.length ? `<h3 class="rep-s">Top posts</h3><table class="rep-t"><tbody>${d.top.map((t, i) => `<tr><td class="rep-n">${i + 1}</td><td>${esc(t.title)}${t.learn ? `<div class="rep-sm">${esc(t.learn)}</div>` : ''}</td><td class="rep-v">${fmtN(t.s)}</td></tr>`).join('')}</tbody></table>` : ''}
-    ${nv.next?.length ? `<h3 class="rep-s">Next month</h3><ul class="rep-ul">${nv.next.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
-    ${nv.needs?.length ? `<h3 class="rep-s">What we need from you</h3><ul class="rep-ul">${nv.needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${show('note') && r.note ? `<div class="rep-note">${esc(r.note)}<div class="rep-sm" style="margin-top:6px">— The Reach Story team</div></div>` : ''}
+    ${show('analytics') && tiles.length ? `<h3 class="rep-s">Analytics</h3><div class="rep-an">${tiles.map(a => { const x = chg(d.cur.val[a.k], d.prev.val[a.k]); const good = a.k === 'adSpend' ? null : x !== null && x >= 0;
+      return `<div><span class="rep-al">${esc(a.l)}</span><b>${fmtV(a, d.cur.val[a.k])}</b>${x !== null ? `<span class="rep-ch ${good === null ? '' : good ? 'up' : 'down'}">${x >= 0 ? '▲' : '▼'} ${Math.abs(x).toFixed(0)}%</span>` : `<span class="rep-ch">&nbsp;</span>`}</div>`; }).join('')}
+      <div><span class="rep-al">Content delivered</span><b>${d.content}<small>/${d.target}</small></b><span class="rep-ch ${d.content >= d.target ? 'up' : ''}">${d.target ? Math.round(d.content / d.target * 100) + '% of plan' : '&nbsp;'}</span></div></div>
+      ${der.length ? `<p class="rep-der">${der.map(esc).join('  ·  ')}</p>` : ''}` : ''}
+    ${show('highlights') && nv.highlights?.length ? `<h3 class="rep-s">Highlights</h3><ul class="rep-ul">${nv.highlights.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${show('followers') && d.series.length > 1 ? `<h3 class="rep-s">Follower growth${d.followersNow ? ` · ${fmtN(d.followersNow)} now` : ''}</h3><div class="rep-chart">${chartSvg(d.series, {w:680, h:170, static:true, ink:'#6b6f76', grid:'#e6e7ea', color:`hsl(${hue} 60% 42%)`, surface:'#ffffff'})}</div>` : ''}
+    ${show('delivered') && Object.keys(d.byKind).length ? `<h3 class="rep-s">What we delivered</h3><div class="rep-kinds">${Object.entries(d.byKind).map(([k, v]) => `<span><b>${v}</b> ${esc(k)}${v === 1 ? '' : 's'}</span>`).join('')}</div>` : ''}
+    ${show('top') && d.top.length ? `<h3 class="rep-s">Top posts</h3><table class="rep-t"><tbody>${d.top.map((t, i) => `<tr><td class="rep-n">${i + 1}</td><td>${esc(t.title)}${t.learn ? `<div class="rep-sm">${esc(t.learn)}</div>` : ''}</td><td class="rep-v">${fmtN(t.s)}</td></tr>`).join('')}</tbody></table>` : ''}
+    ${show('next') && nv.next?.length ? `<h3 class="rep-s">Next month</h3><ul class="rep-ul">${nv.next.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${show('needs') && nv.needs?.length ? `<h3 class="rep-s">What we need from you</h3><ul class="rep-ul">${nv.needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     <div class="rep-foot"><span>@the.reach.story</span><span>${esc(monthLabel(mk))} · ${esc(c.name)}</span></div>
-  </div></div>
-  ${!d.ins.length && !d.fol ? `<p class="muted" style="font-size:13px;margin-top:12px">Tip: add follower counts and insight screenshots during the month and this report fills in with real numbers.</p>` : ''}`;
+  </div></div></div>`;
 }
 let pdfLib = null;
 function loadPdfLib(){
@@ -1395,7 +1526,7 @@ async function reportPdf(c){
   ui.busy.pdf = true; render();
   try {
     await loadPdfLib();
-    const el = document.getElementById('rep');
+    const el = document.getElementById('rep'); el.style.zoom = '';
     const blob = await window.html2pdf().set({margin:0, image:{type:'jpeg', quality:.95}, html2canvas:{scale:2, backgroundColor:'#ffffff', useCORS:true}, jsPDF:{unit:'px', format:[794, Math.max(1123, el.scrollHeight)], hotfixes:['px_scaling']}, pagebreak:{mode:['avoid-all']}}).from(el).outputPdf('blob');
     await downloads.save({filename:`${c.name} - ${monthLabel(ui.rMonth || monthKey)} report.pdf`, data:blob});
     toast('PDF ready');
@@ -1403,16 +1534,19 @@ async function reportPdf(c){
   ui.busy.pdf = false; render();
 }
 function reportAi(c){
-  const mk = ui.rMonth || monthKey, d = reportData(c, mk);
+  const mk = ui.rMonth || monthKey, d = reportData(c, mk), r = repDoc(c, mk) || {};
+  const nums = Object.fromEntries(AN.filter(a => d.cur.val[a.k] !== undefined).map(a => [a.l, {now:d.cur.val[a.k], lastMonth:d.prev.val[a.k] ?? null}]));
   run('rep:' + c.id, async () => {
-    const r = await sample.json(`${preamble}\n\nWrite the wording for The Reach Story's ${monthLabel(mk)} report to ${c.name}. It goes to the client, so it must sound like a professional agency: warm, confident, specific, simple English. Use ONLY these numbers; never invent any.\n\nData: ${JSON.stringify({delivered:d.byKind, content:d.content, target:d.target, followers:d.fol && {start:d.fol.start, end:d.fol.end, gain:d.fol.gain}, totals:d.totals, topPosts:d.top, learnings:d.learn, upcoming:d.next.map(e => e.d + ' ' + e.name), focus:c.plan?.focus})}\n\nReply with only JSON: {"headline": "short title for the month", "summary": "2 sentences", "highlights": ["3-4 bullets with numbers"], "next": ["3 planned moves"], "needs": ["2-3 things we need from the client"]}`, {cache:false});
-    if (!r || !r.headline) throw {code:'invalid_json'};
-    await write(() => db.collection('reports').doc(`${c.id}_${mk}`).set({client:c.id, month:mk, narrative:{headline:String(r.headline), summary:String(r.summary || ''), highlights:(r.highlights || []).map(String), next:(r.next || []).map(String), needs:(r.needs || []).map(String)}, at:Date.now()}), 'Report wording saved');
+    const out = await sample.json(`${preamble}\n\nWrite the wording for The Reach Story's ${monthLabel(mk)} report to ${c.name}. It goes to the client, so it must sound like a professional agency: warm, confident, specific, simple English. Explain what the numbers MEAN for their business (e.g. non-follower reach = new local customers discovering them). Use ONLY these numbers; never invent any. If a number went down, say so honestly and say what we’re doing about it.\n\nData: ${JSON.stringify({analytics:nums, engagementRate:d.cur.der.engRate, costPerLead:d.cur.der.cpl, delivered:d.byKind, content:d.content, target:d.target, topPosts:d.top, learnings:d.learn, upcoming:d.next.map(e => e.d + ' ' + e.name), focus:c.plan?.focus, openClientAsks:(c.asks || []).filter(x => x.status !== 'done').map(x => x.text)})}\n\nReply with only JSON: {"headline": "short title for the month", "summary": "2 sentences", "highlights": ["3-4 bullets with numbers and what they mean"], "next": ["3 planned moves"], "needs": ["2-3 things we need from the client"]}`, {cache:false});
+    if (!out || !out.headline) throw {code:'invalid_json'};
+    await saveRep(c, mk, {narrative:{headline:String(out.headline), summary:String(out.summary || ''), highlights:(out.highlights || []).map(String), next:(out.next || []).map(String), needs:(out.needs || []).map(String)}}, 'Report wording saved');
   });
 }
 function reportText(c){
-  const mk = ui.rMonth || monthKey, d = reportData(c, mk), nv = repNarrative(c, mk, d);
-  return [`*${c.name} · ${monthLabel(mk)} report*`, '', nv.summary, '', ...(nv.highlights || []).map(x => '• ' + x), '', '*Next month*', ...(nv.next || []).map(x => '• ' + x), '', '*What we need from you*', ...(nv.needs || []).map(x => '• ' + x), '', '— The Reach Story'].filter((x, i, a) => !(x === '' && a[i - 1] === '')).join('\n');
+  const mk = ui.rMonth || monthKey, d = reportData(c, mk), nv = repNarrative(c, mk, d), r = repDoc(c, mk) || {};
+  const nums = AN.filter(a => d.cur.val[a.k] !== undefined).slice(0, 6).map(a => { const x = chg(d.cur.val[a.k], d.prev.val[a.k]); return `• ${a.l}: ${fmtV(a, d.cur.val[a.k])}${x !== null ? ` (${x >= 0 ? '▲' : '▼'} ${Math.abs(x).toFixed(0)}%)` : ''}`; });
+  return [`*${c.name} · ${monthLabel(mk)} report*`, '', nv.summary, r.note || '', '', nums.length ? '*Numbers*' : '', ...nums, '', '*Highlights*', ...(nv.highlights || []).map(x => '• ' + x), '', '*Next month*', ...(nv.next || []).map(x => '• ' + x), '', '*What we need from you*', ...(nv.needs || []).map(x => '• ' + x), '', 'Full PDF report attached.', '— The Reach Story']
+    .filter((x, i, a) => !(x === '' && (a[i - 1] === '' || i === 0))).join('\n');
 }
 
 /* ----- Higgsfield ----- */
@@ -1527,6 +1661,11 @@ document.addEventListener('click', async e => {
   else if (a === 'unarchive') await upd(b.dataset.cid, {status:'active'}, 'Client restored');
   else if (a === 'openReport'){ ui.rMonth = ui.rMonth || monthKey; go('report', c.id); }
   else if (a === 'repPdf') reportPdf(c);
+  else if (a === 'openReportFor'){ ui.rMonth = ui.rMonth || monthKey; go('report', b.dataset.cid); }
+  else if (a === 'repStatus') await saveRep(c, ui.rMonth || monthKey, {status:b.dataset.s, sentAt: b.dataset.s === 'sent' ? Date.now() : 0}, b.dataset.s === 'sent' ? 'Marked as sent' : 'Back to draft');
+  else if (a === 'addOverview'){ ui.keep['i-type'] = 'Account overview'; ui.keep['i-date'] = (ui.rMonth || monthKey) === monthKey ? today : (ui.rMonth + '-28'); go('client', c.id, 'insights'); }
+  else if (a === 'goFollowers') go('client', c.id, 'followers');
+  else if (a === 'goTasks'){ ui.filt = {client:c.id, who:'', done:true, preset:''}; ui.taskView = 'list'; go('tasks'); }
   else if (a === 'repAi') reportAi(c);
   else if (a === 'repCopy'){ const t = reportText(c); try { await navigator.clipboard.writeText(t); toast('Summary copied'); } catch(_){ toast('Copy isn’t allowed here. Select the report text instead.'); } }
   else if (a === 'hfGo'){ const x = S.prompts.find(p => p.id === b.dataset.doc); if (x) hfGenerate(c, x, x.id, b.dataset.unlim === undefined ? undefined : b.dataset.unlim === '1'); }
@@ -1592,6 +1731,7 @@ document.addEventListener('change', async e => {
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
   else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
   else if (k === 'repMonth'){ ui.rMonth = el.value; render(); }
+  else if (k === 'repSec'){ const c = C(ui.cid), mk = ui.rMonth || monthKey, hide = new Set(repDoc(c, mk)?.hide || []); el.checked ? hide.delete(el.dataset.k) : hide.add(el.dataset.k); await saveRep(c, mk, {hide:[...hide]}); }
   else if (k === 'hfModel'){ ui.keep['hfm-' + el.dataset.doc] = el.value; }
   else if (k === 'filt'){ ui.filt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); }
   else if (k === 'local'){ const c = C(ui.cid); const items = (c.local?.items || []).map((it, n) => n === Number(el.dataset.n) ? {...it, done:el.checked} : it); await upd(c.id, {local:{items}}); }
@@ -1619,6 +1759,8 @@ document.addEventListener('submit', async e => {
     await upd(c.id, {followers:[...(c.followers || []).filter(x => x.d !== d_), {d:d_, n}].sort((a,b) => a.d.localeCompare(b.d)).slice(-200)}, 'Count added'); return; }
   if (k === 'folGoal'){ await upd(c.id, {followerGoal:Math.max(0, Number(v('fo-goal')) || 0)}, 'Goal saved'); return; }
   if (k === 'details'){ await upd(c.id, {name:v('d-name') || c.name, tag:v('d-tag'), handle:v('d-handle'), website:v('d-web'), city:v('d-city'), source:v('d-source'), fee:v('d-fee'), billingDay:Math.min(28, Math.max(0, Number(v('d-bill')) || 0))}, 'Details saved'); return; }
+  if (k === 'repStats'){ const mk = ui.rMonth || monthKey, stats = {}; for (const a of AN){ const x = v('an-' + a.k); if (x !== '' && Number.isFinite(num(x))) stats[a.k] = num(x); } await saveRep(c, mk, {stats}, 'Numbers saved'); return; }
+  if (k === 'repNote'){ const mk = ui.rMonth || monthKey; if (await saveRep(c, mk, {note:v('rep-note')}, 'Note saved')) delete ui.keep['rep-note-' + c.id + '-' + mk]; return; }
   if (k === 'comment'){
     const tid = f.closest('[data-tid]').dataset.tid, t = S.tasks.find(x => x.id === tid); const text = v('cm-' + tid), nd = v('nd-' + tid);
     if (!t || !text) return;
