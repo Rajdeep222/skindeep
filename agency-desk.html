@@ -335,6 +335,7 @@ function viewToday(){
   return `<h1>${esc(now.toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'}))}</h1>
   <p class="sub">${!loaded.clients ? 'Loading…' : behind.length ? `${behind.length} of ${S.clients.length} pages are behind this month’s target. ${dim - day + 1} days left.` : `Every page is on pace. ${dim - day + 1} days left this month.`}</p>
 
+  ${(() => { const n = S.insights.filter(i => i.unread).length; return n ? `<div class="sec"><div class="lab">Screenshots to read</div><p style="margin:0">${n} screenshot${n===1?'':'s'} waiting. Say <b>“read new insights”</b> in your Claude Code chat and the numbers and learnings will appear on each client’s Insights tab.</p></div>` : ''; })()}
   <div class="sec"><div class="lab">Next move per page</div>
   <div class="items">${S.clients.map(c => { const p = pace(c); return `<div class="it click" data-go="client" data-cid="${esc(c.id)}" tabindex="0" role="link">
     <div><div class="t">${esc(c.next || 'Set a next move on the client page')}</div><div class="s"><span>${dot(c)} ${esc(c.name)}</span><span class="pill ${p.cls}">${esc(p.label)}</span></div></div>
@@ -428,14 +429,14 @@ function tabInsights(c){
       </div>
       <label>Note or numbers <span class="muted">(optional: what the post was, or type the metrics if you have no screenshot)</span><textarea id="i-note" rows="2" data-keep="i-note">${esc(keep('i-note'))}</textarea></label>
       <div class="row">${pend.length && pend.length > 1 ? `<button class="lnk" type="button" data-act="pick">Add more</button>` : ''}
-        <button class="b pri" type="submit" ${ui.busy['ins'] ? 'disabled' : ''}>${ui.busy['ins'] ? 'Reading…' : sample ? 'Read with Claude and save' : 'Save'}</button>
+        <button class="b pri" type="submit" ${ui.busy['ins'] ? 'disabled' : ''}>${ui.busy['ins'] ? 'Saving…' : pend.length && !canImages ? 'Save for reading' : sample ? 'Read with Claude and save' : 'Save'}</button>
         ${pend.length ? `<button class="b" type="button" data-act="clearPend">Clear</button>` : ''}</div>
-      ${!canImages && sample ? `<p class="muted" style="font-size:12px;margin:0">This view can’t send images to Claude, so screenshots are stored and Claude reads your note instead.</p>` : ''}
+      ${!canImages && pend.length ? `<p class="muted" style="font-size:12px;margin:0">This app can’t send images to Claude from inside the page. Screenshots are saved as <b>waiting to be read</b>. Then say “read new insights” in your Claude Code chat and they’ll be read and filled in here.</p>` : ''}
     </form></div>
 
   <div class="sec"><div class="lab">What we’ve learned<span class="acts">${list.length ? `<span class="muted">${list.length} saved</span>` : ''}</span></div>
     ${list.length ? list.map(i => `<article class="ins">
-      <div class="row" style="justify-content:space-between"><h3>${esc(i.title || i.type)}</h3><button class="x" data-act="delInsight" data-id="${esc(i.id)}" aria-label="Delete insight">×</button></div>
+      <div class="row" style="justify-content:space-between"><h3>${esc(i.title || i.type)}${i.unread ? ` <span class="pill warn" style="font-size:12px">Waiting to be read</span>` : ''}</h3><button class="x" data-act="delInsight" data-id="${esc(i.id)}" aria-label="Delete insight">×</button></div>
       <div class="meta" style="margin-top:-6px"><span>${esc(i.type)}</span>${i.date ? `<span>${esc(fmt(i.date))}</span>` : ''}<span>added ${esc(new Date(i.createdAt||0).toLocaleDateString(undefined,{day:'numeric',month:'short'}))}</span></div>
       ${i.assets?.length ? `<div class="thumbs">${i.assets.map(a => `<figure><a href="/_blob/${esc(a)}" target="_blank" rel="noopener"><img src="/_blob/${esc(a)}" alt="Insight screenshot" loading="lazy"></a></figure>`).join('')}</div>` : ''}
       ${i.metrics && Object.keys(i.metrics).length ? `<div class="chips">${Object.entries(i.metrics).map(([k,v]) => `<span class="chip">${esc(k)} <b>${esc(v)}</b></span>`).join('')}</div>` : ''}
@@ -694,20 +695,22 @@ async function readInsight(c){
   ui.keep['i-type'] = type;
   ui.busy.ins = true; render();
   try {
+    if (files.length && !assets){ toast('Screenshots can’t be stored in this view. Type the numbers in the note instead.'); ui.busy.ins = false; render(); return; }
+    const queue = files.length && !canImages;
     let ids = [];
     if (files.length && assets){
       for (const f of files){ const r = await assets.upload(f); ids.push(r.id); }
     }
     let r = {};
-    if (sample){
+    if (sample && !queue){
       const useImg = canImages && files.length;
       r = await sample.json(`${preamble}\n\nYou are the analyst for ${c.name}. ${useImg ? `Read the attached screenshot(s): ${type}.` : `Here are notes/numbers the owner typed: ${type}.`} ${note ? 'Owner’s note: ' + note : ''}\n${type === 'Competitor post' ? 'This is a COMPETITOR or reference account. Learnings = what we should borrow for our client and how to do it better.' : 'Extract every number you can see. Judge performance against an account of this size and against earlier insights.'}\n\nEarlier insights: ${JSON.stringify(clientInsights(c.id).slice(0, 6).map(i => ({date:i.date, title:i.title, metrics:i.metrics})))}\nClient: ${JSON.stringify(clientContext(c, {insights:0}).client)}\n\nReply with only JSON: {"title": "short label, e.g. Carousel: bridal set · 3 Oct", "date": "YYYY-MM-DD if visible else empty", "metrics": {"Reach": 1234, "...": "..."}, "summary": "2 sentences", "learnings": ["3 specific, reusable learnings"], "next": ["2 concrete next actions"]}`,
         useImg ? {cache:false, images:files.slice(0, maxImages || 5)} : {cache:false});
     }
     const doc = {client:c.id, type, note, date: (r.date && /^\d{4}-\d\d-\d\d$/.test(r.date)) ? r.date : date, assets:ids,
       title:String(r.title || type), metrics: r.metrics && typeof r.metrics === 'object' ? r.metrics : {}, summary:String(r.summary || ''),
-      learnings:Array.isArray(r.learnings) ? r.learnings.map(String).slice(0, 6) : [], next:Array.isArray(r.next) ? r.next.map(String).slice(0, 4) : [], createdAt:Date.now()};
-    if (await write(() => db.collection('insights').add(doc), 'Insight saved')){
+      learnings:Array.isArray(r.learnings) ? r.learnings.map(String).slice(0, 6) : [], next:Array.isArray(r.next) ? r.next.map(String).slice(0, 4) : [], unread:!!queue, createdAt:Date.now()};
+    if (await write(() => db.collection('insights').add(doc), queue ? 'Saved. Waiting to be read' : 'Insight saved')){
       ui.pending.forEach(p => URL.revokeObjectURL(p.url)); ui.pending = []; ui.keep['i-note'] = ''; ui.keep['i-date'] = '';
     }
   } catch(e){ toast(errCopy(e)); }
