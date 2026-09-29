@@ -1,0 +1,522 @@
+<title>Agency Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: left rail on desktop, bottom tab bar on phones; one main column of stacked panels.
+   Identity: client hue dots + a pace tick on every progress bar, so "behind" reads at a glance. */
+:root{
+  --bg:#eceff4; --surface:#ffffff; --surface2:#f4f6fa; --ink:#12161f; --muted:#596273; --line:#d8dde6;
+  --accent:#2a4bec; --accent-ink:#ffffff; --good:#146c43; --warn:#9a5b00; --bad:#b3261e; --cl:44%;
+  --f-display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
+  --f-body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"DM Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c0f16; --surface:#141924; --surface2:#1a2030; --ink:#e9edf5; --muted:#9aa4b5; --line:#262e3d;
+  --accent:#8299ff; --accent-ink:#0c0f16; --good:#4cc38a; --warn:#e2a445; --bad:#ff8078; --cl:64%; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c0f16; --surface:#141924; --surface2:#1a2030; --ink:#e9edf5; --muted:#9aa4b5; --line:#262e3d;
+  --accent:#8299ff; --accent-ink:#0c0f16; --good:#4cc38a; --warn:#e2a445; --bad:#ff8078; --cl:64%; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:16px 88px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start;display:flex;flex-direction:column;gap:20px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:20px;line-height:1.1}
+.brand small{display:block;font-family:var(--f-mono);font-weight:400;font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.02em}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;padding:8px 10px;border-radius:6px;font-weight:500;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.nav button:hover{background:var(--surface2);color:var(--ink)}
+.nav button[aria-current="true"]{background:var(--ink);color:var(--bg)}
+.nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nav .n{font-family:var(--f-mono);font-size:12px}
+.month{font-family:var(--f-mono);font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.month b{color:var(--ink);font-weight:500}
+main{min-width:0;display:flex;flex-direction:column;gap:20px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.head h1{font-size:28px}
+.head p{margin:2px 0 0;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.panel h2{font-size:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;font-weight:500}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:4px 9px;font-size:13px}
+.btn[disabled]{opacity:.55;cursor:default}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:hsl(var(--h) 62% var(--cl));flex:none}
+.pulse{display:flex;flex-direction:column;gap:10px}
+.prow{display:grid;grid-template-columns:150px minmax(0,1fr) 92px;gap:12px;align-items:center}
+.prow .nm{display:flex;align-items:center;gap:8px;font-weight:600;min-width:0}
+.prow .nm span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{position:relative;height:8px;background:var(--surface2);border-radius:4px;border:1px solid var(--line)}
+.bar i{position:absolute;left:0;top:-1px;bottom:-1px;border-radius:4px;background:hsl(var(--h) 62% var(--cl))}
+.bar u{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);opacity:.75;text-decoration:none}
+.pct{font-family:var(--f-mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.pill.good{color:var(--good)}.pill.warn{color:var(--warn)}.pill.bad{color:var(--bad)}.pill.neutral{color:var(--muted)}
+.legend{font-size:12px;color:var(--muted);margin-top:10px;display:flex;gap:8px;align-items:center}
+.legend u{display:inline-block;width:2px;height:12px;background:var(--ink);opacity:.75}
+.list{display:flex;flex-direction:column}
+.task{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.task:first-child{border-top:0}
+.task .ttl{min-width:0;overflow-wrap:anywhere}
+.task .meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.task .ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.task.done .ttl{text-decoration:line-through;color:var(--muted)}
+.st{border:1px solid var(--line);background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;min-width:92px;text-align:center}
+.st[data-s="doing"]{border-color:var(--accent);color:var(--accent)}
+.st[data-s="review"]{border-color:var(--warn);color:var(--warn)}
+.st[data-s="done"]{border-color:var(--good);color:var(--good)}
+.late{color:var(--bad);font-weight:600}
+select,input[type=text],input[type=date],input[type=number],textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+textarea{width:100%;resize:vertical}
+.form{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr)) auto;gap:8px;align-items:end}
+.form label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
+.form select,.form input{width:100%}
+.empty{color:var(--muted);padding:6px 0}
+.sug{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
+.sug:first-child{border-top:0}
+.sug .why{font-size:13px;color:var(--muted);margin-top:2px}
+.sug .ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:12px;border-top:3px solid hsl(var(--h) 62% var(--cl))}
+.card h3{font-size:19px;display:flex;align-items:center;gap:8px}
+.card .tag{color:var(--muted);font-size:13px;margin-top:-6px}
+.big{display:flex;align-items:baseline;gap:8px}
+.big b{font-family:var(--f-mono);font-weight:500;font-size:30px;line-height:1}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:2px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--line)}
+.plan dl{margin:0;display:grid;grid-template-columns:90px minmax(0,1fr);gap:6px 10px}
+.plan dt{font-size:12px;color:var(--muted);padding-top:1px}
+.plan dd{margin:0;overflow-wrap:anywhere}
+.editgrid{display:grid;gap:8px}
+.editgrid label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.team{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.who{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:2px 4px 2px 10px;background:var(--surface2)}
+.who button{all:unset;cursor:pointer;width:20px;height:20px;border-radius:50%;text-align:center;color:var(--muted)}
+.who button:hover{background:var(--line);color:var(--ink)}
+.who button:focus-visible{outline:2px solid var(--accent)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;z-index:5;max-width:calc(100vw - 32px)}
+.tabs{display:none}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static}
+  .rail .nav,.rail .month{display:none}
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px);z-index:4;gap:4px}
+  .tabs button{all:unset;cursor:pointer;text-align:center;padding:10px 4px;border-radius:6px;font-weight:600;color:var(--muted)}
+  .tabs button[aria-current="true"]{background:var(--ink);color:var(--bg)}
+  .tabs button:focus-visible{outline:2px solid var(--accent)}
+  .prow{grid-template-columns:minmax(0,1fr) 84px}
+  .prow .bar{grid-column:1 / -1;order:3}
+  .form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .form label:first-child{grid-column:1 / -1}
+  .task,.sug{grid-template-columns:auto minmax(0,1fr)}
+  .task .ctl,.sug .ctl{grid-column:1 / -1;justify-content:flex-start}
+  .head h1{font-size:24px}
+}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s ease}}
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">Agency Desk<small id="railDate">&nbsp;</small></div>
+    <nav class="nav" aria-label="Sections">
+      <button data-view="today" aria-current="true">Today</button>
+      <button data-view="clients">Clients <span class="n" id="nClients"></span></button>
+      <button data-view="tasks">Tasks <span class="n" id="nTasks"></span></button>
+    </nav>
+    <div class="month" id="railMonth"></div>
+  </aside>
+
+  <main>
+    <section id="v-today">
+      <div class="head"><div><h1 id="todayTitle">Today</h1><p id="todaySub" class="muted"></p></div></div>
+      <div class="panel" style="margin-top:20px"><h2>Month progress</h2><div class="pulse" id="pulse"></div>
+        <div class="legend"><u></u> where each client should be by today</div></div>
+      <div class="panel" style="margin-top:20px"><h2>Needs attention <span class="muted" style="font-family:var(--f-body);font-weight:400;font-size:13px" id="attnCount"></span></h2><div class="list" id="attn"></div></div>
+      <div class="panel" style="margin-top:20px">
+        <h2>Plan for today <button class="btn primary" id="planDay">Plan my day with Claude</button></h2>
+        <div id="dayPlan"><p class="empty">Claude looks at each client's monthly target, how far behind they are and what is already open, then suggests today's tasks. Add the ones you want and assign them.</p></div>
+      </div>
+    </section>
+
+    <section id="v-clients" hidden>
+      <div class="head"><div><h1>Clients</h1><p class="muted">Monthly retainers, growth plans and content ideas.</p></div></div>
+      <div class="cards" id="cards" style="margin-top:20px"></div>
+    </section>
+
+    <section id="v-tasks" hidden>
+      <div class="head"><div><h1>Tasks</h1><p class="muted">Everything owed to clients, and who is doing it.</p></div></div>
+      <div class="panel" style="margin-top:20px">
+        <h2>Add a task</h2>
+        <form class="form" id="addForm">
+          <label for="fTitle">Task<input type="text" id="fTitle" placeholder="e.g. Edit 4 showroom reels" required></label>
+          <label for="fClient">Client<select id="fClient"></select></label>
+          <label for="fKind">Type<select id="fKind"></select></label>
+          <label for="fWho">Assign to<select id="fWho"></select></label>
+          <label for="fDue">Due<input type="date" id="fDue"></label>
+          <button class="btn primary" type="submit">Add</button>
+        </form>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <h2>Team</h2>
+        <div class="team" id="team"></div>
+        <form class="row" id="teamForm" style="margin-top:10px">
+          <label for="tName" class="muted" style="position:absolute;left:-9999px">Team member name</label>
+          <input type="text" id="tName" placeholder="Add a team member" style="max-width:220px">
+          <button class="btn small" type="submit">Add member</button>
+        </form>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <h2>All tasks
+          <span class="row">
+            <label for="filClient" class="muted" style="position:absolute;left:-9999px">Filter by client</label>
+            <select id="filClient"></select>
+            <label for="filWho" class="muted" style="position:absolute;left:-9999px">Filter by person</label>
+            <select id="filWho"></select>
+            <label class="row muted" style="gap:4px"><input type="checkbox" id="filDone"> Show done</label>
+          </span>
+        </h2>
+        <div class="list" id="taskList"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <button data-view="today" aria-current="true">Today</button>
+  <button data-view="clients">Clients</button>
+  <button data-view="tasks">Tasks</button>
+</nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KINDS = {reel:'Reel', post:'Post', ad:'Meta ad', shoot:'Shoot', website:'Website', seo:'SEO', strategy:'Strategy', other:'Other'};
+const STATUS = ['todo','doing','review','done'];
+const SL = {todo:'To do', doing:'In progress', review:'In review', done:'Done'};
+const HUES = [212, 28, 148, 340, 265, 190, 50];
+
+let db = null, sample = null, canWrite = true;
+const S = {clients:[], tasks:[], team:[]};
+const ui = {view:'today', editing:null, plans:{}};
+let loaded = {clients:false, tasks:false, team:false};
+
+/* ---------- dates ---------- */
+const now = new Date();
+const pad = n => String(n).padStart(2, '0');
+const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+const monthKey = todayStr.slice(0, 7);
+const dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+const day = now.getDate();
+const daysLeft = dim - day + 1;
+const fmtDay = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, {day:'numeric', month:'short'});
+
+/* ---------- derived numbers ---------- */
+const tgt = c => c.target || {kind:'reel', count:0};
+const delivered = c => S.tasks.filter(t => t.client === c.id && t.month === monthKey && t.kind === tgt(c).kind && t.status === 'done').length;
+const expected = c => tgt(c).count * day / dim;
+function pace(c){
+  const n = tgt(c).count, d = delivered(c);
+  if (!n) return {cls:'neutral', label:'No target', gap:0};
+  if (d >= n) return {cls:'good', label:'Target hit', gap:0};
+  const gap = Math.floor(expected(c)) - d;
+  if (gap <= 0) return {cls:'good', label:'On pace', gap:0};
+  return {cls: gap >= Math.max(3, n * .2) ? 'bad' : 'warn', label:`${gap} behind`, gap};
+}
+const clientById = id => S.clients.find(c => c.id === id);
+const memberById = id => S.team.find(m => m.id === id);
+const hue = c => HUES[(S.clients.indexOf(c) + HUES.length) % HUES.length];
+const dotFor = id => { const c = clientById(id); return c ? `<span class="dot" style="--h:${hue(c)}"></span>` : ''; };
+
+/* ---------- shell ---------- */
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 3200);
+}
+function setView(v){
+  ui.view = v;
+  for (const id of ['today','clients','tasks']) $('#v-' + id).hidden = id !== v;
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-current', String(b.dataset.view === v)));
+  try { localStorage.setItem('desk-view', v); } catch(e){}
+  render();
+}
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+
+async function write(fn){
+  try { await fn(); return true; }
+  catch(e){ toast(e && e.code === 'invalid_argument' ? 'You need Contributor access or higher to change this.' : 'Could not save. Try again.'); return false; }
+}
+
+/* ---------- render ---------- */
+let queued = false;
+function schedule(){ if (!queued){ queued = true; requestAnimationFrame(() => { queued = false; render(); }); } }
+
+function render(){
+  $('#railDate').textContent = now.toLocaleDateString(undefined, {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+  $('#railMonth').innerHTML = `Day <b>${day}</b> of <b>${dim}</b><br>${daysLeft} day${daysLeft===1?'':'s'} left this month`;
+  $('#nClients').textContent = S.clients.length || '';
+  const open = S.tasks.filter(t => t.status !== 'done').length;
+  $('#nTasks').textContent = open || '';
+  fillSelects();
+  if (ui.view === 'today') renderToday();
+  if (ui.view === 'clients' && !ui.editing) renderClients();
+  if (ui.view === 'tasks') renderTasks();
+}
+
+function renderToday(){
+  $('#todayTitle').textContent = now.toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'long'});
+  const behind = S.clients.filter(c => pace(c).gap > 0).length;
+  $('#todaySub').textContent = !loaded.clients ? 'Loading…' :
+    behind ? `${behind} of ${S.clients.length} clients are behind pace. ${daysLeft} day${daysLeft===1?'':'s'} left this month.` :
+    `Every client is on pace. ${daysLeft} day${daysLeft===1?'':'s'} left this month.`;
+
+  if (!S.clients.length){
+    $('#pulse').innerHTML = `<p class="empty">${loaded.clients ? 'No clients yet. Ask Claude to add your clients to this desk.' : 'Loading clients…'}</p>`;
+  } else {
+    $('#pulse').innerHTML = S.clients.map(c => {
+      const n = tgt(c).count, d = delivered(c), p = pace(c);
+      const w = n ? Math.min(100, d / n * 100) : 0, e = n ? Math.min(100, day / dim * 100) : 0;
+      return `<div class="prow" style="--h:${hue(c)}">
+        <div class="nm"><span class="dot"></span><span>${esc(c.name)}</span></div>
+        <div class="bar" role="img" aria-label="${d} of ${n} ${esc(KINDS[tgt(c).kind]||'')}s done, ${esc(p.label)}"><i style="width:${w}%"></i><u style="left:${e}%"></u></div>
+        <div class="pct">${d}/${n} <span class="pill ${p.cls}" style="display:block;margin-top:2px;text-align:center">${esc(p.label)}</span></div>
+      </div>`;
+    }).join('');
+  }
+
+  const items = S.tasks.filter(t => t.status !== 'done' && t.due && t.due <= todayStr)
+    .sort((a,b) => a.due.localeCompare(b.due));
+  const unassigned = S.tasks.filter(t => t.status !== 'done' && !t.assignee).length;
+  $('#attnCount').textContent = unassigned ? `${unassigned} open task${unassigned===1?'':'s'} unassigned` : '';
+  $('#attn').innerHTML = items.length ? items.map(taskRow).join('') :
+    `<p class="empty">${loaded.tasks ? 'Nothing is due or overdue. Use “Plan my day” to line up work.' : 'Loading tasks…'}</p>`;
+  renderPlan('day');
+}
+
+function taskRow(t){
+  const c = clientById(t.client), m = memberById(t.assignee);
+  const late = t.status !== 'done' && t.due && t.due < todayStr;
+  return `<div class="task ${t.status === 'done' ? 'done' : ''}" data-id="${esc(t.id)}">
+    <button class="st" data-act="cycle" data-s="${esc(t.status)}" title="Change status">${esc(SL[t.status] || t.status)}</button>
+    <div><div class="ttl">${esc(t.title)}</div>
+      <div class="meta">${c ? `<span>${dotFor(c.id)} ${esc(c.name)}</span>` : ''}<span>${esc(KINDS[t.kind] || t.kind || '')}</span>
+      ${t.due ? `<span class="${late ? 'late' : ''}">${late ? 'Overdue · ' : 'Due '}${esc(fmtDay(t.due))}</span>` : ''}</div></div>
+    <div class="ctl">
+      <select data-act="assign" aria-label="Assign task">${assignOptions(t.assignee)}</select>
+      <button class="btn small" data-act="del" aria-label="Delete task">Delete</button>
+    </div>
+  </div>`;
+}
+const assignOptions = sel => `<option value="">Unassigned</option>` + S.team.map(m => `<option value="${esc(m.id)}"${m.id === sel ? ' selected' : ''}>${esc(m.name)}</option>`).join('');
+
+function fillSelects(){
+  const keep = (el, html) => { const v = el.value; el.innerHTML = html; if ([...el.options].some(o => o.value === v)) el.value = v; };
+  keep($('#fClient'), S.clients.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join(''));
+  keep($('#fKind'), Object.entries(KINDS).map(([k,v]) => `<option value="${k}">${v}</option>`).join(''));
+  keep($('#fWho'), assignOptions(''));
+  keep($('#filClient'), `<option value="">All clients</option>` + S.clients.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join(''));
+  keep($('#filWho'), `<option value="">Everyone</option><option value="none">Unassigned</option>` + S.team.map(m => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join(''));
+}
+
+function renderTasks(){
+  $('#team').innerHTML = S.team.length ? S.team.map(m => `<span class="who">${esc(m.name)}<button data-act="rmMember" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button></span>`).join('')
+    : `<span class="empty">${loaded.team ? 'No team members yet.' : 'Loading…'}</span>`;
+  const fc = $('#filClient').value, fw = $('#filWho').value, sd = $('#filDone').checked;
+  const list = S.tasks.filter(t => (sd || t.status !== 'done') && (!fc || t.client === fc) &&
+    (!fw || (fw === 'none' ? !t.assignee : t.assignee === fw)))
+    .sort((a,b) => (a.due || '9999').localeCompare(b.due || '9999'));
+  $('#taskList').innerHTML = list.length ? list.map(taskRow).join('') :
+    `<p class="empty">${loaded.tasks ? 'No tasks match. Add one above or plan your day on the Today tab.' : 'Loading…'}</p>`;
+  if (!$('#fDue').value) $('#fDue').value = todayStr;
+}
+
+function renderClients(){
+  $('#cards').innerHTML = S.clients.length ? S.clients.map(c => {
+    const n = tgt(c).count, d = delivered(c), p = pace(c), pl = c.plan || {};
+    const w = n ? Math.min(100, d / n * 100) : 0, e = n ? Math.min(100, day / dim * 100) : 0;
+    const openN = S.tasks.filter(t => t.client === c.id && t.status !== 'done').length;
+    return `<article class="card" style="--h:${hue(c)}" data-cid="${esc(c.id)}">
+      <div><h3>${esc(c.name)} <span class="pill ${p.cls}" style="font-family:var(--f-body);font-size:12px">${esc(p.label)}</span></h3>
+      <div class="tag">${esc(c.tag || '')}</div></div>
+      <div>
+        <div class="big"><b>${d}<span class="muted">/${n}</span></b><span class="muted">${esc(KINDS[tgt(c).kind] || '')}s done in ${esc(new Date().toLocaleDateString(undefined,{month:'long'}))}</span></div>
+        <div class="bar" style="margin-top:10px"><i style="width:${w}%"></i><u style="left:${e}%"></u></div>
+        <div class="muted mono" style="font-size:12px;margin-top:8px">${openN} open task${openN===1?'':'s'}</div>
+      </div>
+      <div class="chips">${(c.services || []).map(s => `<span class="chip">${esc(s)}</span>`).join('')}</div>
+      <div class="plan"><h4 style="margin:0 0 8px;font-family:var(--f-display)">Growth plan</h4>
+      ${ui.editing === c.id ? editForm(c) : `<dl>
+        <dt>Goal</dt><dd>${esc(pl.goal || '—')}</dd>
+        <dt>Audience</dt><dd>${esc(pl.audience || '—')}</dd>
+        <dt>Pillars</dt><dd>${esc((pl.pillars || []).join(' · ') || '—')}</dd>
+        <dt>This month</dt><dd>${esc(pl.focus || '—')}</dd></dl>`}</div>
+      <div class="row">
+        ${ui.editing === c.id ? `<button class="btn primary small" data-act="savePlan">Save plan</button><button class="btn small" data-act="cancelEdit">Cancel</button>` :
+        `<button class="btn small" data-act="editPlan">Edit plan</button><button class="btn small" data-act="ideas">Content ideas</button>`}
+      </div>
+      <div data-out="${esc(c.id)}"></div>
+    </article>`;
+  }).join('') : `<p class="empty">${loaded.clients ? 'No clients yet.' : 'Loading clients…'}</p>`;
+  S.clients.forEach(c => { if (ui.plans['ideas:' + c.id]) renderPlan('ideas', c.id); });
+}
+function editForm(c){
+  const pl = c.plan || {}, t = tgt(c);
+  return `<div class="editgrid">
+    <label>Monthly target <span class="row"><input type="number" min="0" id="e-count" value="${esc(t.count)}" style="width:90px">
+      <select id="e-kind">${Object.entries(KINDS).map(([k,v]) => `<option value="${k}"${k === t.kind ? ' selected' : ''}>${v}</option>`).join('')}</select></span></label>
+    <label>Goal<textarea id="e-goal" rows="2">${esc(pl.goal)}</textarea></label>
+    <label>Audience<textarea id="e-aud" rows="2">${esc(pl.audience)}</textarea></label>
+    <label>Content pillars (comma separated)<input type="text" id="e-pil" value="${esc((pl.pillars || []).join(', '))}"></label>
+    <label>This month's focus<textarea id="e-focus" rows="2">${esc(pl.focus)}</textarea></label></div>`;
+}
+
+/* ---------- AI plans ---------- */
+const errCopy = {not_granted:'Claude access was declined for this page.', sampling_disabled:'Claude is not available on this account.', rate_limited:'Too many requests. Wait a moment and try again.', invalid_json:'Claude’s answer could not be read. Try again.'};
+function renderPlan(mode, cid){
+  const key = mode === 'day' ? 'day' : 'ideas:' + cid;
+  const out = mode === 'day' ? $('#dayPlan') : document.querySelector(`[data-out="${CSS.escape(cid)}"]`);
+  const p = ui.plans[key];
+  if (!out || !p) return;
+  if (p.busy){ out.innerHTML = '<p class="empty">Thinking…</p>'; return; }
+  if (p.error){ out.innerHTML = `<p class="empty">${esc(p.error)}</p>`; return; }
+  const rows = (p.items || []).filter(i => !i.added);
+  out.innerHTML = rows.length ? `<div>${rows.map(i => `<div class="sug" data-key="${esc(key)}" data-i="${p.items.indexOf(i)}">
+      <span style="padding-top:5px">${dotFor(i.client)}</span>
+      <div><div>${esc(i.title)}</div><div class="why">${esc(clientById(i.client)?.name || '')} · ${esc(KINDS[i.kind] || i.kind)}${i.why ? ' · ' + esc(i.why) : ''}</div></div>
+      <div class="ctl"><select data-role="sugWho" aria-label="Assign suggestion">${assignOptions(S.team.find(m => m.name.toLowerCase() === String(i.assignee || '').toLowerCase())?.id || '')}</select>
+      <button class="btn primary small" data-act="addSug">Add</button></div></div>`).join('')}
+    <div class="row" style="margin-top:10px"><button class="btn small" data-act="addAll" data-key="${esc(key)}">Add all</button></div></div>`
+    : `<p class="empty">All suggestions added. Generate again for more.</p>`;
+}
+
+async function askClaude(mode, cid, btn){
+  if (!sample){ toast('Claude is not available in this view.'); return; }
+  const key = mode === 'day' ? 'day' : 'ideas:' + cid;
+  const clients = (mode === 'day' ? S.clients : S.clients.filter(c => c.id === cid)).map(c => ({
+    id:c.id, name:c.name, business:c.tag, services:c.services, monthlyTarget:tgt(c), deliveredThisMonth:delivered(c),
+    shouldHaveByToday:Math.round(expected(c)), growthPlan:c.plan || {},
+    openTasks:S.tasks.filter(t => t.client === c.id && t.status !== 'done').map(t => t.title).slice(0, 12)}));
+  const team = S.team.map(m => m.name);
+  const left = mode === 'ideas' ? Math.max(0, tgt(clientById(cid)).count - delivered(clientById(cid))) : 0;
+  const prompt = (mode === 'day'
+    ? `You are the operations lead of a small Indian digital marketing agency. Today is ${todayStr}; day ${day} of ${dim} (${daysLeft} days left in the month). Plan today's work for the owner and the team. Prioritise clients who are furthest behind their monthly target, then growth work (strategy, ads, SEO, website) that makes each brand look professionally run. Give 6 to 9 concrete, specific tasks, each doable in one working day, not vague.`
+    : `You are the content strategist of a small Indian digital marketing agency. Today is ${todayStr}. Suggest ${Math.min(10, Math.max(4, left))} specific, shootable ${KINDS[tgt(clientById(cid)).kind]} ideas for this client's remaining content this month, tied to their growth plan pillars and this month's focus. Titles must be concrete (a scene, hook or angle), not generic.`)
+    + `\n\nData:\n${JSON.stringify({clients, team})}\n\nReply with only a JSON array. Each item: {"client": <client id from the data>, "title": string, "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short sentence, "assignee": a name from team or ""}.`;
+  ui.plans[key] = {busy:true}; renderPlan(mode, cid);
+  btn.disabled = true;
+  try {
+    const arr = await sample.json(prompt, {cache:false});
+    const valid = (Array.isArray(arr) ? arr : []).filter(i => i && i.title && clientById(i.client)).map(i => ({
+      client:i.client, title:String(i.title), kind: KINDS[i.kind] ? i.kind : 'other', why:String(i.why || ''), assignee:String(i.assignee || '')}));
+    ui.plans[key] = valid.length ? {items:valid} : {error:'Claude returned nothing usable. Try again.'};
+  } catch(e){
+    ui.plans[key] = {error: errCopy[e && e.code] || 'Something went wrong. Try again.'};
+  }
+  btn.disabled = false; renderPlan(mode, cid);
+}
+
+async function addTask(t){
+  return write(() => db.collection('tasks').add({
+    title:t.title, client:t.client, kind:t.kind, status:'todo', assignee:t.assignee || '',
+    due:t.due || '', month:(t.due || todayStr).slice(0, 7), createdAt:Date.now()}));
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  const taskEl = b.closest('.task'), id = taskEl && taskEl.dataset.id;
+  if (act === 'cycle'){
+    const t = S.tasks.find(x => x.id === id); if (!t) return;
+    const next = STATUS[(STATUS.indexOf(t.status) + 1) % STATUS.length];
+    await write(() => db.collection('tasks').doc(id).update({status:next, doneAt: next === 'done' ? Date.now() : 0}));
+  } else if (act === 'del'){
+    await write(() => db.collection('tasks').doc(id).delete());
+  } else if (act === 'rmMember'){
+    await write(() => db.collection('team').doc(b.dataset.id).delete());
+  } else if (act === 'editPlan'){
+    ui.editing = b.closest('.card').dataset.cid; renderClients();
+  } else if (act === 'cancelEdit'){
+    ui.editing = null; renderClients();
+  } else if (act === 'savePlan'){
+    const cid = ui.editing, g = i => document.getElementById(i).value.trim();
+    const ok = await write(() => db.collection('clients').doc(cid).update({
+      target:{kind:$('#e-kind').value, count:Math.max(0, Number($('#e-count').value) || 0)},
+      plan:{goal:g('e-goal'), audience:g('e-aud'), focus:g('e-focus'), pillars:g('e-pil').split(',').map(s => s.trim()).filter(Boolean)}}));
+    if (ok){ ui.editing = null; toast('Plan saved'); }
+    renderClients();
+  } else if (act === 'ideas'){
+    askClaude('ideas', b.closest('.card').dataset.cid, b);
+  } else if (act === 'addSug'){
+    const el = b.closest('.sug'), p = ui.plans[el.dataset.key], i = p.items[Number(el.dataset.i)];
+    const who = el.querySelector('[data-role="sugWho"]').value;
+    const due = el.dataset.key === 'day' ? todayStr : '';
+    if (await addTask({...i, assignee:who, due})){ i.added = true; renderPlan(el.dataset.key === 'day' ? 'day' : 'ideas', el.dataset.key.split(':')[1]); toast('Task added'); }
+  } else if (act === 'addAll'){
+    const key = b.dataset.key, p = ui.plans[key], due = key === 'day' ? todayStr : '';
+    const els = [...b.closest('div[class=""], #dayPlan, [data-out]').querySelectorAll('.sug')];
+    b.disabled = true;
+    for (const el of els){
+      const i = p.items[Number(el.dataset.i)];
+      if (i.added) continue;
+      const who = el.querySelector('[data-role="sugWho"]').value;
+      if (await addTask({...i, assignee:who, due})) i.added = true; else break;
+    }
+    renderPlan(key === 'day' ? 'day' : 'ideas', key.split(':')[1]);
+  }
+});
+document.addEventListener('change', async ev => {
+  const s = ev.target.closest('select[data-act="assign"]'); if (!s) return;
+  const id = s.closest('.task').dataset.id;
+  await write(() => db.collection('tasks').doc(id).update({assignee:s.value}));
+});
+$('#planDay').addEventListener('click', ev => askClaude('day', null, ev.currentTarget));
+$('#addForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const title = $('#fTitle').value.trim(); if (!title || !$('#fClient').value) return;
+  if (await addTask({title, client:$('#fClient').value, kind:$('#fKind').value, assignee:$('#fWho').value, due:$('#fDue').value})){
+    $('#fTitle').value = ''; toast('Task added');
+  }
+});
+$('#teamForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const name = $('#tName').value.trim(); if (!name) return;
+  if (await write(() => db.collection('team').add({name, createdAt:Date.now()}))) $('#tName').value = '';
+});
+['filClient','filWho','filDone'].forEach(id => $('#' + id).addEventListener('change', renderTasks));
+
+/* ---------- boot ---------- */
+async function boot(){
+  try { const v = localStorage.getItem('desk-view'); if (['today','clients','tasks'].includes(v)) ui.view = v; } catch(e){}
+  setView(ui.view);
+  try { sample = await claude.use('sample'); } catch(e){}
+  if (!sample) $('#planDay').hidden = true;
+  let user = null;
+  try { user = await claude.use('user'); } catch(e){}
+  try { canWrite = user ? (await user.can('data.write')) !== false : true; } catch(e){}
+  try { db = await claude.use('db'); } catch(e){}
+  if (!db){
+    $('#pulse').innerHTML = '<p class="empty">Sign in to Claude to load your desk.</p>';
+    return;
+  }
+  for (const name of ['clients','tasks','team']){
+    db.collection(name).onSnapshot(snap => {
+      S[name] = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      if (name === 'clients') S.clients.sort((a,b) => (a.order ?? 99) - (b.order ?? 99));
+      if (name === 'team') S.team.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
+      loaded[name] = true; schedule();
+    }, e => { loaded[name] = true; toast('Live updates stopped. Reload the page.'); schedule(); });
+  }
+}
+if (window.claude) boot(); else { $('#pulse').innerHTML = '<p class="empty">Open this page from Claude to load your desk.</p>'; }
+</script>
