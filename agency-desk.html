@@ -1,522 +1,836 @@
-<title>Agency Desk</title>
+<title>Reach Story Desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: left rail on desktop, bottom tab bar on phones; one main column of stacked panels.
-   Identity: client hue dots + a pace tick on every progress bar, so "behind" reads at a glance. */
+/* Layout: quiet sidebar (clients are the navigation) + one reading column; sections split by hairlines, no card grid.
+   One accent (signal orange, "reach") used only for primary actions and the pace tick. */
 :root{
-  --bg:#eceff4; --surface:#ffffff; --surface2:#f4f6fa; --ink:#12161f; --muted:#596273; --line:#d8dde6;
-  --accent:#2a4bec; --accent-ink:#ffffff; --good:#146c43; --warn:#9a5b00; --bad:#b3261e; --cl:44%;
-  --f-display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
-  --f-body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
-  --f-mono:"DM Mono",ui-monospace,Menlo,monospace;
+  --bg:#f5f6f7; --surface:#ffffff; --sunk:#eceef1; --ink:#131518; --muted:#6a7078; --line:#e1e4e8;
+  --accent:#d9481f; --accent-ink:#ffffff; --good:#17794a; --warn:#a15f00; --bad:#c2302a; --cl:46%;
+  --f:"Geist",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --m:"Geist Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0c0f16; --surface:#141924; --surface2:#1a2030; --ink:#e9edf5; --muted:#9aa4b5; --line:#262e3d;
-  --accent:#8299ff; --accent-ink:#0c0f16; --good:#4cc38a; --warn:#e2a445; --bad:#ff8078; --cl:64%; color-scheme:dark}}
+  --bg:#0f1113; --surface:#161a1d; --sunk:#1c2024; --ink:#eceef0; --muted:#9299a1; --line:#262b30;
+  --accent:#ff7a4d; --accent-ink:#1a0b05; --good:#53c98b; --warn:#e3a84a; --bad:#ff7d74; --cl:64%; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0c0f16; --surface:#141924; --surface2:#1a2030; --ink:#e9edf5; --muted:#9aa4b5; --line:#262e3d;
-  --accent:#8299ff; --accent-ink:#0c0f16; --good:#4cc38a; --warn:#e2a445; --bad:#ff8078; --cl:64%; color-scheme:dark}
+  --bg:#0f1113; --surface:#161a1d; --sunk:#1c2024; --ink:#eceef0; --muted:#9299a1; --line:#262b30;
+  --accent:#ff7a4d; --accent-ink:#1a0b05; --good:#53c98b; --warn:#e3a84a; --bad:#ff7d74; --cl:64%; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:16px 88px}
-h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
-button,select,input,textarea{font:inherit;color:inherit}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:28px 96px}
+h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
+h1{font-size:26px;letter-spacing:-.02em;line-height:1.2}
+button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px}
-.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start;display:flex;flex-direction:column;gap:20px}
-.brand{font-family:var(--f-display);font-weight:700;font-size:20px;line-height:1.1}
-.brand small{display:block;font-family:var(--f-mono);font-weight:400;font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.02em}
-.nav{display:flex;flex-direction:column;gap:2px}
-.nav button{all:unset;cursor:pointer;padding:8px 10px;border-radius:6px;font-weight:500;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
-.nav button:hover{background:var(--surface2);color:var(--ink)}
-.nav button[aria-current="true"]{background:var(--ink);color:var(--bg)}
-.nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.nav .n{font-family:var(--f-mono);font-size:12px}
-.month{font-family:var(--f-mono);font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
-.month b{color:var(--ink);font-weight:500}
-main{min-width:0;display:flex;flex-direction:column;gap:20px}
-.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
-.head h1{font-size:28px}
-.head p{margin:2px 0 0;color:var(--muted)}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
-.panel h2{font-size:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;font-weight:500}
-.btn:hover{background:var(--surface2)}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.btn.primary:hover{filter:brightness(1.08)}
-.btn.small{padding:4px 9px;font-size:13px}
-.btn[disabled]{opacity:.55;cursor:default}
+a{color:inherit}
+.app{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:210px minmax(0,1fr);gap:56px}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 28px);align-self:start;display:flex;flex-direction:column;gap:22px}
+.mark{font-family:var(--m);font-size:13px;letter-spacing:-.01em}
+.mark span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px 8px}
+.nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;color:var(--muted)}
+.nav button:hover{color:var(--ink);background:var(--sunk)}
+.nav button[aria-current="true"]{color:var(--ink);background:var(--sunk);font-weight:500}
+.nav button:focus-visible{outline:2px solid var(--accent)}
+.nav .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav .ct{font-family:var(--m);font-size:11px}
+main{min-width:0;max-width:760px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:hsl(var(--h,220) 60% var(--cl));flex:none}
+.sub{color:var(--muted);margin-top:4px}
+.meta{font-family:var(--m);font-size:12px;color:var(--muted);display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:8px}
+.sec{margin-top:36px}
+.lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.lab .acts{display:flex;gap:8px;text-transform:none;letter-spacing:0;font-size:13px}
 .muted{color:var(--muted)}
-.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:hsl(var(--h) 62% var(--cl));flex:none}
-.pulse{display:flex;flex-direction:column;gap:10px}
-.prow{display:grid;grid-template-columns:150px minmax(0,1fr) 92px;gap:12px;align-items:center}
-.prow .nm{display:flex;align-items:center;gap:8px;font-weight:600;min-width:0}
-.prow .nm span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar{position:relative;height:8px;background:var(--surface2);border-radius:4px;border:1px solid var(--line)}
-.bar i{position:absolute;left:0;top:-1px;bottom:-1px;border-radius:4px;background:hsl(var(--h) 62% var(--cl))}
-.bar u{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);opacity:.75;text-decoration:none}
-.pct{font-family:var(--f-mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
-.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
-.pill.good{color:var(--good)}.pill.warn{color:var(--warn)}.pill.bad{color:var(--bad)}.pill.neutral{color:var(--muted)}
-.legend{font-size:12px;color:var(--muted);margin-top:10px;display:flex;gap:8px;align-items:center}
-.legend u{display:inline-block;width:2px;height:12px;background:var(--ink);opacity:.75}
-.list{display:flex;flex-direction:column}
-.task{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
-.task:first-child{border-top:0}
-.task .ttl{min-width:0;overflow-wrap:anywhere}
-.task .meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:2px}
-.task .ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-.task.done .ttl{text-decoration:line-through;color:var(--muted)}
-.st{border:1px solid var(--line);background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;min-width:92px;text-align:center}
-.st[data-s="doing"]{border-color:var(--accent);color:var(--accent)}
-.st[data-s="review"]{border-color:var(--warn);color:var(--warn)}
-.st[data-s="done"]{border-color:var(--good);color:var(--good)}
-.late{color:var(--bad);font-weight:600}
-select,input[type=text],input[type=date],input[type=number],textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
-textarea{width:100%;resize:vertical}
-.form{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr)) auto;gap:8px;align-items:end}
-.form label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
-.form select,.form input{width:100%}
+.mono{font-family:var(--m);font-variant-numeric:tabular-nums}
+.b{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.b:hover{border-color:var(--muted)}
+.b.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.b.pri:hover{filter:brightness(1.07)}
+.b[disabled]{opacity:.5;cursor:default}
+.lnk{all:unset;cursor:pointer;color:var(--accent);font-size:13px;font-weight:500}
+.lnk:focus-visible{outline:2px solid var(--accent)}
+.x{all:unset;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:4px;font-size:15px;line-height:1}
+.x:hover{color:var(--bad);background:var(--sunk)}
+.x:focus-visible{outline:2px solid var(--accent)}
+input[type=text],input[type=number],input[type=date],input:not([type]),select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+textarea{width:100%;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{border-color:var(--muted);outline:none}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.items{display:flex;flex-direction:column}
+.it{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center}
+.it:last-child{border-bottom:0}
+.it .t{min-width:0;overflow-wrap:anywhere}
+.it .s{font-size:12px;color:var(--muted);display:flex;gap:4px 12px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.it .c{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.it.click{cursor:pointer}
+.it.click:hover .t{color:var(--accent)}
+.it select{padding:4px 6px;font-size:12px}
+.late{color:var(--bad);font-weight:500}
 .empty{color:var(--muted);padding:6px 0}
-.sug{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
-.sug:first-child{border-top:0}
-.sug .why{font-size:13px;color:var(--muted);margin-top:2px}
-.sug .ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:12px;border-top:3px solid hsl(var(--h) 62% var(--cl))}
-.card h3{font-size:19px;display:flex;align-items:center;gap:8px}
-.card .tag{color:var(--muted);font-size:13px;margin-top:-6px}
-.big{display:flex;align-items:baseline;gap:8px}
-.big b{font-family:var(--f-mono);font-weight:500;font-size:30px;line-height:1}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font-size:12px;padding:2px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--line)}
-.plan dl{margin:0;display:grid;grid-template-columns:90px minmax(0,1fr);gap:6px 10px}
-.plan dt{font-size:12px;color:var(--muted);padding-top:1px}
-.plan dd{margin:0;overflow-wrap:anywhere}
-.editgrid{display:grid;gap:8px}
-.editgrid label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+.pill{font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.good{color:var(--good)}.pill.warn{color:var(--warn)}.pill.bad{color:var(--bad)}.pill.neutral{color:var(--muted)}
+.bar{position:relative;height:4px;background:var(--sunk);border-radius:2px;margin-top:8px}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:2px;background:var(--ink)}
+.bar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--accent);text-decoration:none}
+.prog{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline}
+.big{font-family:var(--m);font-size:30px;font-weight:500;line-height:1;letter-spacing:-.02em}
+.tabs2{display:flex;gap:18px;border-bottom:1px solid var(--line);margin-top:22px;overflow-x:auto;scrollbar-width:none}
+.tabs2 button{all:unset;cursor:pointer;padding:9px 0;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs2 button:hover{color:var(--ink)}
+.tabs2 button[aria-current="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:500}
+.tabs2 button:focus-visible{outline:2px solid var(--accent)}
+.tabs2 + .sec{margin-top:24px}
+.tabs2 + .sec > .lab{border-top:0;padding-top:0}
+.dots{display:inline-flex;gap:3px;align-items:center}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px 16px}
+.kv dt{color:var(--muted);font-size:13px}
+.kv dd{margin:0;overflow-wrap:anywhere}
+ul.ls{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+ul.ls li{padding-left:2px}
+.form{display:grid;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.form label>input,.form label>select,.form label>textarea{color:var(--ink);font-size:14px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.team{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.who{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:2px 4px 2px 10px;background:var(--surface2)}
-.who button{all:unset;cursor:pointer;width:20px;height:20px;border-radius:50%;text-align:center;color:var(--muted)}
-.who button:hover{background:var(--line);color:var(--ink)}
-.who button:focus-visible{outline:2px solid var(--accent)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;z-index:5;max-width:calc(100vw - 32px)}
+.grow{flex:1;min-width:0}
+.out{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;line-height:1.6}
+.out b{font-weight:600}
+.drop{border:1px dashed var(--muted);border-radius:8px;padding:18px;text-align:center;color:var(--muted);background:var(--surface)}
+.drop.on{border-color:var(--accent);color:var(--ink)}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs figure{margin:0;position:relative;width:84px;height:84px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--sunk)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.thumbs .x{position:absolute;top:2px;right:2px;background:var(--surface)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--m);font-size:12px;padding:2px 8px;border-radius:4px;background:var(--sunk)}
+.chip b{font-weight:500}
+.ins{padding:16px 0;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.ins:last-child{border-bottom:0}
+.ins h3{font-size:15px}
+.chat{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.msg{max-width:92%;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+.msg.u{align-self:flex-end;background:var(--sunk);padding:8px 12px;border-radius:10px 10px 2px 10px}
+.msg.a{align-self:flex-start}
+.check{display:flex;gap:10px;align-items:flex-start;padding:7px 0}
+.check input{margin-top:3px;accent-color:var(--accent)}
+.check.done span{color:var(--muted);text-decoration:line-through}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;min-width:480px}
+.tbl th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl input{width:100%}
+.ev{display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:0}
+.ev .dd{font-family:var(--m);font-size:12px;color:var(--muted);line-height:1.3}
+.ev .dd b{display:block;font-size:20px;color:var(--ink);font-weight:500}
+.ev.past{opacity:.45}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 80px);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;z-index:9;max-width:calc(100vw - 32px);font-size:13px}
 .tabs{display:none}
-@media (max-width:760px){
-  .app{grid-template-columns:minmax(0,1fr)}
-  .rail{position:static}
-  .rail .nav,.rail .month{display:none}
-  .tabs{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px);z-index:4;gap:4px}
-  .tabs button{all:unset;cursor:pointer;text-align:center;padding:10px 4px;border-radius:6px;font-weight:600;color:var(--muted)}
-  .tabs button[aria-current="true"]{background:var(--ink);color:var(--bg)}
+.vh{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{display:none}
+  main{max-width:none}
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px);z-index:8}
+  .tabs button{all:unset;cursor:pointer;text-align:center;padding:9px 2px;border-radius:6px;color:var(--muted);font-size:13px}
+  .tabs button[aria-current="true"]{color:var(--ink);font-weight:600;background:var(--sunk)}
   .tabs button:focus-visible{outline:2px solid var(--accent)}
-  .prow{grid-template-columns:minmax(0,1fr) 84px}
-  .prow .bar{grid-column:1 / -1;order:3}
-  .form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-  .form label:first-child{grid-column:1 / -1}
-  .task,.sug{grid-template-columns:auto minmax(0,1fr)}
-  .task .ctl,.sug .ctl{grid-column:1 / -1;justify-content:flex-start}
-  .head h1{font-size:24px}
+  .kv{grid-template-columns:minmax(0,1fr)}
+  .kv dt{margin-top:6px}
+  .it{grid-template-columns:minmax(0,1fr)}
+  .it .c{justify-content:flex-start}
 }
-@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s ease}}
 </style>
 
 <div class="app">
-  <aside class="rail">
-    <div class="brand">Agency Desk<small id="railDate">&nbsp;</small></div>
-    <nav class="nav" aria-label="Sections">
-      <button data-view="today" aria-current="true">Today</button>
-      <button data-view="clients">Clients <span class="n" id="nClients"></span></button>
-      <button data-view="tasks">Tasks <span class="n" id="nTasks"></span></button>
-    </nav>
-    <div class="month" id="railMonth"></div>
-  </aside>
-
-  <main>
-    <section id="v-today">
-      <div class="head"><div><h1 id="todayTitle">Today</h1><p id="todaySub" class="muted"></p></div></div>
-      <div class="panel" style="margin-top:20px"><h2>Month progress</h2><div class="pulse" id="pulse"></div>
-        <div class="legend"><u></u> where each client should be by today</div></div>
-      <div class="panel" style="margin-top:20px"><h2>Needs attention <span class="muted" style="font-family:var(--f-body);font-weight:400;font-size:13px" id="attnCount"></span></h2><div class="list" id="attn"></div></div>
-      <div class="panel" style="margin-top:20px">
-        <h2>Plan for today <button class="btn primary" id="planDay">Plan my day with Claude</button></h2>
-        <div id="dayPlan"><p class="empty">Claude looks at each client's monthly target, how far behind they are and what is already open, then suggests today's tasks. Add the ones you want and assign them.</p></div>
-      </div>
-    </section>
-
-    <section id="v-clients" hidden>
-      <div class="head"><div><h1>Clients</h1><p class="muted">Monthly retainers, growth plans and content ideas.</p></div></div>
-      <div class="cards" id="cards" style="margin-top:20px"></div>
-    </section>
-
-    <section id="v-tasks" hidden>
-      <div class="head"><div><h1>Tasks</h1><p class="muted">Everything owed to clients, and who is doing it.</p></div></div>
-      <div class="panel" style="margin-top:20px">
-        <h2>Add a task</h2>
-        <form class="form" id="addForm">
-          <label for="fTitle">Task<input type="text" id="fTitle" placeholder="e.g. Edit 4 showroom reels" required></label>
-          <label for="fClient">Client<select id="fClient"></select></label>
-          <label for="fKind">Type<select id="fKind"></select></label>
-          <label for="fWho">Assign to<select id="fWho"></select></label>
-          <label for="fDue">Due<input type="date" id="fDue"></label>
-          <button class="btn primary" type="submit">Add</button>
-        </form>
-      </div>
-      <div class="panel" style="margin-top:20px">
-        <h2>Team</h2>
-        <div class="team" id="team"></div>
-        <form class="row" id="teamForm" style="margin-top:10px">
-          <label for="tName" class="muted" style="position:absolute;left:-9999px">Team member name</label>
-          <input type="text" id="tName" placeholder="Add a team member" style="max-width:220px">
-          <button class="btn small" type="submit">Add member</button>
-        </form>
-      </div>
-      <div class="panel" style="margin-top:20px">
-        <h2>All tasks
-          <span class="row">
-            <label for="filClient" class="muted" style="position:absolute;left:-9999px">Filter by client</label>
-            <select id="filClient"></select>
-            <label for="filWho" class="muted" style="position:absolute;left:-9999px">Filter by person</label>
-            <select id="filWho"></select>
-            <label class="row muted" style="gap:4px"><input type="checkbox" id="filDone"> Show done</label>
-          </span>
-        </h2>
-        <div class="list" id="taskList"></div>
-      </div>
-    </section>
-  </main>
+  <aside class="side" id="side"></aside>
+  <main id="main"><p class="empty">Loading your desk…</p></main>
 </div>
-
-<nav class="tabs" aria-label="Sections">
-  <button data-view="today" aria-current="true">Today</button>
-  <button data-view="clients">Clients</button>
-  <button data-view="tasks">Tasks</button>
-</nav>
+<nav class="tabs" id="tabs" aria-label="Sections"></nav>
 <div class="toast" id="toast" hidden></div>
+<label class="vh" for="filePick">Choose screenshots</label>
+<input type="file" id="filePick" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
 
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const KINDS = {reel:'Reel', post:'Post', ad:'Meta ad', shoot:'Shoot', website:'Website', seo:'SEO', strategy:'Strategy', other:'Other'};
-const STATUS = ['todo','doing','review','done'];
-const SL = {todo:'To do', doing:'In progress', review:'In review', done:'Done'};
-const HUES = [212, 28, 148, 340, 265, 190, 50];
+const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm, '<b>$1</b>');
 
-let db = null, sample = null, canWrite = true;
-const S = {clients:[], tasks:[], team:[]};
-const ui = {view:'today', editing:null, plans:{}};
-let loaded = {clients:false, tasks:false, team:false};
+const KINDS = {reel:'Reel (client clips)', carousel:'Carousel', post:'Photo / graphic post', ai:'AI visual', story:'Story', ad:'Meta ad', gbp:'Google post', seo:'SEO', website:'Website', strategy:'Strategy', other:'Other'};
+const SHORT = {reel:'Reel', carousel:'Carousel', post:'Post', ai:'AI visual', story:'Story', ad:'Ad', gbp:'Google post', seo:'SEO', website:'Website', strategy:'Strategy', other:'Other'};
+const CONTENT = ['reel','carousel','post','ai'];
+const STATUS = {todo:'To do', editing:'Editing', sent:'With client', approved:'Approved', done:'Done'};
+const INSIGHT_TYPES = ['Post insights','Reel insights','Story insights','Account overview','Meta Ads Manager','Google Business Profile','Search Console / website','Competitor post','Other'];
+const WRITE_MODES = {
+  caption:'Caption + hashtags', carousel:'Carousel slides', adcopy:'Meta ad copy (3 versions)', whatsapp:'WhatsApp broadcast',
+  assets:'Ask client for photos/clips', review:'Google review request', gbp:'Google Business post', hooks:'10 hooks for a reel'
+};
+const AGENCY_RULES = [
+  'The agency is The Reach Story (@the.reach.story), a small marketing studio in Khanna, Punjab: the owner, a partner (Panda) and one editor.',
+  'We NEVER shoot video. Reels are edited from clips the client sends. Photos come from the client. For Eroe Clothing we generate AI product images.',
+  'Instagram in 2026: sends per reach (DM shares) is the strongest signal for reaching non-followers; carousels have the highest engagement of any format; original content gets more distribution than reposts; reels need a hook in the first 3 seconds and work best at 30–90 seconds.',
+  'Local Khanna clients win through Google Business Profile, reviews and Click-to-WhatsApp ads, not only Instagram.',
+  'Be specific and practical. No generic advice. Everything must be doable by a 3-person team with the materials the client can send.'
+];
+const EVENTS = [
+  {d:'2026-10-11', name:'Navratri begins (to 20 Oct)', who:['rkjewellers','djyps','omsons','reachstory'], prep:'Festive looks and dandiya-night posts. DJ YPS: push Navratri and Dussehra night bookings now.'},
+  {d:'2026-10-20', name:'Dussehra', who:['masterwheels','rkjewellers','omsons','djyps','reachstory'], prep:'Greeting post plus a “new beginnings” offer. Many families buy vehicles on Dussehra: Master Wheels accessory and alloy packages.'},
+  {d:'2026-10-29', name:'Karwa Chauth', who:['rkjewellers','omsons'], prep:'RK: gift-for-wife sets, ads from 15 Oct. Om Sons: couple festive outfits.'},
+  {d:'2026-10-31', name:'Halloween (US)', who:['eroe'], prep:'Eroe: blanks for Halloween and fall merch drops. Posts in early October.'},
+  {d:'2026-11-06', name:'Dhanteras', who:['rkjewellers','masterwheels'], prep:'The biggest jewellery buying day. RK: Meta ads live 3 weeks before (16 Oct), double budget in the final week, personal WhatsApp to top customers. Master Wheels: new-car alloy and accessory packages.'},
+  {d:'2026-11-08', name:'Diwali', who:['omsons','rkjewellers','djyps','masterwheels','eroe','reachstory'], prep:'Greeting creative for every client, designed a week early. DJ YPS: Diwali party bookings. Om Sons: festive orders need 2–3 weeks, so push by mid-October.'},
+  {d:'2026-11-11', name:'Bhai Dooj', who:['rkjewellers'], prep:'Gifts for sisters: light gold and silver.'},
+  {d:'2026-11-20', name:'Dev Uthani Ekadashi: wedding season opens', who:['omsons','rkjewellers','djyps'], prep:'Weddings cluster after 20–21 Nov. Grooms book tailoring 4–8 weeks ahead, so Om Sons groom content runs from October. RK: bridal sets. DJ YPS: wedding packages.'},
+  {d:'2026-11-24', name:'Guru Nanak Gurpurab', who:['omsons','rkjewellers','djyps','masterwheels','reachstory'], prep:'A respectful Punjabi greeting for every Khanna client. No sales push.'},
+  {d:'2026-11-27', name:'Black Friday (US)', who:['eroe'], prep:'Eroe: wholesale tier promo or sample-pack offer, teased from 16 Nov. Cyber Monday is 30 Nov.'},
+  {d:'2026-12-25', name:'Christmas', who:['eroe','djyps'], prep:'Eroe: holiday merch order-deadline posts in early December. DJ YPS: Christmas parties.'},
+  {d:'2026-12-31', name:'New Year’s Eve', who:['djyps','reachstory','eroe'], prep:'DJ YPS: NYE bookings from early December. The Reach Story: year-in-review of client results.'},
+  {d:'2027-01-13', name:'Lohri (13–14 Jan)', who:['omsons','rkjewellers','djyps','masterwheels','reachstory'], prep:'Punjab’s big winter festival. RK: first-Lohri gifts. DJ YPS: Lohri nights. Om Sons: Lohri outfits. Posts from early January.'}
+];
 
 /* ---------- dates ---------- */
 const now = new Date();
 const pad = n => String(n).padStart(2, '0');
-const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-const monthKey = todayStr.slice(0, 7);
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = iso(now);
+const monthKey = today.slice(0, 7);
 const dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
 const day = now.getDate();
-const daysLeft = dim - day + 1;
-const fmtDay = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, {day:'numeric', month:'short'});
+const daysTo = d => Math.round((new Date(d + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5);
+const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, {day:'numeric', month:'short'});
+const monthName = now.toLocaleDateString(undefined, {month:'long'});
 
-/* ---------- derived numbers ---------- */
-const tgt = c => c.target || {kind:'reel', count:0};
-const delivered = c => S.tasks.filter(t => t.client === c.id && t.month === monthKey && t.kind === tgt(c).kind && t.status === 'done').length;
-const expected = c => tgt(c).count * day / dim;
+/* ---------- state ---------- */
+let db = null, sample = null, assets = null, userNs = null;
+let canImages = false, maxImages = 0, canTools = false;
+let role = 'admin', myUid = null, myMember = null;
+const S = {clients:[], tasks:[], team:[], insights:[]};
+const loaded = {clients:false, tasks:false, team:false, insights:false};
+const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, dayPlan:null,
+  pending:[], editing:null, filt:{client:'', who:'', done:false}};
+
+const C = id => S.clients.find(c => c.id === id);
+const M = id => S.team.find(m => m.id === id);
+const hueStyle = c => c ? `--h:${c.hue ?? 220}` : '';
+const dot = c => c ? `<span class="dot" style="${hueStyle(c)}"></span>` : '';
+const keep = (k, d = '') => ui.keep[k] ?? d;
+
+/* ---------- derived ---------- */
+const target = c => (c.target && c.target.count) || 0;
+const posted = c => S.tasks.filter(t => t.client === c.id && t.status === 'done' && CONTENT.includes(t.kind) && t.doneMonth === monthKey).length;
 function pace(c){
-  const n = tgt(c).count, d = delivered(c);
+  const n = target(c), d = posted(c);
   if (!n) return {cls:'neutral', label:'No target', gap:0};
   if (d >= n) return {cls:'good', label:'Target hit', gap:0};
-  const gap = Math.floor(expected(c)) - d;
+  const gap = Math.floor(n * day / dim) - d;
   if (gap <= 0) return {cls:'good', label:'On pace', gap:0};
   return {cls: gap >= Math.max(3, n * .2) ? 'bad' : 'warn', label:`${gap} behind`, gap};
 }
-const clientById = id => S.clients.find(c => c.id === id);
-const memberById = id => S.team.find(m => m.id === id);
-const hue = c => HUES[(S.clients.indexOf(c) + HUES.length) % HUES.length];
-const dotFor = id => { const c = clientById(id); return c ? `<span class="dot" style="--h:${hue(c)}"></span>` : ''; };
+const openTasks = cid => S.tasks.filter(t => t.status !== 'done' && (!cid || t.client === cid));
+const clientInsights = cid => S.insights.filter(i => i.client === cid).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+const eventsFor = cid => EVENTS.filter(e => e.who.includes(cid) && daysTo(e.d) >= -1);
+
+function clientContext(c, opts = {}){
+  const ins = clientInsights(c.id).slice(0, opts.insights ?? 10).map(i => ({date:i.date || new Date(i.createdAt||0).toISOString().slice(0,10), type:i.type, title:i.title, metrics:i.metrics, learnings:i.learnings}));
+  return {
+    today, dayOfMonth:day, daysInMonth:dim,
+    client:{name:c.name, business:c.tag, instagram:c.handle, website:c.website, city:c.city, language:c.brand?.language || c.lang,
+      contentSource:c.source, adBudgetPerMonth:c.ads?.budget, services:c.services, monthlyTarget:target(c), postedThisMonth:posted(c),
+      nextAction:c.next, brand:c.brand, growthPlan:c.plan, research:c.research && {summary:c.research.summary, opportunities:c.research.opportunities, fixFirst:c.research.fixes},
+      competitors:c.competitors},
+    recentInsights:ins,
+    openTasks:openTasks(c.id).slice(0, 15).map(t => `${t.title} [${SHORT[t.kind]||t.kind}, ${STATUS[t.status]}${t.due ? ', due ' + t.due : ''}]`),
+    upcomingMoments:eventsFor(c.id).slice(0, 4).map(e => `${e.d} ${e.name}: ${e.prep}`)
+  };
+}
+const preamble = 'Rules for you:\n- ' + AGENCY_RULES.join('\n- ');
 
 /* ---------- shell ---------- */
-function toast(msg){
-  const t = $('#toast'); t.textContent = msg; t.hidden = false;
-  clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 3200);
+function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 3200); }
+async function write(fn, ok){
+  try { await fn(); if (ok) toast(ok); return true; }
+  catch(e){ toast(e && e.code === 'invalid_argument' ? 'You don’t have permission to change this.' : e && e.code === 'quota_exceeded' ? 'Storage is full. Delete old insights first.' : 'Could not save. Try again.'); return false; }
 }
-function setView(v){
-  ui.view = v;
-  for (const id of ['today','clients','tasks']) $('#v-' + id).hidden = id !== v;
-  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-current', String(b.dataset.view === v)));
-  try { localStorage.setItem('desk-view', v); } catch(e){}
-  render();
-}
-document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+const errCopy = e => ({not_granted:'Claude access was declined for this page. Reload to be asked again.', sampling_disabled:'Claude isn’t available on this account.', rate_limited:'Too many requests. Wait a minute and try again.', invalid_json:'Claude’s answer couldn’t be read. Try again.', images_unavailable:'This view can’t send images to Claude. Type the numbers in the note instead.', image_rejected:'That image couldn’t be read. Try a PNG or JPG screenshot.', prompt_too_large:'Too much to read at once. Try fewer screenshots.'}[e && e.code] || 'Something went wrong. Try again.');
 
-async function write(fn){
-  try { await fn(); return true; }
-  catch(e){ toast(e && e.code === 'invalid_argument' ? 'You need Contributor access or higher to change this.' : 'Could not save. Try again.'); return false; }
+function go(view, cid, ctab){
+  ui.view = view; if (cid !== undefined) ui.cid = cid; if (ctab) ui.ctab = ctab;
+  ui.editing = null;
+  try { localStorage.setItem('rsd-nav', JSON.stringify({view:ui.view, cid:ui.cid, ctab:ui.ctab})); } catch(e){}
+  render(); window.scrollTo(0, 0);
 }
+
+let pendingRender = false, rq = false;
+const typing = () => { const a = document.activeElement; return a && $('#main').contains(a) && a.matches('input:not([type=checkbox]):not([type=file]),textarea'); };
+function schedule(){
+  if (typing()){ pendingRender = true; return; }
+  if (!rq){ rq = true; requestAnimationFrame(() => { rq = false; render(); }); }
+}
+document.addEventListener('focusout', () => setTimeout(() => { if (pendingRender && !typing()){ pendingRender = false; render(); } }, 60));
 
 /* ---------- render ---------- */
-let queued = false;
-function schedule(){ if (!queued){ queued = true; requestAnimationFrame(() => { queued = false; render(); }); } }
-
 function render(){
-  $('#railDate').textContent = now.toLocaleDateString(undefined, {weekday:'short', day:'numeric', month:'short', year:'numeric'});
-  $('#railMonth').innerHTML = `Day <b>${day}</b> of <b>${dim}</b><br>${daysLeft} day${daysLeft===1?'':'s'} left this month`;
-  $('#nClients').textContent = S.clients.length || '';
-  const open = S.tasks.filter(t => t.status !== 'done').length;
-  $('#nTasks').textContent = open || '';
-  fillSelects();
-  if (ui.view === 'today') renderToday();
-  if (ui.view === 'clients' && !ui.editing) renderClients();
-  if (ui.view === 'tasks') renderTasks();
+  if (role === 'editor'){ $('#side').innerHTML = sideEditor(); $('#tabs').innerHTML = ''; $('#main').innerHTML = viewEditor(); return; }
+  $('#side').innerHTML = side();
+  $('#tabs').innerHTML = [['today','Today'],['clients','Clients'],['calendar','Calendar'],['tasks','Tasks']].map(([v,l]) =>
+    `<button data-go="${v}" aria-current="${ui.view === v || (v === 'clients' && ui.view === 'client')}">${l}</button>`).join('');
+  const v = ui.view === 'client' && C(ui.cid) ? viewClient(C(ui.cid)) :
+    ui.view === 'clients' ? viewClients() : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
+  $('#main').innerHTML = v;
 }
 
-function renderToday(){
-  $('#todayTitle').textContent = now.toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'long'});
-  const behind = S.clients.filter(c => pace(c).gap > 0).length;
-  $('#todaySub').textContent = !loaded.clients ? 'Loading…' :
-    behind ? `${behind} of ${S.clients.length} clients are behind pace. ${daysLeft} day${daysLeft===1?'':'s'} left this month.` :
-    `Every client is on pace. ${daysLeft} day${daysLeft===1?'':'s'} left this month.`;
-
-  if (!S.clients.length){
-    $('#pulse').innerHTML = `<p class="empty">${loaded.clients ? 'No clients yet. Ask Claude to add your clients to this desk.' : 'Loading clients…'}</p>`;
-  } else {
-    $('#pulse').innerHTML = S.clients.map(c => {
-      const n = tgt(c).count, d = delivered(c), p = pace(c);
-      const w = n ? Math.min(100, d / n * 100) : 0, e = n ? Math.min(100, day / dim * 100) : 0;
-      return `<div class="prow" style="--h:${hue(c)}">
-        <div class="nm"><span class="dot"></span><span>${esc(c.name)}</span></div>
-        <div class="bar" role="img" aria-label="${d} of ${n} ${esc(KINDS[tgt(c).kind]||'')}s done, ${esc(p.label)}"><i style="width:${w}%"></i><u style="left:${e}%"></u></div>
-        <div class="pct">${d}/${n} <span class="pill ${p.cls}" style="display:block;margin-top:2px;text-align:center">${esc(p.label)}</span></div>
-      </div>`;
-    }).join('');
-  }
-
-  const items = S.tasks.filter(t => t.status !== 'done' && t.due && t.due <= todayStr)
-    .sort((a,b) => a.due.localeCompare(b.due));
-  const unassigned = S.tasks.filter(t => t.status !== 'done' && !t.assignee).length;
-  $('#attnCount').textContent = unassigned ? `${unassigned} open task${unassigned===1?'':'s'} unassigned` : '';
-  $('#attn').innerHTML = items.length ? items.map(taskRow).join('') :
-    `<p class="empty">${loaded.tasks ? 'Nothing is due or overdue. Use “Plan my day” to line up work.' : 'Loading tasks…'}</p>`;
-  renderPlan('day');
+function side(){
+  const due = openTasks().filter(t => t.due && t.due <= today).length;
+  return `<div class="mark">the.reach.story<span>desk · ${esc(now.toLocaleDateString(undefined,{day:'numeric',month:'short'}))} · day ${day}/${dim}</span></div>
+  <nav class="nav" aria-label="Sections">
+    <button data-go="today" aria-current="${ui.view==='today'}"><span class="nm">Today</span>${due ? `<span class="ct">${due}</span>` : ''}</button>
+    <div class="grp">Clients</div>
+    ${S.clients.map(c => { const p = pace(c); return `<button data-go="client" data-cid="${esc(c.id)}" aria-current="${ui.view==='client' && ui.cid===c.id}">${dot(c)}<span class="nm">${esc(c.name)}</span><span class="ct" style="color:var(--${p.cls==='neutral'?'muted':p.cls})">${posted(c)}/${target(c)}</span></button>`; }).join('')}
+    <div class="grp">Plan</div>
+    <button data-go="calendar" aria-current="${ui.view==='calendar'}"><span class="nm">Calendar</span></button>
+    <button data-go="tasks" aria-current="${ui.view==='tasks'}"><span class="nm">Tasks</span><span class="ct">${openTasks().length || ''}</span></button>
+  </nav>`;
 }
 
-function taskRow(t){
-  const c = clientById(t.client), m = memberById(t.assignee);
-  const late = t.status !== 'done' && t.due && t.due < todayStr;
-  return `<div class="task ${t.status === 'done' ? 'done' : ''}" data-id="${esc(t.id)}">
-    <button class="st" data-act="cycle" data-s="${esc(t.status)}" title="Change status">${esc(SL[t.status] || t.status)}</button>
-    <div><div class="ttl">${esc(t.title)}</div>
-      <div class="meta">${c ? `<span>${dotFor(c.id)} ${esc(c.name)}</span>` : ''}<span>${esc(KINDS[t.kind] || t.kind || '')}</span>
-      ${t.due ? `<span class="${late ? 'late' : ''}">${late ? 'Overdue · ' : 'Due '}${esc(fmtDay(t.due))}</span>` : ''}</div></div>
-    <div class="ctl">
-      <select data-act="assign" aria-label="Assign task">${assignOptions(t.assignee)}</select>
-      <button class="btn small" data-act="del" aria-label="Delete task">Delete</button>
-    </div>
+function taskRow(t, opts = {}){
+  const c = C(t.client), late = t.status !== 'done' && t.due && t.due < today;
+  return `<div class="it" data-tid="${esc(t.id)}">
+    <div><div class="t">${esc(t.title)}</div>
+      <div class="s">${opts.noClient ? '' : `<span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span>`}<span>${esc(SHORT[t.kind] || t.kind)}</span>
+      ${t.due ? `<span class="${late ? 'late' : ''}">${late ? 'Overdue · ' : ''}${esc(fmt(t.due))}</span>` : ''}
+      ${opts.showWho && t.assignee ? `<span>${esc(M(t.assignee)?.name || '')}</span>` : ''}</div></div>
+    <div class="c">
+      <label class="vh" for="st-${esc(t.id)}">Status</label>
+      <select id="st-${esc(t.id)}" data-change="status">${Object.entries(STATUS).map(([k,v]) => `<option value="${k}"${k===t.status?' selected':''}>${v}</option>`).join('')}</select>
+      ${opts.editor ? '' : `<label class="vh" for="as-${esc(t.id)}">Assign</label><select id="as-${esc(t.id)}" data-change="assign">${whoOptions(t.assignee)}</select>
+      <button class="x" data-act="delTask" aria-label="Delete task">×</button>`}
+    </div></div>`;
+}
+const whoOptions = sel => `<option value="">Unassigned</option>` + S.team.map(m => `<option value="${esc(m.id)}"${m.id===sel?' selected':''}>${esc(m.name)}</option>`).join('');
+const kindOptions = sel => Object.entries(KINDS).map(([k,v]) => `<option value="${k}"${k===sel?' selected':''}>${v}</option>`).join('');
+
+function suggestions(key, items){
+  const rows = items.map((i, n) => ({...i, n})).filter(i => !i.added);
+  if (!rows.length) return `<p class="empty">All added. Generate again for more.</p>`;
+  return `<div class="items">${rows.map(i => { const c = C(i.client); return `<div class="it" data-sug="${esc(key)}" data-n="${i.n}">
+    <div><div class="t">${esc(i.title)}</div>
+    <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}<span>${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
+    ${i.need ? `<div class="s">Ask client for: ${esc(i.need)}</div>` : ''}</div>
+    <div class="c"><label class="vh" for="sw-${esc(key)}-${i.n}">Assign</label><select id="sw-${esc(key)}-${i.n}" data-role="sugWho">${whoOptions(S.team.find(m => m.name.toLowerCase() === String(i.assignee||'').toLowerCase())?.id || '')}</select>
+    <button class="b" data-act="addSug">Add</button></div></div>`; }).join('')}</div>
+    <div class="row" style="margin-top:10px"><button class="lnk" data-act="addAllSug" data-key="${esc(key)}">Add all as tasks</button></div>`;
+}
+const busyOr = (k, html) => ui.busy[k] ? `<p class="empty">Thinking… this can take up to a minute.</p>` : html;
+
+/* ----- Today ----- */
+function viewToday(){
+  const behind = S.clients.filter(c => pace(c).gap > 0);
+  const due = openTasks().filter(t => t.due && t.due <= today).sort((a,b) => a.due.localeCompare(b.due));
+  const soon = EVENTS.filter(e => daysTo(e.d) >= 0 && daysTo(e.d) <= 45).slice(0, 4);
+  const unassigned = openTasks().filter(t => !t.assignee).length;
+  return `<h1>${esc(now.toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'}))}</h1>
+  <p class="sub">${!loaded.clients ? 'Loading…' : behind.length ? `${behind.length} of ${S.clients.length} pages are behind this month’s target. ${dim - day + 1} days left.` : `Every page is on pace. ${dim - day + 1} days left this month.`}</p>
+
+  <div class="sec"><div class="lab">Next move per page</div>
+  <div class="items">${S.clients.map(c => { const p = pace(c); return `<div class="it click" data-go="client" data-cid="${esc(c.id)}" tabindex="0" role="link">
+    <div><div class="t">${esc(c.next || 'Set a next move on the client page')}</div><div class="s"><span>${dot(c)} ${esc(c.name)}</span><span class="pill ${p.cls}">${esc(p.label)}</span></div></div>
+    <div class="c mono muted">${posted(c)}/${target(c)}</div></div>`; }).join('') || `<p class="empty">${loaded.clients ? 'No clients yet.' : 'Loading…'}</p>`}</div></div>
+
+  <div class="sec"><div class="lab">Due today and overdue${unassigned ? `<span class="acts muted">${unassigned} open unassigned</span>` : ''}</div>
+  <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Plan the day below.' : 'Loading…'}</p>`}</div></div>
+
+  <div class="sec"><div class="lab">Coming up</div>
+  <div class="items">${soon.map(e => `<div class="it"><div><div class="t">${esc(e.name)} <span class="muted mono" style="font-size:12px">· ${esc(fmt(e.d))} · in ${daysTo(e.d)} days</span></div><div class="s"><span class="dots">${e.who.map(id => dot(C(id))).join('')}</span><span>${esc(e.prep)}</span></div></div></div>`).join('') || '<p class="empty">No moments in the next 45 days.</p>'}</div></div>
+
+  <div class="sec"><div class="lab">Plan my day<span class="acts">${sample ? `<button class="b pri" data-act="planDay" ${ui.busy.day ? 'disabled' : ''}>Plan with Claude</button>` : ''}</span></div>
+  ${busyOr('day', ui.out.day ? `<p class="empty">${esc(ui.out.day)}</p>` : ui.dayPlan ? suggestions('day', ui.dayPlan) :
+    `<p class="empty">${sample ? 'Claude reads every page’s target, research, recent insights and the festive calendar, then proposes today’s work. Add the tasks you want and assign them.' : 'Open this page in Claude to plan with AI.'}</p>`)}</div>`;
+}
+
+/* ----- Clients list ----- */
+function viewClients(){
+  return `<h1>Clients</h1><p class="sub">${monthName}: posted content against each monthly target.</p>
+  <div class="sec"><div class="items">${S.clients.map(c => { const n = target(c), d = posted(c), p = pace(c);
+    return `<div class="it click" data-go="client" data-cid="${esc(c.id)}" tabindex="0" role="link"><div>
+      <div class="prog"><div class="t">${dot(c)} <b style="font-weight:500">${esc(c.name)}</b> <span class="muted">· ${esc(c.tag || '')}</span></div><div class="mono">${d}/${n}</div></div>
+      <div class="bar"><i style="width:${n ? Math.min(100, d/n*100) : 0}%"></i><u style="left:${day/dim*100}%"></u></div>
+      <div class="s" style="margin-top:6px"><span class="pill ${p.cls}">${esc(p.label)}</span><span>${esc(c.next || '')}</span></div></div></div>`; }).join('') || '<p class="empty">Loading…</p>'}</div>
+  <p class="muted" style="font-size:12px;margin-top:10px">The orange tick marks where each page should be by today.</p></div>`;
+}
+
+/* ----- Client ----- */
+const CTABS = [['overview','Overview'],['insights','Insights'],['studio','Studio'],['ads','Ads'],['growth','Growth'],['brand','Brand']];
+function viewClient(c){
+  const n = target(c), d = posted(c), p = pace(c);
+  const tab = ui.ctab;
+  const body = tab === 'insights' ? tabInsights(c) : tab === 'studio' ? tabStudio(c) : tab === 'ads' ? tabAds(c) : tab === 'growth' ? tabGrowth(c) : tab === 'brand' ? tabBrand(c) : tabOverview(c);
+  return `<div class="row" style="justify-content:space-between;align-items:flex-start">
+    <div><h1>${dot(c)} ${esc(c.name)}</h1><p class="sub">${esc(c.tag || '')}</p></div>
+    <div style="text-align:right"><div class="big">${d}<span class="muted">/${n}</span></div><div><span class="pill ${p.cls}">${esc(p.label)}</span></div></div>
+  </div>
+  <div class="meta">${c.handle ? `<span>${esc(c.handle)}</span>` : ''}${c.website ? `<span>${esc(c.website)}</span>` : ''}<span>${esc(c.city || '')}</span><span>${esc(c.brand?.language || c.lang || '')}</span><span>Ads ${esc(c.ads?.budget || '—')}</span></div>
+  <div class="bar" style="margin-top:14px"><i style="width:${n ? Math.min(100, d/n*100) : 0}%"></i><u style="left:${day/dim*100}%"></u></div>
+  <nav class="tabs2" aria-label="${esc(c.name)} sections">${CTABS.map(([k,l]) => `<button data-ctab="${k}" aria-current="${tab===k}">${l}${k==='insights' && clientInsights(c.id).length ? ` <span class="mono muted" style="font-size:11px">${clientInsights(c.id).length}</span>` : ''}</button>`).join('')}</nav>
+  ${body}`;
+}
+
+function tabOverview(c){
+  const pl = c.plan || {}, r = c.research || {}, tasks = openTasks(c.id).sort((a,b) => (a.due||'9').localeCompare(b.due||'9'));
+  const ev = eventsFor(c.id).slice(0, 3);
+  return `<div class="sec"><div class="lab">Next move</div>
+    <form class="row" data-form="next"><label class="vh" for="next-${esc(c.id)}">Next move</label>
+    <input class="grow" type="text" id="next-${esc(c.id)}" data-keep="next-${esc(c.id)}" value="${esc(keep('next-'+c.id, c.next || ''))}" placeholder="The one thing that moves this page forward">
+    <button class="b" type="submit">Save</button></form></div>
+
+  <div class="sec"><div class="lab">Open work<span class="acts">${sample ? `<button class="lnk" data-act="ideas">Content ideas</button>` : ''}</span></div>
+    <div class="items">${tasks.length ? tasks.map(t => taskRow(t, {noClient:true, showWho:true})).join('') : '<p class="empty">No open tasks for this page.</p>'}</div>
+    <form class="row" data-form="quickTask" style="margin-top:10px">
+      <label class="vh" for="qt-${esc(c.id)}">New task</label><input class="grow" type="text" id="qt-${esc(c.id)}" data-keep="qt-${esc(c.id)}" value="${esc(keep('qt-'+c.id))}" placeholder="Add a task for ${esc(c.name)}">
+      <label class="vh" for="qk-${esc(c.id)}">Type</label><select id="qk-${esc(c.id)}">${kindOptions(c.target?.kind === 'ai' ? 'ai' : 'carousel')}</select>
+      <button class="b" type="submit">Add</button></form>
+    ${ui.busy['ideas:'+c.id] || ui.ideas[c.id] || ui.out['ideas:'+c.id] ? `<div style="margin-top:16px">${busyOr('ideas:'+c.id, ui.out['ideas:'+c.id] ? `<p class="empty">${esc(ui.out['ideas:'+c.id])}</p>` : suggestions('ideas:'+c.id, ui.ideas[c.id] || []))}</div>` : ''}
+  </div>
+
+  <div class="sec"><div class="lab">Growth plan<span class="acts">${ui.editing === 'plan' ? '' : `<button class="lnk" data-act="editPlan">Edit</button>`}</span></div>
+    ${ui.editing === 'plan' ? `<form class="form" data-form="plan">
+      <div class="row"><label style="flex:0 0 120px">Monthly content<input type="number" min="0" id="p-count" value="${esc(target(c))}"></label></div>
+      <label>Goal<textarea id="p-goal" rows="2">${esc(pl.goal)}</textarea></label>
+      <label>Audience<textarea id="p-aud" rows="2">${esc(pl.audience)}</textarea></label>
+      <label>Content pillars (comma separated)<input type="text" id="p-pil" value="${esc((pl.pillars||[]).join(', '))}"></label>
+      <label>This month’s focus<textarea id="p-focus" rows="2">${esc(pl.focus)}</textarea></label>
+      <div class="row"><button class="b pri" type="submit">Save plan</button><button class="b" type="button" data-act="cancelEdit">Cancel</button></div></form>` :
+    `<dl class="kv"><dt>Goal</dt><dd>${esc(pl.goal || '—')}</dd><dt>Audience</dt><dd>${esc(pl.audience || '—')}</dd>
+      <dt>Pillars</dt><dd>${esc((pl.pillars||[]).join(' · ') || '—')}</dd><dt>This month</dt><dd>${esc(pl.focus || '—')}</dd></dl>`}</div>
+
+  ${r.summary ? `<div class="sec"><div class="lab">Research</div>
+    <p style="margin:0 0 14px">${esc(r.summary)}</p>
+    ${r.fixes?.length ? `<p class="muted" style="margin:0 0 6px;font-size:13px">Fix first</p><ul class="ls">${r.fixes.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${r.opportunities?.length ? `<p class="muted" style="margin:16px 0 6px;font-size:13px">Opportunities</p><ul class="ls">${r.opportunities.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${r.sources?.length ? `<p class="muted" style="margin:16px 0 0;font-size:12px">Sources: ${r.sources.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join(', ')}</p>` : ''}</div>` : ''}
+
+  ${ev.length ? `<div class="sec"><div class="lab">Moments for this page</div><div class="items">${ev.map(e => `<div class="it"><div><div class="t">${esc(e.name)} <span class="muted mono" style="font-size:12px">· ${esc(fmt(e.d))} · ${daysTo(e.d) >= 0 ? 'in ' + daysTo(e.d) + ' days' : 'today'}</span></div><div class="s"><span>${esc(e.prep)}</span></div></div></div>`).join('')}</div></div>` : ''}`;
+}
+
+function tabInsights(c){
+  const list = clientInsights(c.id);
+  const pend = ui.pending;
+  return `<div class="sec"><div class="lab">Add insights</div>
+    <div class="drop" id="drop" tabindex="0">${pend.length ? `<div class="thumbs" style="justify-content:center">${pend.map((p,i) => `<figure><img src="${p.url}" alt="Screenshot ${i+1}"><button class="x" data-act="unpend" data-i="${i}" aria-label="Remove screenshot">×</button></figure>`).join('')}</div>` :
+      `Paste a screenshot here (Ctrl/Cmd + V), drop it, or <button class="lnk" data-act="pick">choose files</button>`}</div>
+    <form class="form" data-form="insight" style="margin-top:12px">
+      <div class="row">
+        <label class="grow" style="min-width:160px">What is it<select id="i-type">${INSIGHT_TYPES.map(t => `<option${t===keep('i-type')?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+        <label style="flex:0 0 150px">Post date<input type="date" id="i-date" data-keep="i-date" value="${esc(keep('i-date'))}"></label>
+      </div>
+      <label>Note or numbers <span class="muted">(optional: what the post was, or type the metrics if you have no screenshot)</span><textarea id="i-note" rows="2" data-keep="i-note">${esc(keep('i-note'))}</textarea></label>
+      <div class="row">${pend.length && pend.length > 1 ? `<button class="lnk" type="button" data-act="pick">Add more</button>` : ''}
+        <button class="b pri" type="submit" ${ui.busy['ins'] ? 'disabled' : ''}>${ui.busy['ins'] ? 'Reading…' : sample ? 'Read with Claude and save' : 'Save'}</button>
+        ${pend.length ? `<button class="b" type="button" data-act="clearPend">Clear</button>` : ''}</div>
+      ${!canImages && sample ? `<p class="muted" style="font-size:12px;margin:0">This view can’t send images to Claude, so screenshots are stored and Claude reads your note instead.</p>` : ''}
+    </form></div>
+
+  <div class="sec"><div class="lab">What we’ve learned<span class="acts">${list.length ? `<span class="muted">${list.length} saved</span>` : ''}</span></div>
+    ${list.length ? list.map(i => `<article class="ins">
+      <div class="row" style="justify-content:space-between"><h3>${esc(i.title || i.type)}</h3><button class="x" data-act="delInsight" data-id="${esc(i.id)}" aria-label="Delete insight">×</button></div>
+      <div class="meta" style="margin-top:-6px"><span>${esc(i.type)}</span>${i.date ? `<span>${esc(fmt(i.date))}</span>` : ''}<span>added ${esc(new Date(i.createdAt||0).toLocaleDateString(undefined,{day:'numeric',month:'short'}))}</span></div>
+      ${i.assets?.length ? `<div class="thumbs">${i.assets.map(a => `<figure><a href="/_blob/${esc(a)}" target="_blank" rel="noopener"><img src="/_blob/${esc(a)}" alt="Insight screenshot" loading="lazy"></a></figure>`).join('')}</div>` : ''}
+      ${i.metrics && Object.keys(i.metrics).length ? `<div class="chips">${Object.entries(i.metrics).map(([k,v]) => `<span class="chip">${esc(k)} <b>${esc(v)}</b></span>`).join('')}</div>` : ''}
+      ${i.summary ? `<p style="margin:0">${esc(i.summary)}</p>` : ''}
+      ${i.learnings?.length ? `<ul class="ls">${i.learnings.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      ${i.next?.length ? `<p class="muted" style="margin:0;font-size:13px">Next: ${esc(i.next.join(' · '))}</p>` : ''}
+      ${i.note && !i.summary ? `<p class="muted" style="margin:0">${esc(i.note)}</p>` : ''}
+    </article>`).join('') : `<p class="empty">No insights yet. Every screenshot you add here makes Claude’s ideas, plans and reviews for ${esc(c.name)} more specific.</p>`}</div>`;
+}
+
+function tabStudio(c){
+  const turns = ui.chats[c.id] || [];
+  const outK = 'write:' + c.id;
+  return `<div class="sec"><div class="lab">Ask your strategist</div>
+    ${turns.length ? `<div class="chat">${turns.map(t => `<div class="msg ${t.role === 'user' ? 'u' : 'a'}">${t.role === 'user' ? esc(t.content) : md(t.content)}</div>`).join('')}</div>` :
+      `<p class="empty" style="margin-bottom:10px">Ask anything about ${esc(c.name)}. Claude knows the research, brand, recent insights, open tasks and the festive calendar${canTools ? ', and can add tasks for you' : ''}.</p>`}
+    ${ui.busy['chat:'+c.id] ? `<p class="empty">Thinking…</p>` : ''}
+    <form class="row" data-form="chat"><label class="vh" for="chat-${esc(c.id)}">Message</label>
+      <input class="grow" type="text" id="chat-${esc(c.id)}" data-keep="chat-${esc(c.id)}" value="${esc(keep('chat-'+c.id))}" placeholder="e.g. What should we post this week to get more enquiries?" ${sample ? '' : 'disabled'}>
+      <button class="b pri" type="submit" ${sample && !ui.busy['chat:'+c.id] ? '' : 'disabled'}>Ask</button>
+      ${turns.length ? `<button class="b" type="button" data-act="clearChat">New chat</button>` : ''}</form></div>
+
+  <div class="sec"><div class="lab">Write</div>
+    <form class="form" data-form="write">
+      <div class="row"><label class="vh" for="w-mode">Format</label><select id="w-mode">${Object.entries(WRITE_MODES).map(([k,v]) => `<option value="${k}"${k===keep('w-mode','caption')?' selected':''}>${v}</option>`).join('')}</select></div>
+      <label class="vh" for="w-brief">Brief</label><textarea id="w-brief" rows="2" data-keep="w-brief-${esc(c.id)}" placeholder="What it’s about, e.g. new bridal set, 22k, Dhanteras offer">${esc(keep('w-brief-'+c.id))}</textarea>
+      <div class="row"><button class="b pri" type="submit" ${sample && !ui.busy[outK] ? '' : 'disabled'}>Write</button>
+      <button class="b" type="button" data-act="weekly" ${sample && !ui.busy[outK] ? '' : 'disabled'}>Weekly review</button>
+      <button class="b" type="button" data-act="report" ${sample && !ui.busy[outK] ? '' : 'disabled'}>Monthly client report</button></div>
+    </form>
+    <div style="margin-top:14px">${busyOr(outK, ui.out[outK] ? `<div class="out" id="out-${esc(c.id)}">${md(ui.out[outK])}</div><div class="row" style="margin-top:8px"><button class="lnk" data-act="copy" data-src="out-${esc(c.id)}">Copy</button></div>` : '')}</div>
   </div>`;
 }
-const assignOptions = sel => `<option value="">Unassigned</option>` + S.team.map(m => `<option value="${esc(m.id)}"${m.id === sel ? ' selected' : ''}>${esc(m.name)}</option>`).join('');
 
-function fillSelects(){
-  const keep = (el, html) => { const v = el.value; el.innerHTML = html; if ([...el.options].some(o => o.value === v)) el.value = v; };
-  keep($('#fClient'), S.clients.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join(''));
-  keep($('#fKind'), Object.entries(KINDS).map(([k,v]) => `<option value="${k}">${v}</option>`).join(''));
-  keep($('#fWho'), assignOptions(''));
-  keep($('#filClient'), `<option value="">All clients</option>` + S.clients.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join(''));
-  keep($('#filWho'), `<option value="">Everyone</option><option value="none">Unassigned</option>` + S.team.map(m => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join(''));
+function tabAds(c){
+  const a = c.ads || {}, p = a.plan;
+  return `<div class="sec"><div class="lab">Budget</div>
+    <form class="row" data-form="ads">
+      <label class="grow" style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)">Monthly budget<input type="text" id="a-budget" value="${esc(a.budget || '')}" placeholder="e.g. ₹5,000–6,000"></label>
+      <label class="grow" style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)">Status<input type="text" id="a-status" value="${esc(a.status || '')}" placeholder="e.g. Running / Paused / Not started"></label>
+      <button class="b" type="submit" style="align-self:flex-end">Save</button></form></div>
+
+  <div class="sec"><div class="lab">Ad plan<span class="acts">${sample ? `<button class="b pri" data-act="adPlan" ${ui.busy['ads:'+c.id] ? 'disabled' : ''}>${p ? 'Redraft with Claude' : 'Draft with Claude'}</button>` : ''}</span></div>
+    ${busyOr('ads:'+c.id, ui.out['ads:'+c.id] ? `<p class="empty">${esc(ui.out['ads:'+c.id])}</p>` : p ? `
+      <dl class="kv"><dt>Objective</dt><dd>${esc(p.objective)}</dd><dt>Audience</dt><dd>${esc(p.audience)}</dd>${p.when ? `<dt>When</dt><dd>${esc(p.when)}</dd>` : ''}</dl>
+      ${p.split?.length ? `<div class="tbl" style="margin-top:16px"><table><thead><tr><th>Campaign</th><th>Budget</th><th>Why</th></tr></thead><tbody>${p.split.map(s => `<tr><td>${esc(s.name)}</td><td class="mono">${esc(s.amount)}</td><td>${esc(s.purpose)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+      ${p.creatives?.length ? `<p class="muted" style="margin:18px 0 6px;font-size:13px">Creatives (from client photos and clips)</p><ul class="ls">${p.creatives.map(x => `<li><b style="font-weight:500">${esc(x.format)}:</b> ${esc(x.angle)}${x.hook ? ` — “${esc(x.hook)}”` : ''}</li>`).join('')}</ul>` : ''}
+      ${p.setup?.length ? `<p class="muted" style="margin:18px 0 6px;font-size:13px">Setup</p><ul class="ls">${p.setup.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      ${p.measure?.length ? `<p class="muted" style="margin:18px 0 6px;font-size:13px">Measure</p><ul class="ls">${p.measure.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      <p class="muted" style="font-size:12px;margin-top:14px">Paste Ads Manager screenshots in Insights and redraft to tune this plan.</p>` :
+      `<p class="empty">No plan yet. Claude will use the budget, research, festive dates and any Ads Manager screenshots you’ve added.</p>`)}</div>
+
+  <div class="sec"><div class="lab">Notes</div>
+    <form class="form" data-form="adNotes"><label class="vh" for="a-notes">Ad notes</label><textarea id="a-notes" rows="3" data-keep="a-notes-${esc(c.id)}">${esc(keep('a-notes-'+c.id, a.notes || ''))}</textarea>
+    <div><button class="b" type="submit">Save notes</button></div></form></div>`;
 }
 
-function renderTasks(){
-  $('#team').innerHTML = S.team.length ? S.team.map(m => `<span class="who">${esc(m.name)}<button data-act="rmMember" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button></span>`).join('')
-    : `<span class="empty">${loaded.team ? 'No team members yet.' : 'Loading…'}</span>`;
-  const fc = $('#filClient').value, fw = $('#filWho').value, sd = $('#filDone').checked;
-  const list = S.tasks.filter(t => (sd || t.status !== 'done') && (!fc || t.client === fc) &&
-    (!fw || (fw === 'none' ? !t.assignee : t.assignee === fw)))
+function tabGrowth(c){
+  const items = c.local?.items || [], seo = c.seo?.keywords, comp = c.competitors || [];
+  return `${items.length ? `<div class="sec"><div class="lab">Local presence checklist<span class="acts muted">${items.filter(i => i.done).length}/${items.length}</span></div>
+    ${items.map((it, n) => `<label class="check ${it.done ? 'done' : ''}"><input type="checkbox" data-change="local" data-n="${n}" ${it.done ? 'checked' : ''}><span>${esc(it.t)}</span></label>`).join('')}
+    <p class="muted" style="font-size:12px">Use Studio → Write → “Google review request” for a ready-to-send message.</p></div>` : ''}
+
+  ${seo ? `<div class="sec"><div class="lab">SEO keywords<span class="acts"><button class="lnk" data-act="addKw">Add keyword</button></span></div>
+    <form data-form="seo"><div class="tbl"><table><thead><tr><th>Keyword</th><th>Target page</th><th style="width:90px">Rank</th><th style="width:90px">Last</th><th style="width:30px"></th></tr></thead><tbody>
+    ${seo.map((k, n) => `<tr><td><label class="vh" for="kw-${n}">Keyword</label><input type="text" id="kw-${n}" value="${esc(k.kw)}"></td><td><label class="vh" for="kp-${n}">Page</label><input type="text" id="kp-${n}" value="${esc(k.page || '')}" placeholder="/collections/…"></td><td><label class="vh" for="kr-${n}">Rank</label><input type="text" id="kr-${n}" value="${esc(k.rank || '')}" placeholder="—"></td><td class="mono muted">${esc(k.prev || '—')}</td><td><button class="x" type="button" data-act="delKw" data-n="${n}" aria-label="Remove keyword">×</button></td></tr>`).join('')}
+    </tbody></table></div><div class="row" style="margin-top:10px"><button class="b" type="submit">Save rankings</button><span class="muted" style="font-size:12px">Check rank in Search Console (Performance → Queries) and paste the screenshot in Insights too.</span></div></form></div>` : ''}
+
+  <div class="sec"><div class="lab">Competitors and reference accounts</div>
+    <div class="items">${comp.map((x, n) => `<div class="it"><div><div class="t">${esc(x.name)}</div>${x.note ? `<div class="s">${esc(x.note)}</div>` : ''}</div><div class="c"><button class="x" data-act="delComp" data-n="${n}" aria-label="Remove">×</button></div></div>`).join('') || '<p class="empty">None yet.</p>'}</div>
+    <form class="row" data-form="comp" style="margin-top:10px"><label class="vh" for="cp-n">Account</label><input type="text" id="cp-n" placeholder="@handle or brand" style="flex:1 1 160px">
+      <label class="vh" for="cp-note">Why watch</label><input type="text" id="cp-note" placeholder="Why watch them" style="flex:2 1 200px"><button class="b" type="submit">Add</button></form>
+    <p class="muted" style="font-size:12px;margin-top:8px">Screenshot a competitor post that did well and add it in Insights as “Competitor post”. Claude will say what to borrow.</p></div>`;
+}
+
+function tabBrand(c){
+  const b = c.brand || {};
+  const f = (id, label, val, rows = 2) => `<label>${label}<textarea id="${id}" rows="${rows}">${esc(val || '')}</textarea></label>`;
+  return `<div class="sec"><div class="lab">Brand kit</div>
+    <form class="form" data-form="brand">
+      ${f('b-tone','Tone of voice', b.tone)}
+      <label>Language<input type="text" id="b-lang" value="${esc(b.language || '')}"></label>
+      ${f('b-look','Look: colours, fonts, photo style', b.look)}
+      ${f('b-do','Always', b.always)}
+      ${f('b-dont','Never', b.never)}
+      <label>Hashtags and tags<input type="text" id="b-tags" value="${esc(b.tags || '')}"></label>
+      <div><button class="b pri" type="submit">Save brand kit</button></div>
+    </form><p class="muted" style="font-size:12px">Everything Claude writes for ${esc(c.name)} follows this kit.</p></div>`;
+}
+
+/* ----- Calendar ----- */
+function viewCalendar(){
+  let last = '';
+  return `<h1>Calendar</h1><p class="sub">Festive and wedding-season moments, and when each page needs to start.</p>
+  <div class="sec">${EVENTS.map(e => { const m = new Date(e.d+'T00:00:00').toLocaleDateString(undefined,{month:'long', year:'numeric'}); const head = m !== last ? `<div class="lab" style="margin-top:${last ? 24 : 0}px">${esc(m)}</div>` : ''; last = m; const dt = daysTo(e.d);
+    return head + `<div class="ev ${dt < 0 ? 'past' : ''}"><div class="dd"><b>${new Date(e.d+'T00:00:00').getDate()}</b>${esc(new Date(e.d+'T00:00:00').toLocaleDateString(undefined,{weekday:'short'}))}</div>
+      <div><div class="row" style="justify-content:space-between"><b style="font-weight:500">${esc(e.name)}</b><span class="mono muted" style="font-size:12px">${dt < 0 ? 'passed' : dt === 0 ? 'today' : 'in ' + dt + ' days'}</span></div>
+      <div class="s muted" style="font-size:13px;margin-top:4px">${esc(e.prep)}</div>
+      <div class="row" style="margin-top:6px;gap:10px">${e.who.map(id => { const c = C(id); return c ? `<button class="lnk" style="color:var(--muted);font-weight:400;display:inline-flex;gap:5px;align-items:center" data-go="client" data-cid="${esc(id)}">${dot(c)}${esc(c.name)}</button>` : ''; }).join('')}</div></div></div>`; }).join('')}
+  <p class="muted" style="font-size:12px;margin-top:14px">Lunar dates can shift by a day. Check the local panchang for Lohri and Dev Uthani.</p></div>`;
+}
+
+/* ----- Tasks ----- */
+function viewTasks(){
+  const f = ui.filt;
+  const list = S.tasks.filter(t => (f.done || t.status !== 'done') && (!f.client || t.client === f.client) && (!f.who || (f.who === 'none' ? !t.assignee : t.assignee === f.who)))
     .sort((a,b) => (a.due || '9999').localeCompare(b.due || '9999'));
-  $('#taskList').innerHTML = list.length ? list.map(taskRow).join('') :
-    `<p class="empty">${loaded.tasks ? 'No tasks match. Add one above or plan your day on the Today tab.' : 'Loading…'}</p>`;
-  if (!$('#fDue').value) $('#fDue').value = todayStr;
-}
-
-function renderClients(){
-  $('#cards').innerHTML = S.clients.length ? S.clients.map(c => {
-    const n = tgt(c).count, d = delivered(c), p = pace(c), pl = c.plan || {};
-    const w = n ? Math.min(100, d / n * 100) : 0, e = n ? Math.min(100, day / dim * 100) : 0;
-    const openN = S.tasks.filter(t => t.client === c.id && t.status !== 'done').length;
-    return `<article class="card" style="--h:${hue(c)}" data-cid="${esc(c.id)}">
-      <div><h3>${esc(c.name)} <span class="pill ${p.cls}" style="font-family:var(--f-body);font-size:12px">${esc(p.label)}</span></h3>
-      <div class="tag">${esc(c.tag || '')}</div></div>
-      <div>
-        <div class="big"><b>${d}<span class="muted">/${n}</span></b><span class="muted">${esc(KINDS[tgt(c).kind] || '')}s done in ${esc(new Date().toLocaleDateString(undefined,{month:'long'}))}</span></div>
-        <div class="bar" style="margin-top:10px"><i style="width:${w}%"></i><u style="left:${e}%"></u></div>
-        <div class="muted mono" style="font-size:12px;margin-top:8px">${openN} open task${openN===1?'':'s'}</div>
-      </div>
-      <div class="chips">${(c.services || []).map(s => `<span class="chip">${esc(s)}</span>`).join('')}</div>
-      <div class="plan"><h4 style="margin:0 0 8px;font-family:var(--f-display)">Growth plan</h4>
-      ${ui.editing === c.id ? editForm(c) : `<dl>
-        <dt>Goal</dt><dd>${esc(pl.goal || '—')}</dd>
-        <dt>Audience</dt><dd>${esc(pl.audience || '—')}</dd>
-        <dt>Pillars</dt><dd>${esc((pl.pillars || []).join(' · ') || '—')}</dd>
-        <dt>This month</dt><dd>${esc(pl.focus || '—')}</dd></dl>`}</div>
+  return `<h1>Tasks</h1><p class="sub">Everything owed to clients, and who is on it. Pipeline: to do → editing → with client → approved → done.</p>
+  <div class="sec"><div class="lab">Add a task</div>
+    <form class="form" data-form="task">
+      <label class="vh" for="t-title">Task</label><input type="text" id="t-title" data-keep="t-title" value="${esc(keep('t-title'))}" placeholder="e.g. Edit 3 reels from Sunday’s wedding clips">
       <div class="row">
-        ${ui.editing === c.id ? `<button class="btn primary small" data-act="savePlan">Save plan</button><button class="btn small" data-act="cancelEdit">Cancel</button>` :
-        `<button class="btn small" data-act="editPlan">Edit plan</button><button class="btn small" data-act="ideas">Content ideas</button>`}
-      </div>
-      <div data-out="${esc(c.id)}"></div>
-    </article>`;
-  }).join('') : `<p class="empty">${loaded.clients ? 'No clients yet.' : 'Loading clients…'}</p>`;
-  S.clients.forEach(c => { if (ui.plans['ideas:' + c.id]) renderPlan('ideas', c.id); });
-}
-function editForm(c){
-  const pl = c.plan || {}, t = tgt(c);
-  return `<div class="editgrid">
-    <label>Monthly target <span class="row"><input type="number" min="0" id="e-count" value="${esc(t.count)}" style="width:90px">
-      <select id="e-kind">${Object.entries(KINDS).map(([k,v]) => `<option value="${k}"${k === t.kind ? ' selected' : ''}>${v}</option>`).join('')}</select></span></label>
-    <label>Goal<textarea id="e-goal" rows="2">${esc(pl.goal)}</textarea></label>
-    <label>Audience<textarea id="e-aud" rows="2">${esc(pl.audience)}</textarea></label>
-    <label>Content pillars (comma separated)<input type="text" id="e-pil" value="${esc((pl.pillars || []).join(', '))}"></label>
-    <label>This month's focus<textarea id="e-focus" rows="2">${esc(pl.focus)}</textarea></label></div>`;
+        <label class="vh" for="t-client">Client</label><select id="t-client">${S.clients.map(c => `<option value="${esc(c.id)}"${c.id===keep('t-client')?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
+        <label class="vh" for="t-kind">Type</label><select id="t-kind">${kindOptions(keep('t-kind','carousel'))}</select>
+        <label class="vh" for="t-who">Assign</label><select id="t-who">${whoOptions(keep('t-who'))}</select>
+        <label class="vh" for="t-due">Due</label><input type="date" id="t-due" value="${esc(keep('t-due', today))}">
+        <button class="b pri" type="submit">Add</button></div></form></div>
+
+  <div class="sec"><div class="lab">All tasks<span class="acts">
+      <label class="vh" for="f-client">Client</label><select id="f-client" data-change="filt" data-k="client"><option value="">All pages</option>${S.clients.map(c => `<option value="${esc(c.id)}"${c.id===f.client?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
+      <label class="vh" for="f-who">Person</label><select id="f-who" data-change="filt" data-k="who"><option value="">Everyone</option><option value="none"${f.who==='none'?' selected':''}>Unassigned</option>${S.team.map(m => `<option value="${esc(m.id)}"${m.id===f.who?' selected':''}>${esc(m.name)}</option>`).join('')}</select>
+      <label class="row" style="gap:4px;color:var(--muted)"><input type="checkbox" id="f-done" data-change="filt" data-k="done" ${f.done?'checked':''}> Done</label></span></div>
+    <div class="items">${list.length ? list.map(t => taskRow(t, {showWho:false})).join('') : `<p class="empty">${loaded.tasks ? 'No tasks match.' : 'Loading…'}</p>`}</div></div>
+
+  <div class="sec"><div class="lab">Team</div>
+    <div class="items">${S.team.map(m => `<div class="it"><div><div class="t">${esc(m.name)}</div><div class="s"><span>${esc({owner:'Owner · sees everything', partner:'Partner · sees everything', editor:'Editor · sees only their tasks'}[m.role] || m.role)}</span><span>${openTasks().filter(t => t.assignee === m.id).length} open</span></div></div>
+      <div class="c">${m.role === 'owner' ? '' : `<button class="x" data-act="delMember" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button>`}</div></div>`).join('')}</div>
+    <form class="row" data-form="member" style="margin-top:10px"><label class="vh" for="m-name">Name</label><input type="text" id="m-name" placeholder="Name" style="flex:1 1 160px">
+      <label class="vh" for="m-role">Role</label><select id="m-role"><option value="editor">Editor (own tasks only)</option><option value="partner">Partner (everything)</option></select><button class="b" type="submit">Add member</button></form>
+    <p class="muted" style="font-size:12px;margin-top:8px">Share this page from the Share menu: partners as <b>Editor</b>, editors as <b>Contributor</b>. Contributors only ever see the task list.</p></div>`;
 }
 
-/* ---------- AI plans ---------- */
-const errCopy = {not_granted:'Claude access was declined for this page.', sampling_disabled:'Claude is not available on this account.', rate_limited:'Too many requests. Wait a moment and try again.', invalid_json:'Claude’s answer could not be read. Try again.'};
-function renderPlan(mode, cid){
-  const key = mode === 'day' ? 'day' : 'ideas:' + cid;
-  const out = mode === 'day' ? $('#dayPlan') : document.querySelector(`[data-out="${CSS.escape(cid)}"]`);
-  const p = ui.plans[key];
-  if (!out || !p) return;
-  if (p.busy){ out.innerHTML = '<p class="empty">Thinking…</p>'; return; }
-  if (p.error){ out.innerHTML = `<p class="empty">${esc(p.error)}</p>`; return; }
-  const rows = (p.items || []).filter(i => !i.added);
-  out.innerHTML = rows.length ? `<div>${rows.map(i => `<div class="sug" data-key="${esc(key)}" data-i="${p.items.indexOf(i)}">
-      <span style="padding-top:5px">${dotFor(i.client)}</span>
-      <div><div>${esc(i.title)}</div><div class="why">${esc(clientById(i.client)?.name || '')} · ${esc(KINDS[i.kind] || i.kind)}${i.why ? ' · ' + esc(i.why) : ''}</div></div>
-      <div class="ctl"><select data-role="sugWho" aria-label="Assign suggestion">${assignOptions(S.team.find(m => m.name.toLowerCase() === String(i.assignee || '').toLowerCase())?.id || '')}</select>
-      <button class="btn primary small" data-act="addSug">Add</button></div></div>`).join('')}
-    <div class="row" style="margin-top:10px"><button class="btn small" data-act="addAll" data-key="${esc(key)}">Add all</button></div></div>`
-    : `<p class="empty">All suggestions added. Generate again for more.</p>`;
-}
-
-async function askClaude(mode, cid, btn){
-  if (!sample){ toast('Claude is not available in this view.'); return; }
-  const key = mode === 'day' ? 'day' : 'ideas:' + cid;
-  const clients = (mode === 'day' ? S.clients : S.clients.filter(c => c.id === cid)).map(c => ({
-    id:c.id, name:c.name, business:c.tag, services:c.services, monthlyTarget:tgt(c), deliveredThisMonth:delivered(c),
-    shouldHaveByToday:Math.round(expected(c)), growthPlan:c.plan || {},
-    openTasks:S.tasks.filter(t => t.client === c.id && t.status !== 'done').map(t => t.title).slice(0, 12)}));
-  const team = S.team.map(m => m.name);
-  const left = mode === 'ideas' ? Math.max(0, tgt(clientById(cid)).count - delivered(clientById(cid))) : 0;
-  const prompt = (mode === 'day'
-    ? `You are the operations lead of a small Indian digital marketing agency. Today is ${todayStr}; day ${day} of ${dim} (${daysLeft} days left in the month). Plan today's work for the owner and the team. Prioritise clients who are furthest behind their monthly target, then growth work (strategy, ads, SEO, website) that makes each brand look professionally run. Give 6 to 9 concrete, specific tasks, each doable in one working day, not vague.`
-    : `You are the content strategist of a small Indian digital marketing agency. Today is ${todayStr}. Suggest ${Math.min(10, Math.max(4, left))} specific, shootable ${KINDS[tgt(clientById(cid)).kind]} ideas for this client's remaining content this month, tied to their growth plan pillars and this month's focus. Titles must be concrete (a scene, hook or angle), not generic.`)
-    + `\n\nData:\n${JSON.stringify({clients, team})}\n\nReply with only a JSON array. Each item: {"client": <client id from the data>, "title": string, "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short sentence, "assignee": a name from team or ""}.`;
-  ui.plans[key] = {busy:true}; renderPlan(mode, cid);
-  btn.disabled = true;
-  try {
-    const arr = await sample.json(prompt, {cache:false});
-    const valid = (Array.isArray(arr) ? arr : []).filter(i => i && i.title && clientById(i.client)).map(i => ({
-      client:i.client, title:String(i.title), kind: KINDS[i.kind] ? i.kind : 'other', why:String(i.why || ''), assignee:String(i.assignee || '')}));
-    ui.plans[key] = valid.length ? {items:valid} : {error:'Claude returned nothing usable. Try again.'};
-  } catch(e){
-    ui.plans[key] = {error: errCopy[e && e.code] || 'Something went wrong. Try again.'};
+/* ----- Editor (Contributor) view ----- */
+function sideEditor(){ return `<div class="mark">the.reach.story<span>my tasks</span></div>`; }
+function viewEditor(){
+  if (!myUid) return `<h1>My tasks</h1><p class="sub">Sign in to Claude to see your tasks.</p>`;
+  if (!myMember){
+    const eds = S.team.filter(m => m.role === 'editor');
+    return `<h1>Who are you?</h1><p class="sub">Pick your name once. This page will show only the tasks assigned to you.</p>
+      <div class="sec"><div class="row">${eds.map(m => `<button class="b" data-act="claim" data-id="${esc(m.id)}">${esc(m.name)}</button>`).join('') || `<p class="empty">${loaded.team ? 'Ask the owner to add you to the team.' : 'Loading…'}</p>`}</div></div>`;
   }
-  btn.disabled = false; renderPlan(mode, cid);
+  const mine = S.tasks.filter(t => t.assignee === myMember).sort((a,b) => (a.status === 'done') - (b.status === 'done') || (a.due || '9').localeCompare(b.due || '9'));
+  const open = mine.filter(t => t.status !== 'done');
+  return `<h1>Hi ${esc(M(myMember)?.name || '')}</h1><p class="sub">${open.length} open task${open.length === 1 ? '' : 's'}. Move each one along as you work: editing → with client → done.</p>
+    <div class="sec"><div class="lab">Open</div><div class="items">${open.map(t => taskRow(t, {editor:true})).join('') || '<p class="empty">Nothing assigned right now.</p>'}</div></div>
+    ${mine.length > open.length ? `<div class="sec"><div class="lab">Done</div><div class="items">${mine.filter(t => t.status === 'done').slice(0, 20).map(t => taskRow(t, {editor:true})).join('')}</div></div>` : ''}`;
 }
 
+/* ---------- data writes ---------- */
+const tasksCol = () => db.collection('tasks');
 async function addTask(t){
-  return write(() => db.collection('tasks').add({
-    title:t.title, client:t.client, kind:t.kind, status:'todo', assignee:t.assignee || '',
-    due:t.due || '', month:(t.due || todayStr).slice(0, 7), createdAt:Date.now()}));
+  const c = C(t.client);
+  return write(() => tasksCol().add({title:String(t.title).slice(0, 300), client:t.client, clientName:c ? c.name : '', kind:KINDS[t.kind] ? t.kind : 'other',
+    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now()}));
+}
+const upd = (cid, data, ok) => write(() => db.collection('clients').doc(cid).update(data), ok);
+
+/* ---------- Claude ---------- */
+function validItems(arr, fallbackClient){
+  return (Array.isArray(arr) ? arr : []).map(i => ({...i, client: C(i && i.client) ? i.client : fallbackClient}))
+    .filter(i => i && i.title && C(i.client)).map(i => ({client:i.client, title:String(i.title), kind:KINDS[i.kind] ? i.kind : 'other',
+      why:String(i.why || ''), need:String(i.need || ''), assignee:String(i.assignee || '')}));
+}
+async function run(key, fn){
+  ui.busy[key] = true; delete ui.out[key]; render();
+  try { await fn(); } catch(e){ ui.out[key] = errCopy(e); }
+  ui.busy[key] = false; render();
+}
+const itemSpec = `Reply with only a JSON array. Each item: {"client": client id, "title": specific task (what exactly to make, with the hook or angle), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or ""}.`;
+
+function planDay(){
+  run('day', async () => {
+    const data = S.clients.map(c => ({id:c.id, ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
+      openTasks:openTasks(c.id).map(t => t.title).slice(0, 8), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
+    const team = S.team.map(m => `${m.name} (${m.role})`);
+    const arr = await sample.json(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). The Reach Story is our own studio page: grow it too, ideally with case studies from client results. Give 7 to 10 tasks, each finishable today. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, {cache:false});
+    const items = validItems(arr);
+    if (!items.length) throw {code:'empty'};
+    ui.dayPlan = items;
+  });
+}
+function ideas(c){
+  run('ideas:' + c.id, async () => {
+    const left = Math.max(4, Math.min(10, target(c) - posted(c)));
+    const arr = await sample.json(`${preamble}\n\nYou are the content strategist for ${c.name}. Suggest ${left} content pieces for the rest of this month that grow recognition and sales. Use the research, pillars, recent insight learnings (repeat what worked), and upcoming moments. Mix formats: carousels, reels edited from client clips${c.id === 'eroe' ? ', AI product visuals' : ''}, photo posts, stories. Each title must be concrete: the exact angle, first-slide text or hook. Write hooks in the client's language.\n\nContext:\n${JSON.stringify(clientContext(c))}\n\n${itemSpec} Use "${c.id}" as the client id.`, {cache:false});
+    const items = validItems(arr, c.id);
+    if (!items.length) throw {code:'empty'};
+    ui.ideas[c.id] = items;
+  });
+}
+async function chat(c, text){
+  const key = 'chat:' + c.id;
+  const turns = ui.chats[c.id] = ui.chats[c.id] || [];
+  turns.push({role:'user', content:text});
+  ui.keep['chat-' + c.id] = '';
+  ui.busy[key] = true; render();
+  const lead = {role:'user', content:`${preamble}\n\nYou are the senior strategist at The Reach Story, advising on ${c.name}. Answer in plain English (write captions/hooks in the client's language). Be concrete and brief: short paragraphs or bullet lists, no fluff.${canTools ? ' If the owner asks you to plan or schedule work, use the add_task tool for each task.' : ''}\n\nWhat you know:\n${JSON.stringify(clientContext(c))}`};
+  const opts = {cache:false};
+  if (canTools) opts.tools = [{name:'add_task', description:'Adds one task for this client to the team task list. Returns "added". Use only when the owner asks to plan, schedule or add work.',
+    inputSchema:{type:'object', properties:{title:{type:'string'}, kind:{type:'string', enum:Object.keys(KINDS)}, due:{type:'string', description:'YYYY-MM-DD or empty'}}, required:['title']},
+    execute: async (inp) => { const ok = await addTask({title:String(inp.title||''), client:c.id, kind:String(inp.kind||'other'), due:/^\d{4}-\d\d-\d\d$/.test(String(inp.due||'')) ? String(inp.due) : ''}); if (!ok) throw new Error('could not save'); return 'added'; }}];
+  try {
+    const hist = turns.slice(-12);
+    const {text: ans} = await sample([lead, ...(hist[0].role === 'assistant' ? hist.slice(1) : hist)], opts);
+    turns.push({role:'assistant', content:ans});
+  } catch(e){ turns.push({role:'assistant', content: e && e.text ? e.text + '\n\n(interrupted)' : errCopy(e)}); }
+  ui.busy[key] = false; render();
+  const inp = document.getElementById('chat-' + c.id); if (inp) inp.focus();
+}
+const WRITE_PROMPTS = {
+  caption:'Write 2 caption options (hook line first, 3–5 short lines, clear call to action to DM/WhatsApp/visit) and 12–15 relevant hashtags mixing local and niche.',
+  carousel:'Write a 6–8 slide carousel: slide-by-slide text (slide 1 is a scroll-stopping hook, last slide a call to action), plus which client photo to use behind each slide, plus the caption. Design it to be saved and sent to a friend.',
+  adcopy:'Write 3 Meta ad variations: primary text (under 125 characters before “more”), headline, and call-to-action button. Each takes a different angle (offer, trust, emotion). Say which client photo or clip suits each.',
+  whatsapp:'Write a short personal WhatsApp broadcast message to past customers (warm, not spammy, one clear ask), plus a 1-line follow-up for people who reply.',
+  assets:'Write a friendly WhatsApp message to the client asking for exactly the photos and clips we need this week, as a numbered shot list with tips for filming on a phone (orientation, light, length). We do not shoot ourselves.',
+  review:'Write a short Google review request message to send customers after delivery, with a place for the review link, plus a thank-you reply template for 5-star reviews and a calm reply template for a negative review.',
+  gbp:'Write 3 Google Business Profile posts (under 1,000 characters each, with a call-to-action button choice) that help local search: mention the town and services naturally.',
+  hooks:'Write 10 reel hooks (text on screen for the first 3 seconds) for clips the client can send. Vary them: question, bold claim, before/after, number, local reference.'
+};
+function writeFor(c, mode, brief){
+  const key = 'write:' + c.id;
+  run(key, async () => {
+    const {text} = await sample(`${preamble}\n\nYou write for ${c.name}. Follow the brand kit exactly and write in the brand's language (for Punjabi, use the Roman-script Punjabi people in Khanna type on Instagram, unless the brand kit says Gurmukhi).\nTask: ${WRITE_PROMPTS[mode]}\nBrief: ${brief || '(none — pick the best topic from the plan, research and upcoming moments)'}\n\nContext:\n${JSON.stringify(clientContext(c, {insights:5}))}\n\nReturn only the finished copy, ready to paste. Use short headings in **bold** to separate versions.`, {cache:false});
+    ui.out[key] = text;
+  });
+}
+function weekly(c){
+  run('write:' + c.id, async () => {
+    const since = Date.now() - 14 * 864e5;
+    const doneRecent = S.tasks.filter(t => t.client === c.id && t.status === 'done').slice(-20).map(t => `${t.title} [${SHORT[t.kind]}]`);
+    const ins = clientInsights(c.id).filter(i => (i.createdAt||0) >= since);
+    const {text} = await sample(`${preamble}\n\nWeekly review for ${c.name}. Look at the insights from the last 14 days and the work done. Give:\n**Repeat** — 3 things that worked, with the numbers that prove it\n**Drop** — 1 thing to stop\n**Test** — 1 experiment for next week\n**Next week** — 5 specific pieces of content or actions\nIf there are few or no insights, say which screenshots to add in the Insights tab and base the review on the plan and research.\n\nInsights (last 14 days): ${JSON.stringify(ins.map(i => ({date:i.date, type:i.type, title:i.title, metrics:i.metrics, learnings:i.learnings})))}\nDone recently: ${JSON.stringify(doneRecent)}\n\nContext:\n${JSON.stringify(clientContext(c, {insights:0}))}`, {cache:false});
+    ui.out['write:' + c.id] = text;
+  });
+}
+function report(c){
+  run('write:' + c.id, async () => {
+    const monthIns = clientInsights(c.id).filter(i => (i.date || new Date(i.createdAt||0).toISOString()).slice(0,7) === monthKey);
+    const doneM = S.tasks.filter(t => t.client === c.id && t.status === 'done' && t.doneMonth === monthKey).map(t => `${t.title} [${SHORT[t.kind]}]`);
+    const {text} = await sample(`${preamble}\n\nWrite the ${monthName} monthly report that The Reach Story sends to ${c.name}. It must look like it comes from a professional agency. Sections: **Highlights** (3 bullets with numbers), **What we delivered** (counts by type), **What the numbers say** (plain words), **Next month** (3–5 planned moves tied to upcoming moments), **What we need from you** (photos/clips/approvals). Use only numbers that appear in the insights; if a number is missing write [add number]. Simple English${c.id === 'eroe' ? '' : ' with one closing line in Punjabi'}. Ready to paste into WhatsApp or email.\n\nInsights this month: ${JSON.stringify(monthIns.map(i => ({date:i.date, type:i.type, title:i.title, metrics:i.metrics, summary:i.summary})))}\nDelivered this month: ${JSON.stringify(doneM)} (target ${target(c)})\n\nContext:\n${JSON.stringify(clientContext(c, {insights:0}))}`, {cache:false});
+    ui.out['write:' + c.id] = text;
+  });
+}
+function adPlan(c){
+  run('ads:' + c.id, async () => {
+    const adIns = clientInsights(c.id).filter(i => /Ads|Meta/i.test(i.type)).slice(0, 5);
+    const p = await sample.json(`${preamble}\n\nYou are a Meta ads specialist. Draft next month's ad plan for ${c.name} with a budget of ${c.ads?.budget || 'unknown'} per month (status: ${c.ads?.status || 'unknown'}). For Khanna businesses prefer Click-to-WhatsApp or lead objectives with a tight local radius; for Eroe (US B2B) prefer website traffic/leads to wholesale enquiries. Creatives must use client photos, client clips or AI visuals — no shoots. Time spend around the upcoming moments. Learn from any Ads Manager insights.\n\nAds Manager insights: ${JSON.stringify(adIns.map(i => ({date:i.date, metrics:i.metrics, learnings:i.learnings})))}\nContext:\n${JSON.stringify(clientContext(c, {insights:3}))}\n\nReply with only JSON: {"objective": string, "audience": "location, radius, age, interests", "when": "dates and pacing", "split": [{"name": campaign name, "amount": "₹… or $…", "purpose": string}], "creatives": [{"format": string, "angle": string, "hook": string}], "setup": [3–6 setup steps], "measure": [3 KPIs with target numbers]}`, {cache:false});
+    if (!p || !p.objective) throw {code:'invalid_json'};
+    await upd(c.id, {ads:{plan:p, planAt:Date.now()}}, 'Ad plan saved');
+  });
+}
+async function readInsight(c){
+  const type = $('#i-type').value, date = $('#i-date').value, note = $('#i-note').value.trim();
+  const files = ui.pending.map(p => p.file);
+  if (!files.length && !note){ toast('Add a screenshot or type the numbers first.'); return; }
+  ui.keep['i-type'] = type;
+  ui.busy.ins = true; render();
+  try {
+    let ids = [];
+    if (files.length && assets){
+      for (const f of files){ const r = await assets.upload(f); ids.push(r.id); }
+    }
+    let r = {};
+    if (sample){
+      const useImg = canImages && files.length;
+      r = await sample.json(`${preamble}\n\nYou are the analyst for ${c.name}. ${useImg ? `Read the attached screenshot(s): ${type}.` : `Here are notes/numbers the owner typed: ${type}.`} ${note ? 'Owner’s note: ' + note : ''}\n${type === 'Competitor post' ? 'This is a COMPETITOR or reference account. Learnings = what we should borrow for our client and how to do it better.' : 'Extract every number you can see. Judge performance against an account of this size and against earlier insights.'}\n\nEarlier insights: ${JSON.stringify(clientInsights(c.id).slice(0, 6).map(i => ({date:i.date, title:i.title, metrics:i.metrics})))}\nClient: ${JSON.stringify(clientContext(c, {insights:0}).client)}\n\nReply with only JSON: {"title": "short label, e.g. Carousel: bridal set · 3 Oct", "date": "YYYY-MM-DD if visible else empty", "metrics": {"Reach": 1234, "...": "..."}, "summary": "2 sentences", "learnings": ["3 specific, reusable learnings"], "next": ["2 concrete next actions"]}`,
+        useImg ? {cache:false, images:files.slice(0, maxImages || 5)} : {cache:false});
+    }
+    const doc = {client:c.id, type, note, date: (r.date && /^\d{4}-\d\d-\d\d$/.test(r.date)) ? r.date : date, assets:ids,
+      title:String(r.title || type), metrics: r.metrics && typeof r.metrics === 'object' ? r.metrics : {}, summary:String(r.summary || ''),
+      learnings:Array.isArray(r.learnings) ? r.learnings.map(String).slice(0, 6) : [], next:Array.isArray(r.next) ? r.next.map(String).slice(0, 4) : [], createdAt:Date.now()};
+    if (await write(() => db.collection('insights').add(doc), 'Insight saved')){
+      ui.pending.forEach(p => URL.revokeObjectURL(p.url)); ui.pending = []; ui.keep['i-note'] = ''; ui.keep['i-date'] = '';
+    }
+  } catch(e){ toast(errCopy(e)); }
+  ui.busy.ins = false; render();
+}
+function addPending(files){
+  const imgs = [...files].filter(f => /^image\//.test(f.type));
+  if (!imgs.length) return;
+  for (const f of imgs) ui.pending.push({file:f, url:URL.createObjectURL(f)});
+  if (maxImages && ui.pending.length > maxImages) toast(`Claude reads up to ${maxImages} screenshots at a time.`);
+  render();
 }
 
 /* ---------- events ---------- */
-document.addEventListener('click', async ev => {
-  const b = ev.target.closest('[data-act]'); if (!b) return;
-  const act = b.dataset.act;
-  const taskEl = b.closest('.task'), id = taskEl && taskEl.dataset.id;
-  if (act === 'cycle'){
-    const t = S.tasks.find(x => x.id === id); if (!t) return;
-    const next = STATUS[(STATUS.indexOf(t.status) + 1) % STATUS.length];
-    await write(() => db.collection('tasks').doc(id).update({status:next, doneAt: next === 'done' ? Date.now() : 0}));
-  } else if (act === 'del'){
-    await write(() => db.collection('tasks').doc(id).delete());
-  } else if (act === 'rmMember'){
-    await write(() => db.collection('team').doc(b.dataset.id).delete());
-  } else if (act === 'editPlan'){
-    ui.editing = b.closest('.card').dataset.cid; renderClients();
-  } else if (act === 'cancelEdit'){
-    ui.editing = null; renderClients();
-  } else if (act === 'savePlan'){
-    const cid = ui.editing, g = i => document.getElementById(i).value.trim();
-    const ok = await write(() => db.collection('clients').doc(cid).update({
-      target:{kind:$('#e-kind').value, count:Math.max(0, Number($('#e-count').value) || 0)},
-      plan:{goal:g('e-goal'), audience:g('e-aud'), focus:g('e-focus'), pillars:g('e-pil').split(',').map(s => s.trim()).filter(Boolean)}}));
-    if (ok){ ui.editing = null; toast('Plan saved'); }
-    renderClients();
-  } else if (act === 'ideas'){
-    askClaude('ideas', b.closest('.card').dataset.cid, b);
-  } else if (act === 'addSug'){
-    const el = b.closest('.sug'), p = ui.plans[el.dataset.key], i = p.items[Number(el.dataset.i)];
-    const who = el.querySelector('[data-role="sugWho"]').value;
-    const due = el.dataset.key === 'day' ? todayStr : '';
-    if (await addTask({...i, assignee:who, due})){ i.added = true; renderPlan(el.dataset.key === 'day' ? 'day' : 'ideas', el.dataset.key.split(':')[1]); toast('Task added'); }
-  } else if (act === 'addAll'){
-    const key = b.dataset.key, p = ui.plans[key], due = key === 'day' ? todayStr : '';
-    const els = [...b.closest('div[class=""], #dayPlan, [data-out]').querySelectorAll('.sug')];
+document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.keep; if (k) ui.keep[k] = e.target.value; });
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.it.click')){ e.preventDefault(); e.target.click(); } });
+document.addEventListener('click', async e => {
+  const g = e.target.closest('[data-go]');
+  if (g && !e.target.closest('select,input,button:not([data-go])')){ go(g.dataset.go, g.dataset.cid ?? ui.cid, g.dataset.go === 'client' && g.dataset.cid !== ui.cid ? 'overview' : undefined); return; }
+  const t = e.target.closest('[data-ctab]'); if (t){ ui.ctab = t.dataset.ctab; ui.editing = null; try { localStorage.setItem('rsd-nav', JSON.stringify({view:ui.view, cid:ui.cid, ctab:ui.ctab})); } catch(_){} render(); return; }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act, c = C(ui.cid), tid = b.closest('[data-tid]')?.dataset.tid;
+  if (a === 'delTask') await write(() => tasksCol().doc(tid).delete());
+  else if (a === 'planDay') planDay();
+  else if (a === 'ideas') ideas(c);
+  else if (a === 'addSug' || a === 'addAllSug'){
+    const key = a === 'addSug' ? b.closest('[data-sug]').dataset.sug : b.dataset.key;
+    const items = key === 'day' ? ui.dayPlan : ui.ideas[key.split(':')[1]];
+    const rows = a === 'addSug' ? [b.closest('[data-sug]')] : [...document.querySelectorAll(`[data-sug="${CSS.escape(key)}"]`)];
     b.disabled = true;
-    for (const el of els){
-      const i = p.items[Number(el.dataset.i)];
-      if (i.added) continue;
-      const who = el.querySelector('[data-role="sugWho"]').value;
-      if (await addTask({...i, assignee:who, due})) i.added = true; else break;
-    }
-    renderPlan(key === 'day' ? 'day' : 'ideas', key.split(':')[1]);
+    for (const r of rows){ const i = items[Number(r.dataset.n)]; if (!i || i.added) continue;
+      if (await addTask({...i, assignee:r.querySelector('[data-role="sugWho"]').value, due: key === 'day' ? today : ''})) i.added = true; else break; }
+    toast(rows.length > 1 ? 'Tasks added' : 'Task added'); render();
   }
-});
-document.addEventListener('change', async ev => {
-  const s = ev.target.closest('select[data-act="assign"]'); if (!s) return;
-  const id = s.closest('.task').dataset.id;
-  await write(() => db.collection('tasks').doc(id).update({assignee:s.value}));
-});
-$('#planDay').addEventListener('click', ev => askClaude('day', null, ev.currentTarget));
-$('#addForm').addEventListener('submit', async ev => {
-  ev.preventDefault();
-  const title = $('#fTitle').value.trim(); if (!title || !$('#fClient').value) return;
-  if (await addTask({title, client:$('#fClient').value, kind:$('#fKind').value, assignee:$('#fWho').value, due:$('#fDue').value})){
-    $('#fTitle').value = ''; toast('Task added');
+  else if (a === 'editPlan'){ ui.editing = 'plan'; render(); }
+  else if (a === 'cancelEdit'){ ui.editing = null; render(); }
+  else if (a === 'pick') $('#filePick').click();
+  else if (a === 'unpend'){ const [p] = ui.pending.splice(Number(b.dataset.i), 1); if (p) URL.revokeObjectURL(p.url); render(); }
+  else if (a === 'clearPend'){ ui.pending.forEach(p => URL.revokeObjectURL(p.url)); ui.pending = []; render(); }
+  else if (a === 'delInsight'){
+    if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Delete?'; b.style.fontSize = '12px'; setTimeout(() => { if (b.isConnected){ b.dataset.confirm = ''; b.textContent = '×'; b.style.fontSize = ''; } }, 3000); return; }
+    const ins = S.insights.find(i => i.id === b.dataset.id);
+    if (await write(() => db.collection('insights').doc(b.dataset.id).delete(), 'Insight deleted') && ins?.assets?.length && assets)
+      for (const id of ins.assets){ try { await assets.delete(id); } catch(_){} }
   }
+  else if (a === 'clearChat'){ ui.chats[c.id] = []; render(); }
+  else if (a === 'weekly') weekly(c);
+  else if (a === 'report') report(c);
+  else if (a === 'copy'){ const el = document.getElementById(b.dataset.src); if (!el) return;
+    try { await navigator.clipboard.writeText(el.innerText); toast('Copied'); } catch(_){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selected. Press Ctrl/Cmd + C to copy.'); } }
+  else if (a === 'adPlan') adPlan(c);
+  else if (a === 'addKw'){ const kws = [...(c.seo?.keywords || []), {kw:'', page:'', rank:''}]; await upd(c.id, {seo:{keywords:kws}}); }
+  else if (a === 'delKw'){ const kws = (c.seo?.keywords || []).filter((_, n) => n !== Number(b.dataset.n)); await upd(c.id, {seo:{keywords:kws}}); }
+  else if (a === 'delComp'){ await upd(c.id, {competitors:(c.competitors || []).filter((_, n) => n !== Number(b.dataset.n))}); }
+  else if (a === 'delMember') await write(() => db.collection('team').doc(b.dataset.id).delete());
+  else if (a === 'claim'){ if (await write(() => db.doc(`data/users/${myUid}/profile`).set({member:b.dataset.id}))){ myMember = b.dataset.id; render(); } }
 });
-$('#teamForm').addEventListener('submit', async ev => {
-  ev.preventDefault();
-  const name = $('#tName').value.trim(); if (!name) return;
-  if (await write(() => db.collection('team').add({name, createdAt:Date.now()}))) $('#tName').value = '';
+document.addEventListener('change', async e => {
+  const el = e.target, k = el.dataset && el.dataset.change; if (!k) return;
+  const tid = el.closest('[data-tid]')?.dataset.tid;
+  if (k === 'status') await write(() => tasksCol().doc(tid).update({status:el.value, doneMonth: el.value === 'done' ? monthKey : ''}));
+  else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
+  else if (k === 'filt'){ ui.filt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); }
+  else if (k === 'local'){ const c = C(ui.cid); const items = (c.local?.items || []).map((it, n) => n === Number(el.dataset.n) ? {...it, done:el.checked} : it); await upd(c.id, {local:{items}}); }
 });
-['filClient','filWho','filDone'].forEach(id => $('#' + id).addEventListener('change', renderTasks));
+document.addEventListener('submit', async e => {
+  const f = e.target.closest('[data-form]'); if (!f) return;
+  e.preventDefault();
+  const k = f.dataset.form, c = C(ui.cid), v = id => (document.getElementById(id)?.value ?? '').trim();
+  if (k === 'next'){ const val = v('next-' + c.id); if (await upd(c.id, {next:val}, 'Saved')) delete ui.keep['next-' + c.id]; }
+  else if (k === 'quickTask'){ const title = v('qt-' + c.id); if (!title) return; if (await addTask({title, client:c.id, kind:v('qk-' + c.id)})){ ui.keep['qt-' + c.id] = ''; toast('Task added'); render(); } }
+  else if (k === 'task'){ const title = v('t-title'); if (!title) return; ['t-client','t-kind','t-who'].forEach(id => ui.keep[id] = v(id));
+    if (await addTask({title, client:v('t-client'), kind:v('t-kind'), assignee:v('t-who'), due:v('t-due')})){ ui.keep['t-title'] = ''; toast('Task added'); render(); } }
+  else if (k === 'plan'){ const ok = await upd(c.id, {target:{count:Math.max(0, Number(v('p-count')) || 0)}, plan:{goal:v('p-goal'), audience:v('p-aud'), focus:v('p-focus'), pillars:v('p-pil').split(',').map(s => s.trim()).filter(Boolean)}}, 'Plan saved'); if (ok){ ui.editing = null; render(); } }
+  else if (k === 'insight') readInsight(c);
+  else if (k === 'chat'){ const t = v('chat-' + c.id); if (t && sample && !ui.busy['chat:' + c.id]) chat(c, t); }
+  else if (k === 'write'){ ui.keep['w-mode'] = v('w-mode'); writeFor(c, v('w-mode'), v('w-brief')); }
+  else if (k === 'ads') await upd(c.id, {ads:{budget:v('a-budget'), status:v('a-status')}}, 'Saved');
+  else if (k === 'adNotes'){ if (await upd(c.id, {ads:{notes:v('a-notes')}}, 'Notes saved')) delete ui.keep['a-notes-' + c.id]; }
+  else if (k === 'brand') await upd(c.id, {brand:{tone:v('b-tone'), language:v('b-lang'), look:v('b-look'), always:v('b-do'), never:v('b-dont'), tags:v('b-tags')}}, 'Brand kit saved');
+  else if (k === 'seo'){ const kws = (c.seo?.keywords || []).map((x, n) => { const rank = v('kr-' + n); return {kw:v('kw-' + n), page:v('kp-' + n), rank, prev: rank !== (x.rank || '') && x.rank ? x.rank : (x.prev || '')}; }).filter(x => x.kw); await upd(c.id, {seo:{keywords:kws}}, 'Rankings saved'); }
+  else if (k === 'comp'){ const n = v('cp-n'); if (!n) return; await upd(c.id, {competitors:[...(c.competitors || []), {name:n, note:v('cp-note')}]}, 'Added'); }
+  else if (k === 'member'){ const n = v('m-name'); if (!n) return; await write(() => db.collection('team').add({name:n, role:v('m-role'), createdAt:Date.now()}), 'Member added'); }
+});
+$('#filePick').addEventListener('change', e => { addPending(e.target.files); e.target.value = ''; });
+document.addEventListener('paste', e => {
+  if (!(ui.view === 'client' && ui.ctab === 'insights')) return;
+  const files = [...(e.clipboardData?.files || [])].filter(f => /^image\//.test(f.type));
+  if (files.length){ e.preventDefault(); addPending(files); }
+});
+document.addEventListener('dragover', e => { const d = e.target.closest && e.target.closest('#drop'); if (d){ e.preventDefault(); d.classList.add('on'); } });
+document.addEventListener('dragleave', e => { const d = e.target.closest && e.target.closest('#drop'); if (d) d.classList.remove('on'); });
+document.addEventListener('drop', e => { const d = e.target.closest && e.target.closest('#drop'); if (d){ e.preventDefault(); addPending(e.dataTransfer.files); } });
 
 /* ---------- boot ---------- */
-async function boot(){
-  try { const v = localStorage.getItem('desk-view'); if (['today','clients','tasks'].includes(v)) ui.view = v; } catch(e){}
-  setView(ui.view);
-  try { sample = await claude.use('sample'); } catch(e){}
-  if (!sample) $('#planDay').hidden = true;
-  let user = null;
-  try { user = await claude.use('user'); } catch(e){}
-  try { canWrite = user ? (await user.can('data.write')) !== false : true; } catch(e){}
-  try { db = await claude.use('db'); } catch(e){}
-  if (!db){
-    $('#pulse').innerHTML = '<p class="empty">Sign in to Claude to load your desk.</p>';
-    return;
-  }
-  for (const name of ['clients','tasks','team']){
-    db.collection(name).onSnapshot(snap => {
-      S[name] = snap.docs.map(d => ({id:d.id, ...d.data()}));
-      if (name === 'clients') S.clients.sort((a,b) => (a.order ?? 99) - (b.order ?? 99));
-      if (name === 'team') S.team.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
-      loaded[name] = true; schedule();
-    }, e => { loaded[name] = true; toast('Live updates stopped. Reload the page.'); schedule(); });
-  }
+function listen(name, sort){
+  db.collection(name).onSnapshot(snap => {
+    S[name] = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    if (sort) S[name].sort(sort);
+    loaded[name] = true; schedule();
+  }, () => { loaded[name] = true; schedule(); });
 }
-if (window.claude) boot(); else { $('#pulse').innerHTML = '<p class="empty">Open this page from Claude to load your desk.</p>'; }
+async function boot(){
+  try { const n = JSON.parse(localStorage.getItem('rsd-nav') || 'null'); if (n && n.view){ ui.view = n.view; ui.cid = n.cid; ui.ctab = n.ctab || 'overview'; } } catch(e){}
+  try { userNs = await claude.use('user'); } catch(e){}
+  try { db = await claude.use('db'); } catch(e){}
+  if (!db){ $('#main').innerHTML = '<h1>Reach Story Desk</h1><p class="sub">Sign in to Claude to open your desk.</p>'; return; }
+  if (userNs){
+    try { role = (await userNs.canEdit()) ? 'admin' : 'editor'; } catch(e){}
+    try { myUid = await userNs.id(); } catch(e){}
+  }
+  listen('tasks'); listen('team', (a,b) => (a.createdAt||0) - (b.createdAt||0));
+  if (role === 'editor'){
+    if (myUid){ try { const p = await db.doc(`data/users/${myUid}/profile`).get(); if (p.exists) myMember = p.data().member; } catch(e){} }
+    render(); return;
+  }
+  listen('clients', (a,b) => (a.order ?? 99) - (b.order ?? 99));
+  listen('insights');
+  render();
+  try { sample = await claude.use('sample'); } catch(e){}
+  if (sample){ try { const l = await sample.limits(); canImages = !!l.images; maxImages = l.images ? l.images.maxCount : 0; canTools = !!l.tools; } catch(e){} }
+  try { assets = await claude.use('assets'); } catch(e){}
+  render();
+}
+if (window.claude) boot(); else $('#main').innerHTML = '<h1>Reach Story Desk</h1><p class="sub">Open this page from Claude to load your desk.</p>';
 </script>
