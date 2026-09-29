@@ -408,6 +408,22 @@ button.alert:focus-visible{outline:2px solid var(--accent)}
 .minibar i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--cc)}
 .minibar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.45;text-decoration:none}
 .cc-kpis > div{background:color-mix(in srgb,var(--cc) 7%,var(--sunk))}
+
+/* ---- v12: calendar day panel ---- */
+button.cell{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);min-height:108px;padding:6px;display:flex;flex-direction:column;gap:3px;min-width:0;transition:background .12s}
+button.cell:hover{background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+button.cell:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+button.cell.pastd{background:color-mix(in srgb,var(--surface) 70%,var(--bg))}
+button.cell.now{box-shadow:inset 0 0 0 2px var(--accent)}
+button.cell.sel{background:color-mix(in srgb,var(--accent) 10%,var(--surface));box-shadow:inset 0 0 0 2px var(--ink)}
+.dnrow{display:flex;justify-content:space-between;align-items:center}
+.dcount{font-family:var(--m);font-size:10.5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--sunk);display:grid;place-items:center;color:var(--ink)}
+.dcount.late{background:color-mix(in srgb,var(--bad) 16%,var(--surface));color:var(--bad)}
+span.gchip{cursor:inherit;display:block}
+.more{font-size:11px;color:var(--muted);padding-left:2px}
+.daypanel{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.evnote{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:8px;background:var(--sunk);margin-bottom:10px;font-size:13px}
+.evnote span{color:var(--muted)}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -525,7 +541,7 @@ let role = 'admin', myUid = null, myMember = null;
 const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[]};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], editing:null, openTask:null, taskView:'list', calMode:'list', calOff:0, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
+  pending:[], editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.allClients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
@@ -587,7 +603,7 @@ function go(view, cid, ctab){
 }
 
 let pendingRender = false, rq = false;
-const typing = () => { const a = document.activeElement; return a && $('#main').contains(a) && a.matches('input:not([type=checkbox]):not([type=file]),textarea'); };
+const typing = () => { const a = document.activeElement; return a && $('#main').contains(a) && a.matches('input:not([type=checkbox]):not([type=file]):not([type=date]),textarea'); };
 function schedule(){
   if (typing()){ pendingRender = true; return; }
   if (!rq){ rq = true; requestAnimationFrame(() => { rq = false; render(); }); }
@@ -1040,9 +1056,9 @@ function tabPrompts(c){
 
 /* ----- Calendar ----- */
 function viewCalendar(){
-  const mode = ui.calMode === 'grid' ? 'grid' : 'list';
-  return `<header class="top"><div><p class="eyebrow">Festive and wedding-season moments, and every task with a due date</p><h1>Calendar</h1></div>
-    <div class="seg" role="group" aria-label="Calendar view"><button data-cal="list" aria-pressed="${mode==='list'}">Moments</button><button data-cal="grid" aria-pressed="${mode==='grid'}">Month grid</button></div></header>
+  const mode = ui.calMode === 'list' ? 'list' : 'grid';
+  return `<header class="top"><div><p class="eyebrow">Every task with a due date, plus festive and wedding-season moments</p><h1>Calendar</h1></div>
+    <div class="seg" role="group" aria-label="Calendar view"><button data-cal="grid" aria-pressed="${mode==='grid'}">Month grid</button><button data-cal="list" aria-pressed="${mode==='list'}">Moments</button></div></header>
   ${mode === 'grid' ? calGrid() : calList()}`;
 }
 function calList(){
@@ -1058,18 +1074,40 @@ function calGrid(){
   const base = new Date(now.getFullYear(), now.getMonth() + (ui.calOff || 0), 1);
   const y = base.getFullYear(), m = base.getMonth(), days = new Date(y, m + 1, 0).getDate();
   const lead = (base.getDay() + 6) % 7;
+  const sel = ui.calDay && ui.calDay.slice(0, 7) === `${y}-${pad(m+1)}` ? ui.calDay : null;
   const cells = [];
   for (let i = 0; i < lead; i++) cells.push('<div class="cell off"></div>');
   for (let d = 1; d <= days; d++){
     const ds = `${y}-${pad(m+1)}-${pad(d)}`;
-    const evs = EVENTS.filter(e => e.d === ds), ts = S.tasks.filter(t => t.due === ds);
-    const chips = [...evs.map(e => `<span class="gchip ev">${esc(e.name)}</span>`), ...ts.map(t => { const c = C(t.client); return `<button class="gchip ${t.status === 'done' ? 'done' : ''}" style="${hueStyle(c)}" data-act="gridTask" data-tid="${esc(t.id)}" title="${esc(t.title)}">${esc(t.title)}</button>`; })];
-    cells.push(`<div class="cell ${ds === today ? 'now' : ''} ${ds < today ? 'pastd' : ''}"><span class="dn">${d}</span>${chips.slice(0, 4).join('')}${chips.length > 4 ? `<span class="muted" style="font-size:11px">+${chips.length - 4} more</span>` : ''}</div>`);
+    const evs = EVENTS.filter(e => e.d === ds), ts = S.tasks.filter(t => t.due === ds).sort((a,b) => (a.status === 'done') - (b.status === 'done'));
+    const late = ts.filter(t => t.status !== 'done' && ds < today).length;
+    const chips = [...evs.map(e => `<span class="gchip ev">${esc(e.name)}</span>`), ...ts.map(t => `<span class="gchip ${t.status === 'done' ? 'done' : ''}" style="${hueStyle(C(t.client))}">${esc(t.title)}</span>`)];
+    cells.push(`<button class="cell ${ds === today ? 'now' : ''} ${ds < today ? 'pastd' : ''} ${ds === sel ? 'sel' : ''}" data-day="${ds}" aria-label="${esc(fmt(ds))}: ${ts.length} task${ts.length === 1 ? '' : 's'}${evs.length ? ', ' + evs.map(e => e.name).join(', ') : ''}">
+      <span class="dnrow"><span class="dn">${d}</span>${ts.length ? `<span class="dcount ${late ? 'late' : ''}">${ts.length}</span>` : ''}</span>${chips.slice(0, 3).join('')}${chips.length > 3 ? `<span class="more">+${chips.length - 3} more</span>` : ''}</button>`);
   }
+  const undated = openTasks().filter(t => !t.due);
   return `<div class="sec"><div class="row" style="justify-content:space-between;margin-bottom:12px"><b style="font-weight:600;font-size:16px">${esc(base.toLocaleDateString(undefined,{month:'long', year:'numeric'}))}</b>
     <div class="row"><button class="b" data-act="calPrev" aria-label="Previous month">‹</button><button class="b" data-act="calNow">This month</button><button class="b" data-act="calNext" aria-label="Next month">›</button></div></div>
     <div class="gridwrap"><div class="grid7">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div class="gh">${d}</div>`).join('')}${cells.join('')}</div></div>
-    <p class="muted" style="font-size:12px;margin:10px 0 0">Coloured chips are tasks by due date (click to open). Grey chips are festive moments.</p></div>`;
+    <p class="muted" style="font-size:12px;margin:10px 0 0">Click a date to see and add its tasks. Coloured chips are tasks in each client’s colour. Grey chips are festive moments.</p></div>
+  ${sel ? dayPanel(sel) : ''}
+  <div class="sec"><div class="lab">No date yet<span class="acts muted">${undated.length} open task${undated.length === 1 ? '' : 's'}</span></div>
+    ${undated.length ? `<div class="items">${undated.slice(0, 30).map(t => { const c = C(t.client); return `<div class="it" data-tid="${esc(t.id)}"><div><div class="t">${esc(t.title)}</div><div class="s"><span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span><span class="k">${esc(SHORT[t.kind] || t.kind)}</span></div></div>
+      <div class="c"><label class="vh" for="sd-${esc(t.id)}">Due date</label><input type="date" id="sd-${esc(t.id)}" data-change="schedule" value="${esc(sel || '')}"></div></div>`; }).join('')}</div>` : '<p class="empty">Every open task has a date.</p>'}</div>`;
+}
+function dayPanel(ds){
+  const ts = S.tasks.filter(t => t.due === ds).sort((a,b) => (a.status === 'done') - (b.status === 'done')), evs = EVENTS.filter(e => e.d === ds);
+  const dt = daysTo(ds);
+  return `<div class="sec daypanel" id="daypanel"><div class="lab">${esc(new Date(ds + 'T00:00:00').toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'long'}))}
+      <span class="acts"><span class="muted">${dt === 0 ? 'Today' : dt > 0 ? 'In ' + dt + ' day' + (dt === 1 ? '' : 's') : -dt + ' day' + (dt === -1 ? '' : 's') + ' ago'}</span><button class="x" data-act="closeDay" aria-label="Close day">×</button></span></div>
+    ${evs.map(e => `<div class="evnote"><b>${esc(e.name)}</b><span>${esc(e.prep)}</span></div>`).join('')}
+    <div class="items">${ts.length ? ts.map(t => taskRow(t, {showWho:true})).join('') : '<p class="empty">No tasks on this day.</p>'}</div>
+    <form class="addline" data-form="dayTask" style="margin-top:12px">
+      <label class="vh" for="dt-title">Task</label><input type="text" id="dt-title" data-keep="dt-title" value="${esc(keep('dt-title'))}" placeholder="Add a task for this day">
+      <label class="vh" for="dt-client">Client</label><select id="dt-client">${S.clients.map(c => `<option value="${esc(c.id)}"${c.id === keep('t-client') ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+      <label class="vh" for="dt-kind">Type</label><select id="dt-kind">${kindOptions(keep('t-kind', 'carousel'))}</select>
+      <label class="vh" for="dt-who">Assign</label><select id="dt-who">${whoOptions(keep('t-who'))}</select>
+      <button class="b pri" type="submit">Add</button></form></div>`;
 }
 
 /* ----- Tasks ----- */
@@ -1776,6 +1814,7 @@ document.addEventListener('click', async e => {
   const t = e.target.closest('[data-ctab]'); if (t){ ui.ctab = t.dataset.ctab; ui.editing = null; try { localStorage.setItem('rsd-nav', JSON.stringify({view:ui.view, cid:ui.cid, ctab:ui.ctab})); } catch(_){} render(); return; }
   if (e.target.closest('#cmdk') && !e.target.closest('.cmdbox')){ closeCmd(); return; }
   const ci = e.target.closest('[data-cmd]'); if (ci){ runCmd(Number(ci.dataset.cmd)); return; }
+  const dd = e.target.closest('[data-day]'); if (dd){ ui.calDay = ui.calDay === dd.dataset.day ? null : dd.dataset.day; render(); if (ui.calDay) setTimeout(() => document.getElementById('daypanel')?.scrollIntoView({behavior:'smooth', block:'nearest'}), 30); return; }
   const cal = e.target.closest('[data-cal]'); if (cal){ ui.calMode = cal.dataset.cal; render(); return; }
   const tv = e.target.closest('[data-tv]'); if (tv){ ui.taskView = tv.dataset.tv; render(); return; }
   const sk = e.target.closest('[data-pick-skin]'); if (sk){ setLook('skin', sk.dataset.pickSkin); return; }
@@ -1790,7 +1829,7 @@ document.addEventListener('click', async e => {
   else if (a === 'calPrev'){ ui.calOff = (ui.calOff || 0) - 1; render(); }
   else if (a === 'calNext'){ ui.calOff = (ui.calOff || 0) + 1; render(); }
   else if (a === 'calNow'){ ui.calOff = 0; render(); }
-  else if (a === 'gridTask'){ ui.filt = {client:'', who:'', done:true, preset:''}; ui.taskView = 'list'; ui.openTask = b.dataset.tid; go('tasks'); }
+  else if (a === 'closeDay'){ ui.calDay = null; render(); }
   else if (a === 'clearPreset'){ ui.filt.preset = ''; render(); }
   else if (a === 'newClient'){ ui.addClient = true; go('clients'); setTimeout(() => $('#nc-name')?.focus(), 30); }
   else if (a === 'cancelNewClient'){ ui.addClient = false; render(); }
@@ -1873,6 +1912,7 @@ document.addEventListener('change', async e => {
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
   else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
   else if (k === 'repMonth'){ ui.rMonth = el.value; render(); }
+  else if (k === 'schedule'){ if (el.value) await write(() => tasksCol().doc(tid).update({due:el.value, month:el.value.slice(0, 7)}), 'Scheduled for ' + fmt(el.value)); }
   else if (k === 'iType'){ ui.keep['i-type'] = el.value; render(); }
   else if (k === 'srMonth'){ ui.srMonth = el.value; render(); }
   else if (k === 'repSec'){ const c = C(ui.cid), mk = ui.rMonth || monthKey, hide = new Set(repDoc(c, mk)?.hide || []); el.checked ? hide.delete(el.dataset.k) : hide.add(el.dataset.k); await saveRep(c, mk, {hide:[...hide]}); }
@@ -1902,6 +1942,8 @@ document.addEventListener('submit', async e => {
     await upd(c.id, {followers:[...(c.followers || []).filter(x => x.d !== d_), {d:d_, n}].sort((a,b) => a.d.localeCompare(b.d)).slice(-200)}, 'Count added'); return; }
   if (k === 'folGoal'){ await upd(c.id, {followerGoal:Math.max(0, Number(v('fo-goal')) || 0)}, 'Goal saved'); return; }
   if (k === 'details'){ await upd(c.id, {name:v('d-name') || c.name, tag:v('d-tag'), handle:v('d-handle'), website:v('d-web'), city:v('d-city'), source:v('d-source'), fee:v('d-fee'), billingDay:Math.min(28, Math.max(0, Number(v('d-bill')) || 0))}, 'Details saved'); return; }
+  if (k === 'dayTask'){ const title = v('dt-title'); if (!title || !ui.calDay) return; ['t-client','t-kind','t-who'].forEach((id, n) => ui.keep[id] = v(['dt-client','dt-kind','dt-who'][n]));
+    if (await addTask({title, client:v('dt-client'), kind:v('dt-kind'), assignee:v('dt-who'), due:ui.calDay})){ ui.keep['dt-title'] = ''; toast('Task added'); render(); } return; }
   if (k === 'repStats'){ const mk = ui.rMonth || monthKey, stats = {}; for (const a of AN){ const x = v('an-' + a.k); if (x !== '' && Number.isFinite(num(x))) stats[a.k] = num(x); } await saveRep(c, mk, {stats}, 'Numbers saved'); return; }
   if (k === 'repNote'){ const mk = ui.rMonth || monthKey; if (await saveRep(c, mk, {note:v('rep-note')}, 'Note saved')) delete ui.keep['rep-note-' + c.id + '-' + mk]; return; }
   if (k === 'comment'){
