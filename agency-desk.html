@@ -364,6 +364,17 @@ button.alert:focus-visible{outline:2px solid var(--accent)}
 .rep-ch.down{color:#c2302a}
 .rep-der{margin:10px 0 0;font-size:13px;color:#3a3e45;background:hsl(var(--rh) 60% 96%);border-radius:8px;padding:9px 12px}
 @media (max-width:1100px){.repgrid{grid-template-columns:minmax(0,1fr)}.repside{position:static;max-height:none}}
+
+/* ---- v9: studio review ---- */
+.srhead{display:grid;grid-template-columns:180px minmax(0,1fr);gap:24px;align-items:center}
+.srscore{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.srscore b{font-family:var(--m);font-size:52px;font-weight:500;line-height:1;letter-spacing:-.03em}
+.srscore b.good{color:var(--good)}.srscore b.warn{color:var(--warn)}.srscore b.bad{color:var(--bad)}
+.srscore > span:not(.pill){font-size:12px;color:var(--muted)}
+.srareas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 22px;font-size:13px}
+.clickrow{cursor:pointer}
+.clickrow:hover td{background:var(--sunk)}
+@media (max-width:820px){.srhead{grid-template-columns:minmax(0,1fr)}.srareas{grid-template-columns:minmax(0,1fr)}}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -475,7 +486,7 @@ const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, {day:'n
 const monthName = now.toLocaleDateString(undefined, {month:'long'});
 
 /* ---------- state ---------- */
-let db = null, sample = null, assets = null, userNs = null, mcp = null, downloads = null;
+let db = null, sample = null, assets = null, userNs = null, downloads = null;
 let canImages = false, maxImages = 0, canTools = false;
 let role = 'admin', myUid = null, myMember = null;
 const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[]};
@@ -545,6 +556,7 @@ document.addEventListener('focusout', () => setTimeout(() => { if (pendingRender
 /* ---------- render ---------- */
 const IC = {
   today:'<path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10M10 20v-5h4v5"/>',
+  studio:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   reports:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 17v-3M13 17v-5M16 17v-2"/>',
   tasks:'<path d="M10 6h10M10 12h10M10 18h10M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17"/>',
   calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
@@ -565,7 +577,7 @@ function render(){
     `<button data-act="cmd" aria-label="Search">${ico('search')}<span>Search</span></button>`;
   const c = C(ui.cid);
   const v = ui.view === 'client' && c ? viewClient(c) : ui.view === 'report' && c ? viewReport(c) :
-    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
+    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'studio' ? viewStudio() : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
   $('#main').innerHTML = v;
   if (ui.view === 'client' && c && ui.ctab === 'followers') wireChart();
   if (ui.view === 'report') fitRep();
@@ -584,6 +596,7 @@ function side(){
     ${navBtn('tasks', 'Tasks', open ? `<span class="ct">${open}</span>` : '')}
     ${navBtn('calendar', 'Calendar')}
     ${navBtn('reports', 'Reports')}
+    ${navBtn('studio', 'Studio review')}
     ${navBtn('clients', 'All pages')}
     <div class="grp"><span>Pages</span><button class="addc" data-act="newClient" aria-label="Add a client" title="Add a client">${ico('plus')}</button></div>
     ${S.clients.map(c => { const p = pace(c); return `<button data-go="client" data-cid="${esc(c.id)}" aria-current="${(ui.view === 'client' || ui.view === 'report') && ui.cid === c.id}">${dot(c)}<span class="nm">${esc(c.name)}</span><span class="pdot ${p.cls}" title="${esc(p.label)}"></span></button>`; }).join('')}
@@ -598,6 +611,7 @@ function cmdItems(){
   const it = [
     {l:'Home', k:'Go to', run:() => go('today')},
     {l:'Reports', k:'Go to', run:() => go('reports')},
+    {l:'Studio review: where am I lacking?', k:'Go to', run:() => go('studio')},
     {l:'Tasks: list', k:'Go to', run:() => { ui.taskView = 'list'; go('tasks'); }},
     {l:'Tasks: board', k:'Go to', run:() => { ui.taskView = 'board'; go('tasks'); }},
     {l:'Overdue tasks', k:'Go to', run:() => { ui.filt = {client:'', who:'', done:false, preset:'overdue'}; go('tasks'); }},
@@ -942,9 +956,7 @@ function promptCard(x, i, saved){
     ${x.negative ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Avoid:</b> ${esc(x.negative)}</p>` : ''}
     ${x.settings ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Settings:</b> ${esc(x.settings)}</p>` : ''}
     ${x.use ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Use it for:</b> ${esc(x.use)}</p>` : ''}
-    <div class="row"><button class="lnk" data-act="copy" data-src="${id}">Copy prompt</button><button class="lnk" data-act="promptTask">Add as task</button>
-      ${!saved && mcp && x.what !== 'edit' && x.what !== 'video' ? `<button class="lnk" data-act="hfGoNew">Generate with Higgsfield</button>` : ''}</div>
-    ${saved ? hfBlock(x, x.id) : ''}
+    <div class="row"><button class="lnk" data-act="copy" data-src="${id}">Copy prompt</button><button class="lnk" data-act="promptTask">Add as task</button></div>
   </div>`;
 }
 function tabPrompts(c){
@@ -1549,51 +1561,115 @@ function reportText(c){
     .filter((x, i, a) => !(x === '' && (a[i - 1] === '' || i === 0))).join('\n');
 }
 
-/* ----- Higgsfield ----- */
-const HF = 'Higgsfield';
-const HF_MODELS = {marketing_studio_image:'Product / ad', gpt_image_2_5:'General', soul_2:'People / fashion'};
-const hfErr = e => ({server_not_connected:'Connect Higgsfield in claude.ai → Settings → Connectors, then try again.', needs_reauth:'Reconnect Higgsfield in claude.ai → Settings → Connectors.', not_in_manifest:'Higgsfield isn’t allowed for this page. Allow it when asked, or reload.', selection_required:'Choose which Higgsfield connection to use when Claude asks.', blocked_by_policy:'Your organization blocks this Higgsfield tool.', server_unavailable:'Higgsfield didn’t answer. Try again in a minute.', tool_error:'Higgsfield refused: ' + (e && e.message || '').slice(0, 140)}[e && e.code] || 'Couldn’t reach Higgsfield. Try again.');
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
-const payloadText = r => { try { return JSON.stringify(r.payload ?? r.structuredContent ?? r.content ?? r); } catch(e){ return ''; } };
-async function hfGenerate(c, x, docId, useUnlim){
-  const key = 'hf:' + docId;
-  ui.busy[key] = true; delete ui.hfAsk[key]; render();
-  try {
-    const model = ui.keep['hfm-' + docId] || (c.id === 'eroe' || /product|jewel|wheel|shirt|tee|hoodie/i.test(x.prompt) ? 'marketing_studio_image' : 'gpt_image_2_5');
-    const params = {model, prompt:x.prompt + (x.negative ? `\nAvoid: ${x.negative}` : ''), aspect_ratio:x.ratio || '4:5', count:1};
-    if (useUnlim !== undefined) params.use_unlim = useUnlim;
-    const r = await mcp.callTool(HF, 'generate_image', {params});
-    const txt = payloadText(r);
-    if (/unlim_choice/.test(txt) && useUnlim === undefined){ ui.hfAsk[key] = true; return; }
-    const job = (txt.match(UUID) || [])[0];
-    if (!job) throw {code:'tool_error', message:txt.slice(0, 160)};
-    let gens = [...(S.prompts.find(p => p.id === docId)?.gens || []), {job, model, status:'working', urls:[], at:Date.now()}];
-    await write(() => db.collection('prompts').doc(docId).update({gens}));
-    for (let i = 0; i < 8; i++){
-      const w = await mcp.callTool(HF, 'jobs_wait', {jobs:[{index:0, job_id:job}], timeout_seconds:15}, {cache:false});
-      const wt = payloadText(w);
-      const urls = [...new Set((wt.match(/https:\/\/[^"'\s\\)]+/g) || []).filter(u => !/higgsfield\.ai\/(docs|help|pricing)/i.test(u)))];
-      const failed = /"(failed|error|nsfw|canceled|cancelled)"/i.test(wt), finished = urls.length || failed || /"(completed|succeeded|done)"/i.test(wt);
-      if (finished){ gens = gens.map(g => g.job === job ? {...g, status: urls.length ? 'done' : failed ? 'failed' : 'done', urls:urls.slice(0, 4)} : g); break; }
+/* ----- Studio review: where the agency is lacking ----- */
+const daysSince = ms => ms ? Math.floor((Date.now() - ms) / 864e5) : Infinity;
+const lastInsightAt = c => Math.max(0, ...S.insights.filter(i => i.client === c.id).map(i => Math.max(i.date ? new Date(i.date + 'T00:00:00').getTime() : 0, (i.createdAt || 0) > 1e12 ? i.createdAt : 0)));
+const lastFollowerAt = c => { const f = folSorted(c).at(-1); return f ? new Date(f.d + 'T00:00:00').getTime() : 0; };
+const deliveredIn = (c, mk) => S.tasks.filter(t => t.client === c.id && t.status === 'done' && CONTENT.includes(t.kind) && t.doneMonth === mk).length;
+const hasBudget = c => /\d/.test(c.ads?.budget || '') && !/₹\s*0\b|^0/.test(c.ads?.budget || '');
+function studioReview(mk){
+  const cur = mk === monthKey, dayN = cur ? day : new Date(Number(mk.slice(0,4)), Number(mk.slice(5,7)), 0).getDate(), dimN = new Date(Number(mk.slice(0,4)), Number(mk.slice(5,7)), 0).getDate();
+  const act = S.clients.filter(c => c.status !== 'paused'), gaps = [], wins = [], rows = [];
+  const add = (area, sev, title, why, fix, key, name) => gaps.push({area, sev, title, why, fix, key, name});
+  const area = {Delivery:[], Deadlines:[], 'Client care':[], 'Data and learning':[], 'Growth work':[], Team:[]};
+  for (const c of act){
+    const n = target(c), d = deliveredIn(c, mk), exp = Math.floor(n * dayN / dimN), pct = n ? Math.min(100, d / Math.max(1, exp) * 100) : 100;
+    area.Delivery.push(pct);
+    if (n && exp - d >= Math.max(3, n * .2)) add('Delivery', 3, `${c.name} is ${exp - d} pieces behind`, `${d} of ${n} delivered; ${exp} should be done by ${cur ? 'today' : 'month end'}. Clients notice gaps in posting before anything else.`, {go:'client', cid:c.id, l:'Plan content'}, 'behind', c.name);
+    else if (n && d >= exp && d) wins.push(`${c.name} is on pace (${d}/${n}).`);
+    const ask = (c.asks || []).filter(x => x.status !== 'done' && daysSince(x.at) > 7);
+    area['Client care'].push(ask.length ? Math.max(0, 100 - ask.length * 35) : 100);
+    if (ask.length) add('Client care', 3, `${ask.length} ask${ask.length > 1 ? 's' : ''} from ${c.name} waiting over a week`, `Oldest: “${ask.sort((a,b) => a.at - b.at)[0].text.slice(0, 90)}”. Unanswered requests are the fastest way to lose a retainer.`, {go:'client', cid:c.id, l:'Answer asks'}, 'asks', c.name);
+    const pm = prevMonth(monthKey), pr = repDoc(c, pm);
+    const hadPrev = S.tasks.some(t => t.client === c.id && t.doneMonth === pm) || S.insights.some(i => i.client === c.id && insMonth(i) === pm) || folSorted(c).some(x => x.d.slice(0,7) === pm);
+    if (cur && day > 5 && hadPrev && (!pr || pr.status !== 'sent')){ area['Client care'].push(30); add('Client care', 2, `${monthLabel(pm)} report not sent to ${c.name}`, 'A monthly report is what makes a retainer feel like a professional agency. It takes two minutes once the data is in.', {act:'openReportFor', cid:c.id, month:pm, l:'Open report'}, 'report', c.name); }
+    else if (pr?.status === 'sent') { area['Client care'].push(100); wins.push(`${monthLabel(pm)} report sent to ${c.name}.`); }
+    const li = daysSince(lastInsightAt(c)), lf = daysSince(lastFollowerAt(c));
+    area['Data and learning'].push(li <= 14 ? 100 : li <= 30 ? 60 : 10, lf <= 14 ? 100 : lf <= 30 ? 60 : 20);
+    if (li > 30) add('Data and learning', 2, `No insights for ${c.name} ${li === Infinity ? 'yet' : 'in ' + li + ' days'}`, 'Without screenshots, ideas and plans are guesses and the report has no numbers.', {go:'client', cid:c.id, tab:'insights', l:'Add screenshot'}, 'noins', c.name);
+    if (lf > 30) add('Data and learning', 1, `No follower count for ${c.name} ${lf === Infinity ? 'yet' : 'in ' + lf + ' days'}`, 'Growth you can’t show is growth the client can’t see.', {go:'client', cid:c.id, tab:'followers', l:'Log count'}, 'nofol', c.name);
+    const loc = c.local?.items || [];
+    if (loc.length){ const p = loc.filter(i => i.done).length / loc.length * 100; area['Growth work'].push(p); if (p < 50) add('Growth work', 1, `${c.name}: local presence ${Math.round(p)}% set up`, 'Google profile, reviews and WhatsApp setup bring walk-ins that Instagram alone doesn’t.', {go:'client', cid:c.id, tab:'growth', l:'Open checklist'}, 'local', c.name); }
+    if (hasBudget(c)){ const adIns = S.insights.some(i => i.client === c.id && /Ads|Meta/i.test(i.type) && daysSince(i.createdAt) <= 30); area['Growth work'].push(adIns ? 100 : 30);
+      if (!adIns) add('Growth work', 2, `${c.name} spends ${c.ads.budget} on ads with no results tracked`, 'Paid money with no numbers is the first thing a client questions. Add an Ads Manager screenshot.', {go:'client', cid:c.id, tab:'insights', l:'Add Ads Manager'}, 'ads', c.name); }
+    const planAt = Math.max(c.createdAt || 0, ...(c.history || []).map(h => h.at));
+    if (c.plan?.goal && planAt && daysSince(planAt) > 60){ area['Growth work'].push(40); add('Growth work', 1, `${c.name}: strategy not reviewed in 60+ days`, 'Brands change. Review the plan with the latest insights and client asks.', {go:'client', cid:c.id, l:'Review plan'}, 'plan', c.name); }
+    for (const e of EVENTS.filter(e => e.who.includes(c.id) && daysTo(e.d) >= 0 && daysTo(e.d) <= 21)){
+      const has = S.tasks.some(t => t.client === c.id && ((t.due && t.due >= today && t.due <= e.d) || new RegExp(e.name.split(/[\s(:]/)[0], 'i').test(t.title)));
+      if (!has){ area['Growth work'].push(20); add('Growth work', 3, `Nothing planned for ${e.name} (${c.name})`, `${daysTo(e.d)} days away. ${ownPrep(c, e)}`, {act:'ideas', cid:c.id, l:'Get ideas'}, 'fest-' + c.id, c.name); }
     }
-    gens = gens.map(g => g.job === job && g.status === 'working' ? {...g, status:'queued'} : g);
-    await write(() => db.collection('prompts').doc(docId).update({gens}), 'Higgsfield finished');
-  } catch(e){ toast(hfErr(e)); }
-  finally { ui.busy[key] = false; render(); }
+    const doneC = S.tasks.filter(t => t.client === c.id && t.status === 'done' && CONTENT.includes(t.kind) && t.doneMonth === mk);
+    if (doneC.length >= 6 && c.id !== 'eroe'){ const car = doneC.filter(t => t.kind === 'carousel').length / doneC.length; if (car < .15) add('Delivery', 1, `${c.name}: only ${Math.round(car * 100)}% carousels`, 'Carousels get the highest engagement on Instagram and are easy to make from client photos. Aim for about a third.', {go:'client', cid:c.id, tab:'create', l:'Make carousel prompts'}, 'carousel', c.name); }
+    const ov = S.tasks.filter(t => t.client === c.id && t.status !== 'done' && t.due && t.due < today).length;
+    rows.push({c, n, d, pct:Math.round(pct), ov, li, ask:(c.asks || []).filter(x => x.status !== 'done').length, rep:repDoc(c, prevMonth(monthKey))?.status === 'sent'});
+  }
+  const od = openTasks().filter(t => t.due && t.due < today), noReason = od.filter(t => !(t.comments || []).length);
+  const avgLate = od.length ? Math.round(od.reduce((a, t) => a - daysTo(t.due), 0) / od.length) : 0;
+  area.Deadlines.push(od.length ? Math.max(0, 100 - od.length * 12 - avgLate) : 100);
+  if (od.length) add('Deadlines', od.length > 4 ? 3 : 2, `${od.length} overdue task${od.length > 1 ? 's' : ''}, ${avgLate} days late on average`, noReason.length ? `${noReason.length} have no reason written. Either move the date or say what’s blocking.` : 'Every one has a reason logged. Now move the dates or clear them.', {preset:'overdue', l:'Open overdue'});
+  else wins.push('No overdue tasks.');
+  const done = S.tasks.filter(t => t.status === 'done' && t.doneAt && t.createdAt && t.doneMonth === mk);
+  const turn = done.length ? done.reduce((a, t) => a + (t.doneAt - t.createdAt), 0) / done.length / 864e5 : null;
+  const waits = S.tasks.filter(t => t.statusAt?.sent && t.statusAt?.approved && t.statusAt.approved > t.statusAt.sent).map(t => (t.statusAt.approved - t.statusAt.sent) / 864e5);
+  const stuck = S.tasks.filter(t => t.status === 'sent' && t.statusAt?.sent && daysSince(t.statusAt.sent) > 3);
+  if (stuck.length) add('Client care', 2, `${stuck.length} piece${stuck.length > 1 ? 's' : ''} waiting on client approval for 3+ days`, 'Send a friendly nudge on WhatsApp, or agree that silence after 48 hours means approved.', {preset:'sent', l:'See them'});
+  const owner = S.team.find(m => m.role === 'owner'), editors = S.team.filter(m => m.role === 'editor').map(m => m.id);
+  const editing = openTasks().filter(t => ['reel','carousel','post','ai'].includes(t.kind));
+  const mine = owner ? editing.filter(t => t.assignee === owner.id).length : 0, un = openTasks().filter(t => !t.assignee).length;
+  const tScore = [];
+  if (editing.length >= 4 && editors.length && mine / editing.length > .5){ tScore.push(40); add('Team', 2, `You hold ${mine} of ${editing.length} editing tasks`, 'Your time is worth more on strategy, clients and sales. Hand editing to your editor and review instead.', {go:'tasks', l:'Reassign'}); }
+  else tScore.push(100);
+  if (un >= 3){ tScore.push(50); add('Team', 1, `${un} open tasks have no owner`, 'Unassigned work is work nobody is doing.', {go:'tasks', l:'Assign'}); } else tScore.push(100);
+  area.Team.push(...tScore);
+  const scores = Object.fromEntries(Object.entries(area).map(([k, v]) => [k, v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null]));
+  const vals = Object.values(scores).filter(v => v !== null), total = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+  const GROUP = {behind:n => `${n} pages are behind on content`, report:n => `Last month’s report not sent to ${n} clients`, noins:n => `No recent insights for ${n} clients`, nofol:n => `No recent follower counts for ${n} clients`, local:n => `Local presence under 50% for ${n} clients`, ads:n => `Ad results not tracked for ${n} clients`, plan:n => `${n} strategies not reviewed in 60+ days`, carousel:n => `Too few carousels for ${n} clients`, asks:n => `Client asks waiting over a week at ${n} clients`};
+  const merged = [], seen = {};
+  for (const g of gaps){
+    if (g.key && GROUP[g.key]){ if (seen[g.key]){ seen[g.key].names.push(g.name); seen[g.key].sev = Math.max(seen[g.key].sev, g.sev); continue; } seen[g.key] = {...g, names:[g.name]}; merged.push(seen[g.key]); }
+    else if (g.key && g.key.startsWith('fest-')){ const f = merged.find(x => x.key === g.key); if (f){ f.events.push(g.title.replace(/^Nothing planned for | \(.*\)$/g, '')); f.why = ''; continue; } merged.push({...g, events:[g.title.replace(/^Nothing planned for | \(.*\)$/g, '')]}); }
+    else merged.push(g);
+  }
+  for (const g of merged){
+    if (g.names && g.names.length > 1){ g.title = GROUP[g.key](g.names.length); g.why = g.names.join(', ') + '. ' + g.why.replace(/^[^.]*\. /, ''); }
+    if (g.events && g.events.length > 1){ g.title = `Nothing planned for ${g.events.join(' and ')} (${g.name})`; g.why = 'Festive dates are when local customers buy. Plan posts and offers at least two weeks ahead.'; }
+  }
+  gaps.length = 0; gaps.push(...merged);
+  gaps.sort((a, b) => b.sev - a.sev);
+  return {gaps, wins, rows, scores, total, turn, wait:waits.length ? waits.reduce((a, b) => a + b, 0) / waits.length : null, od:od.length, noReason:noReason.length};
 }
-function hfBlock(x, docId){
-  if (!mcp || x.what === 'edit' || x.what === 'video') return '';
-  const key = 'hf:' + docId, sel = ui.keep['hfm-' + docId] || '';
-  return `<div class="hf">
-    <div class="row"><span class="hfl">Higgsfield</span>
-      <label class="vh" for="hfm-${esc(docId)}">Model</label><select id="hfm-${esc(docId)}" data-change="hfModel" data-doc="${esc(docId)}"><option value="">Auto model</option>${Object.entries(HF_MODELS).map(([k,v]) => `<option value="${k}"${k===sel?' selected':''}>${v}</option>`).join('')}</select>
-      <button class="b pri" data-act="hfGo" data-doc="${esc(docId)}" ${ui.busy[key] ? 'disabled' : ''}>${ui.busy[key] ? 'Generating…' : 'Generate image'}</button></div>
-    ${ui.hfAsk[key] ? `<div class="row"><span style="font-size:13px">You have free generations. Use them?</span><button class="b" data-act="hfGo" data-doc="${esc(docId)}" data-unlim="1">Use free generations</button><button class="b" data-act="hfGo" data-doc="${esc(docId)}" data-unlim="0">Use credits</button></div>` : ''}
-    ${(x.gens || []).length ? `<div class="gens">${x.gens.slice().reverse().map(g => `<div class="gen"><span class="pill ${g.status === 'done' ? 'good' : g.status === 'failed' ? 'bad' : 'warn'}">${g.status === 'done' ? 'Ready' : g.status === 'failed' ? 'Failed' : 'Still rendering'}</span>
-      <span class="muted mono" style="font-size:11px">${esc(HF_MODELS[g.model] || g.model || '')} · ${esc(ago(g.at))}</span>
-      ${(g.urls || []).map((u, i) => `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener">Open image${g.urls.length > 1 ? ' ' + (i + 1) : ''} ↗</a>`).join('')}
-      ${g.status !== 'done' || !(g.urls || []).length ? `<span class="muted" style="font-size:12px">Find it in your Higgsfield library</span>` : ''}</div>`).join('')}</div>` : ''}
-    <p class="muted" style="font-size:11.5px;margin:0">Uses your Higgsfield credits. Images open in Higgsfield, because the desk can’t show pictures from other websites.</p></div>`;
+function viewStudio(){
+  const mk = ui.srMonth || monthKey, r = studioReview(mk), saved = S.reports.find(x => x.id === 'studio_' + mk);
+  const grade = r.total >= 80 ? ['good', 'Strong'] : r.total >= 60 ? ['warn', 'Needs attention'] : ['bad', 'Falling behind'];
+  const sevL = {3:'High', 2:'Medium', 1:'Low'}, sevC = {3:'bad', 2:'warn', 1:'neutral'};
+  return `<header class="top"><div><p class="eyebrow">For you, not the client · where the studio is slipping, and what to fix first</p><h1>Studio review</h1></div>
+    <label class="vh" for="sr-m">Month</label><select id="sr-m" data-change="srMonth">${repMonths().slice(0, 4).map(m => `<option value="${m}"${m === mk ? ' selected' : ''}>${esc(monthLabel(m))}</option>`).join('')}</select></header>
+  <div class="sec srhead"><div class="srscore"><b class="${grade[0]}">${r.total}</b><span>Studio health</span><span class="pill ${grade[0]}">${grade[1]}</span></div>
+    <div class="srareas">${Object.entries(r.scores).map(([k, v]) => `<div><div class="row" style="justify-content:space-between"><span>${esc(k)}</span><span class="mono">${v === null ? '—' : v}</span></div><div class="load" style="max-width:none"><i style="width:${v ?? 0}%;background:var(--${v === null ? 'line' : v >= 80 ? 'good' : v >= 60 ? 'warn' : 'bad'})"></i></div></div>`).join('')}</div></div>
+  <div class="stats" style="margin-top:16px">
+    <div class="stat" style="cursor:default"><b>${r.gaps.length}</b><span>Things to fix</span></div>
+    <div class="stat" style="cursor:default"><b>${r.od}</b><span>Overdue${r.noReason ? ` · ${r.noReason} without reason` : ''}</span></div>
+    <div class="stat" style="cursor:default"><b>${r.turn === null ? '—' : r.turn.toFixed(1) + 'd'}</b><span>Avg task turnaround</span></div>
+    <div class="stat" style="cursor:default"><b>${r.wait === null ? '—' : r.wait.toFixed(1) + 'd'}</b><span>Avg wait on client approval</span></div>
+  </div>
+  <div class="sec"><div class="lab">Where you’re lacking<span class="acts">${sample ? `<button class="b pri" data-act="coach" ${ui.busy.coach ? 'disabled' : ''}>${ui.busy.coach ? 'Thinking…' : saved?.coach ? 'Coach me again' : 'Coach me: 7-day fix plan'}</button>` : ''}</span></div>
+    ${ui.out.coach ? `<p class="late" style="font-size:13px">${esc(ui.out.coach)}</p>` : ''}
+    ${saved?.coach ? `<div class="out" style="margin-bottom:14px">${md(saved.coach)}</div>` : ''}
+    <div class="items">${r.gaps.length ? r.gaps.slice(0, ui.srAll ? 99 : 6).map((g, i) => `<div class="it"><div><div class="t"><span class="pill ${sevC[g.sev]}">${sevL[g.sev]}</span> ${esc(g.title)}</div><div class="s"><span class="k">${esc(g.area)}</span><span>${esc(g.why)}</span></div></div>
+      <div class="c"><button class="b" data-act="srFix" data-i="${i}">${esc(g.fix.l)}</button></div></div>`).join('') : '<p class="empty">Nothing to fix right now. Keep this streak going.</p>'}</div>
+    ${r.gaps.length > 6 ? `<button class="lnk" data-act="srAll" style="margin-top:10px">${ui.srAll ? 'Show top 6' : `Show all ${r.gaps.length}`}</button>` : ''}</div>
+  ${r.wins.length ? `<div class="sec"><div class="lab">What went well</div><ul class="ls">${r.wins.slice(0, 8).map(w => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}
+  <div class="sec"><div class="lab">Client scorecard</div><div class="tbl"><table><thead><tr><th>Client</th><th>Delivery</th><th>Overdue</th><th>Last insight</th><th>Open asks</th><th>Last report</th></tr></thead><tbody>
+    ${r.rows.map(x => `<tr class="clickrow" data-go="client" data-cid="${esc(x.c.id)}"><td>${dot(x.c)} ${esc(x.c.name)}</td><td class="mono ${x.pct < 60 ? 'late' : ''}">${x.d}/${x.n} · ${x.pct}%</td><td class="mono ${x.ov ? 'late' : 'muted'}">${x.ov}</td><td class="mono ${x.li > 30 ? 'late' : 'muted'}">${x.li === Infinity ? 'never' : x.li + 'd ago'}</td><td class="mono ${x.ask ? '' : 'muted'}">${x.ask}</td><td>${x.rep ? '<span class="pill good">Sent</span>' : '<span class="pill neutral">Not sent</span>'}</td></tr>`).join('')}
+  </tbody></table></div>
+  <p class="muted" style="font-size:12px;margin:10px 0 0">Scores come only from your desk data. Turnaround and approval times are tracked from ${esc(fmt('2026-09-30'))} onwards, so they fill in over the next weeks.</p></div>`;
+}
+function coach(){
+  const mk = ui.srMonth || monthKey, r = studioReview(mk);
+  run('coach', async () => {
+    const {text} = await sample(`${preamble}\n\nYou are a tough but kind mentor for the owner of The Reach Story, a 3-person studio. Here is this month’s studio review, computed from their own data. Write:\n**The honest verdict** — 2 sentences.\n**Fix first** — the 3 gaps that cost the most (client trust and revenue), each with the exact action.\n**7-day plan** — Day 1 to Day 7, one or two concrete actions per day, realistic for 3 people who don't shoot video.\n**One habit to build** — a small repeatable routine that prevents these gaps.\nNo fluff.\n\nReview: ${JSON.stringify({score:r.total, areas:r.scores, gaps:r.gaps.map(g => ({area:g.area, severity:g.sev, title:g.title, why:g.why})), wins:r.wins, overdue:r.od, overdueWithoutReason:r.noReason, clients:r.rows.map(x => ({name:x.c.name, delivered:x.d, target:x.n, overdue:x.ov, daysSinceInsight:x.li === Infinity ? null : x.li, openAsks:x.ask}))})}`, {cache:false});
+    await write(() => db.collection('reports').doc('studio_' + mk).set({kind:'studio', month:mk, coach:text, score:r.total, at:Date.now()}), 'Plan saved');
+  });
 }
 
 /* ----- Client asks and updates ----- */
@@ -1661,6 +1737,14 @@ document.addEventListener('click', async e => {
   else if (a === 'unarchive') await upd(b.dataset.cid, {status:'active'}, 'Client restored');
   else if (a === 'openReport'){ ui.rMonth = ui.rMonth || monthKey; go('report', c.id); }
   else if (a === 'repPdf') reportPdf(c);
+  else if (a === 'coach') coach();
+  else if (a === 'srAll'){ ui.srAll = !ui.srAll; render(); }
+  else if (a === 'srFix'){ const g = studioReview(ui.srMonth || monthKey).gaps[Number(b.dataset.i)]; if (!g) return; const f = g.fix;
+    if (f.preset){ ui.filt = {client:'', who:'', done:false, preset:f.preset}; ui.taskView = 'list'; go('tasks'); }
+    else if (f.act === 'openReportFor'){ ui.rMonth = f.month; go('report', f.cid); }
+    else if (f.act === 'ideas'){ go('client', f.cid, 'overview'); ideas(C(f.cid)); }
+    else if (f.go === 'tasks'){ ui.filt = {client:'', who:'', done:false, preset:'open'}; go('tasks'); }
+    else go('client', f.cid, f.tab || 'overview'); }
   else if (a === 'openReportFor'){ ui.rMonth = ui.rMonth || monthKey; go('report', b.dataset.cid); }
   else if (a === 'repStatus') await saveRep(c, ui.rMonth || monthKey, {status:b.dataset.s, sentAt: b.dataset.s === 'sent' ? Date.now() : 0}, b.dataset.s === 'sent' ? 'Marked as sent' : 'Back to draft');
   else if (a === 'addOverview'){ ui.keep['i-type'] = 'Account overview'; ui.keep['i-date'] = (ui.rMonth || monthKey) === monthKey ? today : (ui.rMonth + '-28'); go('client', c.id, 'insights'); }
@@ -1668,9 +1752,6 @@ document.addEventListener('click', async e => {
   else if (a === 'goTasks'){ ui.filt = {client:c.id, who:'', done:true, preset:''}; ui.taskView = 'list'; go('tasks'); }
   else if (a === 'repAi') reportAi(c);
   else if (a === 'repCopy'){ const t = reportText(c); try { await navigator.clipboard.writeText(t); toast('Summary copied'); } catch(_){ toast('Copy isn’t allowed here. Select the report text instead.'); } }
-  else if (a === 'hfGo'){ const x = S.prompts.find(p => p.id === b.dataset.doc); if (x) hfGenerate(c, x, x.id, b.dataset.unlim === undefined ? undefined : b.dataset.unlim === '1'); }
-  else if (a === 'hfGoNew'){ const i = Number(b.closest('[data-gi]').dataset.gi), x = (ui.gen[c.id] || [])[i]; if (!x) return;
-    try { const ref = await db.collection('prompts').add({client:c.id, title:x.title, prompt:x.prompt, negative:x.negative, settings:x.settings, use:x.use, what:x.what, tool:x.tool, ratio:x.ratio, createdAt:Date.now()}); x.saved = true; toast('Saved to Saved prompts'); render(); setTimeout(() => hfGenerate(c, {...x, gens:[]}, ref.id), 400); } catch(_){ toast('Could not save. Try again.'); } }
   else if (a === 'delFol') await upd(c.id, {followers:(c.followers || []).filter(x => x.d !== b.dataset.d)}, 'Entry deleted');
   else if (a === 'markPaid') await upd(b.dataset.cid, {paidMonth:monthKey}, 'Marked paid');
   else if (a === 'setStatus'){ await upd(c.id, {status:b.dataset.s}, b.dataset.s === 'archived' ? 'Client archived' : b.dataset.s === 'paused' ? 'Client paused' : 'Client resumed'); if (b.dataset.s === 'archived') go('clients'); }
@@ -1727,12 +1808,12 @@ document.addEventListener('click', async e => {
 document.addEventListener('change', async e => {
   const el = e.target, k = el.dataset && el.dataset.change; if (!k) return;
   const tid = el.closest('[data-tid]')?.dataset.tid;
-  if (k === 'status') await write(() => tasksCol().doc(tid).update({status:el.value, doneMonth: el.value === 'done' ? monthKey : ''}));
+  if (k === 'status') await write(() => tasksCol().doc(tid).update({status:el.value, doneMonth: el.value === 'done' ? monthKey : '', doneAt: el.value === 'done' ? Date.now() : 0, statusAt:{[el.value]:Date.now()}}));
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
   else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
   else if (k === 'repMonth'){ ui.rMonth = el.value; render(); }
+  else if (k === 'srMonth'){ ui.srMonth = el.value; render(); }
   else if (k === 'repSec'){ const c = C(ui.cid), mk = ui.rMonth || monthKey, hide = new Set(repDoc(c, mk)?.hide || []); el.checked ? hide.delete(el.dataset.k) : hide.add(el.dataset.k); await saveRep(c, mk, {hide:[...hide]}); }
-  else if (k === 'hfModel'){ ui.keep['hfm-' + el.dataset.doc] = el.value; }
   else if (k === 'filt'){ ui.filt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); }
   else if (k === 'local'){ const c = C(ui.cid); const items = (c.local?.items || []).map((it, n) => n === Number(el.dataset.n) ? {...it, done:el.checked} : it); await upd(c.id, {local:{items}}); }
 });
@@ -1796,7 +1877,7 @@ document.addEventListener('dragend', e => { document.querySelectorAll('.dragging
 document.addEventListener('dragover', e => { const col = e.target.closest && e.target.closest('.col[data-col]'); if (col){ e.preventDefault(); document.querySelectorAll('.col.over').forEach(x => x !== col && x.classList.remove('over')); col.classList.add('over'); } });
 document.addEventListener('drop', async e => { const col = e.target.closest && e.target.closest('.col[data-col]'); if (!col) return; e.preventDefault(); col.classList.remove('over');
   const tid = e.dataTransfer.getData('text/plain'), t = S.tasks.find(x => x.id === tid); if (!t || t.status === col.dataset.col) return;
-  await write(() => tasksCol().doc(tid).update({status:col.dataset.col, doneMonth: col.dataset.col === 'done' ? monthKey : ''}), 'Moved to ' + STATUS[col.dataset.col]); });
+  await write(() => tasksCol().doc(tid).update({status:col.dataset.col, doneMonth: col.dataset.col === 'done' ? monthKey : '', doneAt: col.dataset.col === 'done' ? Date.now() : 0, statusAt:{[col.dataset.col]:Date.now()}}), 'Moved to ' + STATUS[col.dataset.col]); });
 document.addEventListener('dragover', e => { const d = e.target.closest && e.target.closest('#drop'); if (d){ e.preventDefault(); d.classList.add('on'); } });
 document.addEventListener('dragleave', e => { const d = e.target.closest && e.target.closest('#drop'); if (d) d.classList.remove('on'); });
 document.addEventListener('drop', e => { const d = e.target.closest && e.target.closest('#drop'); if (d){ e.preventDefault(); addPending(e.dataTransfer.files); } });
@@ -1832,7 +1913,6 @@ async function boot(){
   if (sample){ try { const l = await sample.limits(); canImages = !!l.images; maxImages = l.images ? l.images.maxCount : 0; canTools = !!l.tools; } catch(e){} }
   try { assets = await claude.use('assets'); } catch(e){}
   try { downloads = await claude.use('downloads'); } catch(e){}
-  try { mcp = await claude.use('mcp'); } catch(e){}
   render();
 }
 if (window.claude) boot(); else $('#main').innerHTML = '<h1>Reach Story Desk</h1><p class="sub">Open this page from Claude to load your desk.</p>';
