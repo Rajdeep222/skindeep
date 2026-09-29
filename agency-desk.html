@@ -281,9 +281,9 @@ const monthName = now.toLocaleDateString(undefined, {month:'long'});
 let db = null, sample = null, assets = null, userNs = null;
 let canImages = false, maxImages = 0, canTools = false;
 let role = 'admin', myUid = null, myMember = null;
-const S = {clients:[], tasks:[], team:[], insights:[]};
-const loaded = {clients:false, tasks:false, team:false, insights:false};
-const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, dayPlan:null,
+const S = {clients:[], tasks:[], team:[], insights:[], prompts:[]};
+const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false};
+const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
   pending:[], editing:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.clients.find(c => c.id === id);
@@ -454,11 +454,11 @@ function viewClients(){
 }
 
 /* ----- Client ----- */
-const CTABS = [['overview','Overview'],['insights','Insights'],['studio','Studio'],['ads','Ads'],['growth','Growth'],['brand','Brand']];
+const CTABS = [['overview','Overview'],['insights','Insights'],['prompts','Prompts'],['studio','Studio'],['ads','Ads'],['growth','Growth'],['brand','Brand']];
 function viewClient(c){
   const n = target(c), d = posted(c), p = pace(c);
   const tab = ui.ctab;
-  const body = tab === 'insights' ? tabInsights(c) : tab === 'studio' ? tabStudio(c) : tab === 'ads' ? tabAds(c) : tab === 'growth' ? tabGrowth(c) : tab === 'brand' ? tabBrand(c) : tabOverview(c);
+  const body = tab === 'insights' ? tabInsights(c) : tab === 'prompts' ? tabPrompts(c) : tab === 'studio' ? tabStudio(c) : tab === 'ads' ? tabAds(c) : tab === 'growth' ? tabGrowth(c) : tab === 'brand' ? tabBrand(c) : tabOverview(c);
   return `<div class="hero" style="${hueStyle(c)}"><div class="row" style="justify-content:space-between;align-items:flex-start">
     <div><h1>${dot(c)} ${esc(c.name)}</h1><p class="sub">${esc(c.tag || '')}</p></div>
     <div style="text-align:right"><div class="big">${d}<span class="muted">/${n}</span></div><div><span class="pill ${p.cls}">${esc(p.label)}</span></div></div>
@@ -617,6 +617,45 @@ function tabBrand(c){
     </form><p class="muted" style="font-size:12px">Everything Claude writes for ${esc(c.name)} follows this kit.</p></div>`;
 }
 
+/* ----- Prompts ----- */
+const P_WHAT = {image:'AI image for a post', video:'AI video for a reel', carousel:'Carousel visuals (one per slide)', cover:'Reel cover / thumbnail', edit:'Edit brief for the editor (from client clips)'};
+const P_TOOL = {any:'Any tool', higgsfield:'Higgsfield', nanobanana:'Gemini / Nano Banana', midjourney:'Midjourney', chatgpt:'ChatGPT image', seedance:'Seedance / Kling (video)'};
+const P_RATIO = {'4:5':'4:5 feed', '9:16':'9:16 reel / story', '1:1':'1:1 square', '16:9':'16:9 web banner'};
+const promptsFor = cid => S.prompts.filter(x => x.client === cid).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+function promptCard(x, i, saved){
+  const id = saved ? 'sp-' + x.id : `gp-${i}`;
+  return `<div class="ins" ${saved ? `data-pid="${esc(x.id)}"` : `data-gi="${i}"`}>
+    <div class="row" style="justify-content:space-between"><h3>${esc(x.title || 'Prompt')}</h3>
+      <div class="row">${saved ? `<button class="x" data-act="delPrompt" aria-label="Delete prompt">×</button>` : (x.saved ? '<span class="pill good">Saved</span>' : `<button class="lnk" data-act="savePrompt">Save</button>`)}</div></div>
+    <div class="meta" style="margin-top:-6px"><span>${esc(P_WHAT[x.what] || x.what || '')}</span>${x.what === 'edit' ? '' : `<span>${esc(P_TOOL[x.tool] || '')}</span>`}<span>${esc(x.ratio || '')}</span></div>
+    <div class="out" id="${id}">${esc(x.prompt)}</div>
+    ${x.negative ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Avoid:</b> ${esc(x.negative)}</p>` : ''}
+    ${x.settings ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Settings:</b> ${esc(x.settings)}</p>` : ''}
+    ${x.use ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Use it for:</b> ${esc(x.use)}</p>` : ''}
+    <div class="row"><button class="lnk" data-act="copy" data-src="${id}">Copy prompt</button><button class="lnk" data-act="promptTask">Add as task</button></div>
+  </div>`;
+}
+function tabPrompts(c){
+  const k = 'prompts:' + c.id, gen = ui.gen[c.id] || [], saved = promptsFor(c.id);
+  const def = c.id === 'eroe' ? 'image' : 'edit';
+  const opt = (m, sel) => Object.entries(m).map(([v,l]) => `<option value="${esc(v)}"${v===sel?' selected':''}>${esc(l)}</option>`).join('');
+  return `<div class="sec"><div class="lab">Make prompts</div>
+    <form class="form" data-form="prompts">
+      <div class="row">
+        <label class="grow" style="min-width:180px">What for<select id="pm-what">${opt(P_WHAT, keep('pm-what', def))}</select></label>
+        <label class="grow" style="min-width:150px">Tool<select id="pm-tool">${opt(P_TOOL, keep('pm-tool','any'))}</select></label>
+        <label style="flex:0 1 150px">Format<select id="pm-ratio">${opt(P_RATIO, keep('pm-ratio','4:5'))}</select></label>
+        <label style="flex:0 0 80px">How many<select id="pm-n">${[1,2,3,4,5].map(n => `<option${String(n)===keep('pm-n','3')?' selected':''}>${n}</option>`).join('')}</select></label>
+      </div>
+      <label>What do you want?<textarea id="pm-brief" rows="3" data-keep="pm-brief-${esc(c.id)}" placeholder="${esc(c.id === 'eroe' ? 'e.g. heavyweight black oversized tee, flat lay and on-model, streetwear vibe for Black Friday' : 'e.g. next 3 reels from the wedding clips they sent, Dhanteras offer post, groom look carousel')}">${esc(keep('pm-brief-'+c.id))}</textarea></label>
+      <div class="row"><button class="b pri" type="submit" ${sample && !ui.busy[k] ? '' : 'disabled'}>Write prompts</button>
+      <span class="muted" style="font-size:12px">Uses ${esc(c.name)}’s brand kit, research, insights and upcoming dates.</span></div>
+    </form>
+    <div style="margin-top:6px">${busyOr(k, ui.out[k] ? `<p class="empty">${esc(ui.out[k])}</p>` : gen.map((x,i) => promptCard(x, i, false)).join(''))}</div></div>
+  <div class="sec"><div class="lab">Saved prompts<span class="acts">${saved.length ? `<span class="muted">${saved.length}</span>` : ''}</span></div>
+    ${saved.length ? saved.map(x => promptCard(x, 0, true)).join('') : '<p class="empty">Prompts that work go here. Save them so you can reuse them.</p>'}</div>`;
+}
+
 /* ----- Calendar ----- */
 function viewCalendar(){
   let last = '';
@@ -771,6 +810,26 @@ function report(c){
     ui.out['write:' + c.id] = text;
   });
 }
+const P_GUIDE = {
+  image:'Each prompt describes one finished social image: subject, setting, composition, lighting, lens/camera feel, colour palette from the brand kit, mood, and where text will sit (leave clean space; do not render text unless asked).',
+  video:'Each prompt is for an AI video generator: 5–8 second shot, subject and action, camera movement, lighting, pacing, and the opening frame that works as a hook. Describe motion clearly. One shot per prompt.',
+  carousel:'Write one prompt per slide in a consistent style so the set looks like one series. Slide 1 must stop the scroll. Mention which slide each prompt is for in the title.',
+  cover:'Each prompt is for a reel cover/thumbnail: bold focal subject, high contrast, clean space for 3–5 words of title text, readable at small size.',
+  edit:'These are EDIT BRIEFS for our editor, not AI prompts. We never shoot: work only from clips/photos the client sends. For each: hook for the first 3 seconds (on-screen text in the client language), shot order with timings, captions/subtitles style, music mood (trending, licence-safe), transitions, length (30–60s), cover frame, and a list of clips to ask the client for if missing.'
+};
+const P_TOOLTIPS = {higgsfield:'Write for Higgsfield: rich visual description, cinematic camera terms.', nanobanana:'Write for Gemini image (Nano Banana): natural full sentences, precise about product details and background; it follows instructions literally.', midjourney:'Write for Midjourney: comma-separated descriptive phrases, then parameters like --ar and --style raw at the end.', chatgpt:'Write for ChatGPT image generation: clear natural-language paragraph.', seedance:'Write for Seedance/Kling video: subject + action + camera move + style, one continuous shot.', any:'Write tool-neutral prompts that work in most image/video generators.'};
+function makePrompts(c){
+  const what = $('#pm-what').value, tool = $('#pm-tool').value, ratio = $('#pm-ratio').value, n = Number($('#pm-n').value) || 3, brief = $('#pm-brief').value.trim();
+  Object.assign(ui.keep, {'pm-what':what, 'pm-tool':tool, 'pm-ratio':ratio, 'pm-n':String(n)});
+  const k = 'prompts:' + c.id;
+  run(k, async () => {
+    const arr = await sample.json(`${preamble}\n\nYou are the creative director for ${c.name}. Write ${n} ${what === 'edit' ? 'edit briefs' : 'prompts'} for: ${P_WHAT[what]}. Format ${ratio}.\n${P_GUIDE[what]}\n${what === 'edit' ? '' : P_TOOLTIPS[tool] + ' Keep products realistic and accurate (jewellery details, garment seams, wheel spokes, fabric texture). Match the brand kit look. Local clients are in Khanna, Punjab: settings, people and styling should feel Punjabi and real, never generic stock.'}\nWhat the owner wants: ${brief || '(nothing specific: choose the most useful next posts from the plan, recent insights and upcoming moments)'}\n\nContext:\n${JSON.stringify(clientContext(c, {insights:6}))}\n\nReply with only a JSON array. Each item: {"title": short name, "prompt": the full ready-to-paste prompt or brief, "negative": what to avoid (or ""), "settings": aspect ratio / duration / tool settings (or ""), "use": which post or slot this is for and the caption angle}.`, {cache:false});
+    const items = (Array.isArray(arr) ? arr : []).filter(x => x && x.prompt).map(x => ({title:String(x.title||''), prompt:String(x.prompt), negative:String(x.negative||''), settings:String(x.settings||''), use:String(x.use||''), what, tool, ratio}));
+    if (!items.length) throw {code:'invalid_json'};
+    ui.gen[c.id] = items;
+  });
+}
+
 function adPlan(c){
   run('ads:' + c.id, async () => {
     const adIns = clientInsights(c.id).filter(i => /Ads|Meta/i.test(i.type)).slice(0, 5);
@@ -855,6 +914,12 @@ document.addEventListener('click', async e => {
   else if (a === 'copy'){ const el = document.getElementById(b.dataset.src); if (!el) return;
     try { await navigator.clipboard.writeText(el.innerText); toast('Copied'); } catch(_){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selected. Press Ctrl/Cmd + C to copy.'); } }
   else if (a === 'adPlan') adPlan(c);
+  else if (a === 'savePrompt'){ const i = Number(b.closest('[data-gi]').dataset.gi), x = (ui.gen[c.id] || [])[i]; if (!x) return;
+    if (await write(() => db.collection('prompts').add({client:c.id, title:x.title, prompt:x.prompt, negative:x.negative, settings:x.settings, use:x.use, what:x.what, tool:x.tool, ratio:x.ratio, createdAt:Date.now()}), 'Prompt saved')){ x.saved = true; render(); } }
+  else if (a === 'delPrompt') await write(() => db.collection('prompts').doc(b.closest('[data-pid]').dataset.pid).delete(), 'Prompt deleted');
+  else if (a === 'promptTask'){ const el = b.closest('[data-pid],[data-gi]'); const x = el.dataset.pid ? S.prompts.find(p => p.id === el.dataset.pid) : (ui.gen[c.id] || [])[Number(el.dataset.gi)]; if (!x) return;
+    const kind = x.what === 'video' || x.what === 'edit' ? 'reel' : x.what === 'carousel' ? 'carousel' : c.id === 'eroe' ? 'ai' : 'post';
+    await addTask({title:(x.what === 'edit' ? 'Edit: ' : 'Create: ') + (x.title || 'post') + (x.use ? ' — ' + x.use : ''), client:c.id, kind}) && toast('Task added'); }
   else if (a === 'addKw'){ const kws = [...(c.seo?.keywords || []), {kw:'', page:'', rank:''}]; await upd(c.id, {seo:{keywords:kws}}); }
   else if (a === 'delKw'){ const kws = (c.seo?.keywords || []).filter((_, n) => n !== Number(b.dataset.n)); await upd(c.id, {seo:{keywords:kws}}); }
   else if (a === 'delComp'){ await upd(c.id, {competitors:(c.competitors || []).filter((_, n) => n !== Number(b.dataset.n))}); }
@@ -880,6 +945,7 @@ document.addEventListener('submit', async e => {
   else if (k === 'plan'){ const ok = await upd(c.id, {target:{count:Math.max(0, Number(v('p-count')) || 0)}, plan:{goal:v('p-goal'), audience:v('p-aud'), focus:v('p-focus'), pillars:v('p-pil').split(',').map(s => s.trim()).filter(Boolean)}}, 'Plan saved'); if (ok){ ui.editing = null; render(); } }
   else if (k === 'insight') readInsight(c);
   else if (k === 'chat'){ const t = v('chat-' + c.id); if (t && sample && !ui.busy['chat:' + c.id]) chat(c, t); }
+  else if (k === 'prompts'){ if (sample) makePrompts(c); }
   else if (k === 'write'){ ui.keep['w-mode'] = v('w-mode'); writeFor(c, v('w-mode'), v('w-brief')); }
   else if (k === 'ads') await upd(c.id, {ads:{budget:v('a-budget'), status:v('a-status')}}, 'Saved');
   else if (k === 'adNotes'){ if (await upd(c.id, {ads:{notes:v('a-notes')}}, 'Notes saved')) delete ui.keep['a-notes-' + c.id]; }
@@ -922,6 +988,7 @@ async function boot(){
   }
   listen('clients', (a,b) => (a.order ?? 99) - (b.order ?? 99));
   listen('insights');
+  listen('prompts');
   render();
   try { sample = await claude.use('sample'); } catch(e){}
   if (sample){ try { const l = await sample.limits(); canImages = !!l.images; maxImages = l.images ? l.images.maxCount : 0; canTools = !!l.tools; } catch(e){} }
