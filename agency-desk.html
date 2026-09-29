@@ -174,6 +174,35 @@ select[data-s="approved"],select[data-s="done"]{border-color:color-mix(in srgb,v
 .seg button:focus-visible{outline:2px solid var(--accent)}
 .b,.it,.nav button,.lnk{transition:background .15s,color .15s,border-color .15s}
 .it.click:hover{background:color-mix(in srgb,var(--sunk) 60%,transparent);margin-inline:-20px;padding-inline:20px}
+
+.badge{background:var(--bad);color:var(--surface);border-radius:99px;padding:0 6px;font-size:11px;line-height:17px}
+.prefs{border-top:1px solid var(--line);padding-top:12px;font-size:13px}
+.prefs summary{cursor:pointer;color:var(--ink);list-style:none;padding:4px 8px;border-radius:6px}
+.prefs summary::-webkit-details-marker{display:none}
+.prefs summary:hover{background:var(--sunk)}
+.prefs[open] summary{margin-bottom:10px}
+.prefs .look{border-top:0;padding:0 8px}
+.whoami{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);padding:0 8px 12px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.eyebrow{margin:0 0 6px;font-size:12px;color:var(--muted);letter-spacing:.01em}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.pdot.good{background:var(--good)}.pdot.warn{background:var(--warn)}.pdot.bad{background:var(--bad)}
+.count{display:inline-flex;align-items:center;gap:8px;font-size:13px}
+.clamp{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.evrow{display:flex;gap:14px;align-items:flex-start}
+.when{display:flex;flex-direction:column;align-items:center;min-width:40px;font-size:11px;color:var(--muted);text-transform:uppercase;line-height:1.2}
+.when b{font-size:18px;color:var(--ink);font-weight:500}
+.cbtn{all:unset;cursor:pointer;font-size:12px;color:var(--muted);border-bottom:1px dotted currentColor}
+.cbtn:hover{color:var(--ink)}
+.cbtn.need{color:var(--bad);font-weight:500}
+.cbtn:focus-visible{outline:2px solid var(--accent)}
+.lastc{font-size:12.5px;color:var(--muted);margin-top:5px;padding-left:10px;border-left:2px solid var(--line);overflow-wrap:anywhere}
+.lastc b{font-weight:500;color:var(--ink)}
+.thread{grid-column:1 / -1;display:flex;flex-direction:column;gap:10px;background:var(--sunk);border-radius:10px;padding:12px 14px;margin-top:6px}
+.thread .cm{font-size:13px;overflow-wrap:anywhere}
+.thread .cm b{font-weight:500}
+.thread input[type=date]{flex:0 0 auto}
+.it.is-late{box-shadow:inset 3px 0 0 var(--bad);padding-left:12px}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -284,7 +313,7 @@ let role = 'admin', myUid = null, myMember = null;
 const S = {clients:[], tasks:[], team:[], insights:[], prompts:[]};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], editing:null, filt:{client:'', who:'', done:false}};
+  pending:[], editing:null, openTask:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.clients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
@@ -358,30 +387,45 @@ function render(){
 
 function side(){
   const due = openTasks().filter(t => t.due && t.due <= today).length;
-  return `<div class="mark">the.reach.story<span>desk · ${esc(now.toLocaleDateString(undefined,{day:'numeric',month:'short'}))} · day ${day}/${dim}</span></div>
+  const me = M(myMember);
+  return `<div class="mark">the.reach.story<span>desk</span></div>
   <nav class="nav" aria-label="Sections">
-    <button data-go="today" aria-current="${ui.view==='today'}"><span class="nm">Today</span>${due ? `<span class="ct">${due}</span>` : ''}</button>
-    <div class="grp">Clients</div>
-    ${S.clients.map(c => { const p = pace(c); return `<button data-go="client" data-cid="${esc(c.id)}" aria-current="${ui.view==='client' && ui.cid===c.id}">${dot(c)}<span class="nm">${esc(c.name)}</span><span class="ct" style="color:var(--${p.cls==='neutral'?'muted':p.cls})">${posted(c)}/${target(c)}</span></button>`; }).join('')}
-    <div class="grp">Plan</div>
+    <button data-go="today" aria-current="${ui.view==='today'}"><span class="nm">Today</span>${due ? `<span class="ct badge">${due}</span>` : ''}</button>
+    <button data-go="tasks" aria-current="${ui.view==='tasks'}"><span class="nm">Tasks</span></button>
     <button data-go="calendar" aria-current="${ui.view==='calendar'}"><span class="nm">Calendar</span></button>
-    <button data-go="tasks" aria-current="${ui.view==='tasks'}"><span class="nm">Tasks</span><span class="ct">${openTasks().length || ''}</span></button>
-  </nav>${lookPicker()}`;
+    <div class="grp">Clients</div>
+    ${S.clients.map(c => `<button data-go="client" data-cid="${esc(c.id)}" aria-current="${ui.view==='client' && ui.cid===c.id}">${dot(c)}<span class="nm">${esc(c.name)}</span></button>`).join('')}
+  </nav>
+  <details class="prefs"><summary>${me ? esc(me.name) : 'Settings'}<span class="muted"> · appearance</span></summary>
+    ${S.team.length ? `<label class="whoami">You are<select data-change="whoami">${S.team.filter(m => m.role !== 'editor').map(m => `<option value="${esc(m.id)}"${m.id===myMember?' selected':''}>${esc(m.name)}</option>`).join('')}</select></label>` : ''}
+    ${lookPicker()}</details>`;
 }
 
+const ago = ms => { const d = Math.round((Date.now() - ms) / 864e5); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'; };
 function taskRow(t, opts = {}){
   const c = C(t.client), late = t.status !== 'done' && t.due && t.due < today;
-  return `<div class="it" data-tid="${esc(t.id)}">
+  const cm = t.comments || [], last = cm[cm.length - 1], open = ui.openTask === t.id;
+  const lateBy = late ? -daysTo(t.due) : 0;
+  return `<div class="it ${late ? 'is-late' : ''}" data-tid="${esc(t.id)}">
     <div><div class="t">${esc(t.title)}</div>
       <div class="s">${opts.noClient ? '' : `<span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span>`}<span class="k">${esc(SHORT[t.kind] || t.kind)}</span>
-      ${t.due ? `<span class="${late ? 'late' : ''}">${late ? 'Overdue · ' : ''}${esc(fmt(t.due))}</span>` : ''}
-      ${opts.showWho && t.assignee ? `<span>${esc(M(t.assignee)?.name || '')}</span>` : ''}</div></div>
+      ${t.due ? `<span class="${late ? 'late' : ''}">${late ? `${lateBy} day${lateBy === 1 ? '' : 's'} late` : esc(fmt(t.due))}</span>` : ''}
+      ${opts.showWho && t.assignee ? `<span>${esc(M(t.assignee)?.name || '')}</span>` : ''}
+      <button class="cbtn ${late && !cm.length ? 'need' : ''}" data-act="toggleTask" aria-expanded="${open}">${cm.length ? `${cm.length} comment${cm.length === 1 ? '' : 's'}` : late ? 'Why late?' : 'Comment'}</button></div>
+      ${last && !open ? `<div class="lastc"><b>${esc(M(last.who)?.name || 'Someone')}:</b> ${esc(last.text)}</div>` : ''}</div>
     <div class="c">
       <label class="vh" for="st-${esc(t.id)}">Status</label>
       <select id="st-${esc(t.id)}" data-change="status" data-s="${esc(t.status)}">${Object.entries(STATUS).map(([k,v]) => `<option value="${k}"${k===t.status?' selected':''}>${v}</option>`).join('')}</select>
       ${opts.editor ? '' : `<label class="vh" for="as-${esc(t.id)}">Assign</label><select id="as-${esc(t.id)}" data-change="assign">${whoOptions(t.assignee)}</select>
       <button class="x" data-act="delTask" aria-label="Delete task">×</button>`}
-    </div></div>`;
+    </div>
+    ${open ? `<div class="thread">
+      ${cm.map(x => `<div class="cm"><b>${esc(M(x.who)?.name || 'Someone')}</b><span class="muted"> · ${esc(ago(x.at))}</span><div>${esc(x.text)}</div></div>`).join('')}
+      <form class="row" data-form="comment"><label class="vh" for="cm-${esc(t.id)}">Comment</label>
+        <input class="grow" type="text" id="cm-${esc(t.id)}" data-keep="cm-${esc(t.id)}" value="${esc(keep('cm-' + t.id))}" placeholder="${late ? 'Why is this late? e.g. waiting for clips from the client' : 'Add a comment'}">
+        ${late ? `<label class="vh" for="nd-${esc(t.id)}">New due date</label><input type="date" id="nd-${esc(t.id)}" title="New due date (optional)">` : ''}
+        <button class="b" type="submit">Post</button></form></div>` : ''}
+  </div>`;
 }
 const whoOptions = sel => `<option value="">Unassigned</option>` + S.team.map(m => `<option value="${esc(m.id)}"${m.id===sel?' selected':''}>${esc(m.name)}</option>`).join('');
 const kindOptions = sel => Object.entries(KINDS).map(([k,v]) => `<option value="${k}"${k===sel?' selected':''}>${v}</option>`).join('');
@@ -391,7 +435,7 @@ function suggestions(key, items){
   if (!rows.length) return `<p class="empty">All added. Generate again for more.</p>`;
   return `<div class="items">${rows.map(i => { const c = C(i.client); return `<div class="it" data-sug="${esc(key)}" data-n="${i.n}">
     <div><div class="t">${esc(i.title)}</div>
-    <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}<span>${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
+    <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}<span class="k">${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
     ${i.need ? `<div class="s">Ask client for: ${esc(i.need)}</div>` : ''}</div>
     <div class="c"><label class="vh" for="sw-${esc(key)}-${i.n}">Assign</label><select id="sw-${esc(key)}-${i.n}" data-role="sugWho">${whoOptions(S.team.find(m => m.name.toLowerCase() === String(i.assignee||'').toLowerCase())?.id || '')}</select>
     <button class="b" data-act="addSug">Add</button></div></div>`; }).join('')}</div>
@@ -401,45 +445,47 @@ const busyOr = (k, html) => ui.busy[k] ? `<p class="empty">Thinking… this can 
 
 /* ----- Today ----- */
 function viewToday(){
-  const behind = S.clients.filter(c => pace(c).gap > 0);
   const due = openTasks().filter(t => t.due && t.due <= today).sort((a,b) => a.due.localeCompare(b.due));
-  const soon = EVENTS.filter(e => daysTo(e.d) >= 0 && daysTo(e.d) <= 45).slice(0, 4);
-  const unassigned = openTasks().filter(t => !t.assignee).length;
-  return `<h1>${esc(now.toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'}))}</h1>
+  const soon = EVENTS.filter(e => daysTo(e.d) >= 0 && daysTo(e.d) <= 45).slice(0, 3);
+  const waiting = S.insights.filter(i => i.unread).length;
+  const hr = now.getHours(), hello = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  const me = M(myMember);
+  const showPlan = ui.busy.day || ui.out.day || ui.dayPlan;
+  return `<header class="top"><div><p class="eyebrow">${esc(now.toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'}))} · ${dim - day + 1} day${dim - day ? 's' : ''} left in ${esc(monthName)}</p>
+    <h1>${hello}${me ? ', ' + esc(me.name) : ''}</h1></div>
+    ${sample ? `<button class="b pri" data-act="planDay" ${ui.busy.day ? 'disabled' : ''}>${ui.busy.day ? 'Planning…' : 'Plan my day'}</button>` : ''}</header>
   ${statsStrip()}
-  <p class="sub" style="margin-top:14px">${!loaded.clients ? 'Loading…' : behind.length ? `${behind.length} of ${S.clients.length} pages are behind this month’s target. ${dim - day + 1} days left.` : `Every page is on pace. ${dim - day + 1} days left this month.`}</p>
-
-  ${(() => { const n = S.insights.filter(i => i.unread).length; return n ? `<div class="sec"><div class="lab">Screenshots to read</div><p style="margin:0">${n} screenshot${n===1?'':'s'} waiting. Say <b>“read new insights”</b> in your Claude Code chat and the numbers and learnings will appear on each client’s Insights tab.</p></div>` : ''; })()}
   ${overdueAlert()}
-  <div class="sec"><div class="lab">Next move per page</div>
+  ${waiting ? `<div class="alert warn"><span>${waiting} screenshot${waiting===1?'':'s'} waiting to be read</span><span class="muted" style="font-weight:400">Read every morning at 7:50, or say “read new insights” in chat</span></div>` : ''}
+  ${showPlan ? `<div class="sec"><div class="lab">Today’s plan<span class="acts"><button class="lnk" data-act="closePlan">Close</button></span></div>
+    ${busyOr('day', ui.out.day ? `<p class="empty">${esc(ui.out.day)}</p>` : suggestions('day', ui.dayPlan || []))}</div>` : ''}
+
+  <div class="sec"><div class="lab">Due now</div>
+  <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Use “Plan my day” to line up work.' : 'Loading…'}</p>`}</div></div>
+
+  <div class="sec"><div class="lab">Pages<span class="acts muted">posted this month</span></div>
   <div class="items">${S.clients.map(c => { const p = pace(c); return `<div class="it click" data-go="client" data-cid="${esc(c.id)}" tabindex="0" role="link">
-    <div><div class="t">${esc(c.next || 'Set a next move on the client page')}</div><div class="s"><span>${dot(c)} ${esc(c.name)}</span><span class="pill ${p.cls}">${esc(p.label)}</span></div>
-    <div class="mini" style="${hueStyle(c)}"><i style="width:${target(c) ? Math.min(100, posted(c)/target(c)*100) : 0}%"></i></div></div>
-    <div class="c mono muted">${posted(c)}/${target(c)}</div></div>`; }).join('') || `<p class="empty">${loaded.clients ? 'No clients yet.' : 'Loading…'}</p>`}</div></div>
+    <div><div class="t" style="font-weight:500">${dot(c)} ${esc(c.name)}</div><div class="s"><span class="clamp">${esc(c.next || 'Set a next move on the client page')}</span></div></div>
+    <div class="c"><span class="count"><span class="pdot ${p.cls}" title="${esc(p.label)}"></span><span class="mono">${posted(c)}<span class="muted">/${target(c)}</span></span></span></div></div>`; }).join('') || `<p class="empty">${loaded.clients ? 'No clients yet.' : 'Loading…'}</p>`}</div></div>
 
-  <div class="sec"><div class="lab">Due today and overdue${unassigned ? `<span class="acts muted">${unassigned} open unassigned</span>` : ''}</div>
-  <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Plan the day below.' : 'Loading…'}</p>`}</div></div>
-
-  <div class="sec"><div class="lab">Coming up</div>
-  <div class="items">${soon.map(e => `<div class="it"><div><div class="t">${esc(e.name)} <span class="muted mono" style="font-size:12px">· ${esc(fmt(e.d))} · in ${daysTo(e.d)} days</span></div><div class="s"><span class="dots">${e.who.map(id => dot(C(id))).join('')}</span><span style="flex:1 1 220px;min-width:0">${esc(e.prep)}</span></div></div></div>`).join('') || '<p class="empty">No moments in the next 45 days.</p>'}</div></div>
-
-  <div class="sec"><div class="lab">Plan my day<span class="acts">${sample ? `<button class="b pri" data-act="planDay" ${ui.busy.day ? 'disabled' : ''}>Plan with Claude</button>` : ''}</span></div>
-  ${busyOr('day', ui.out.day ? `<p class="empty">${esc(ui.out.day)}</p>` : ui.dayPlan ? suggestions('day', ui.dayPlan) :
-    `<p class="empty">${sample ? 'Claude reads every page’s target, research, recent insights and the festive calendar, then proposes today’s work. Add the tasks you want and assign them.' : 'Open this page in Claude to plan with AI.'}</p>`)}</div>`;
+  <div class="sec"><div class="lab">Coming up<span class="acts"><button class="lnk" data-go="calendar">Calendar</button></span></div>
+  <div class="items">${soon.map(e => `<div class="it"><div class="evrow"><span class="when mono"><b>${new Date(e.d+'T00:00:00').getDate()}</b>${esc(new Date(e.d+'T00:00:00').toLocaleDateString(undefined,{month:'short'}))}</span>
+    <div style="min-width:0"><div class="t">${esc(e.name)} <span class="muted" style="font-size:12px">· in ${daysTo(e.d)} days</span></div><div class="s"><span class="dots">${e.who.map(id => dot(C(id))).join('')}</span><span class="clamp" style="flex:1 1 220px;min-width:0">${esc(e.prep)}</span></div></div></div></div>`).join('') || '<p class="empty">No moments in the next 45 days.</p>'}</div></div>`;
 }
 
 function statsStrip(){
   const tot = S.clients.reduce((a,c) => a + target(c), 0), done = S.clients.reduce((a,c) => a + posted(c), 0);
   const od = openTasks().filter(t => t.due && t.due < today).length;
   const cells = [[`${done}<small>/${tot}</small>`, 'Posted this month'], [openTasks().length, 'Open tasks'], [od, 'Overdue', od > 0],
-    [S.tasks.filter(t => t.status === 'sent').length, 'With client'], [S.insights.filter(i => i.unread).length, 'Screenshots to read']];
+    [S.tasks.filter(t => t.status === 'sent').length, 'With client']];
   return `<div class="stats">${cells.map(([n,l,hot]) => `<div class="${hot ? 'hot' : ''}"><b>${n}</b><span>${l}</span></div>`).join('')}</div>`;
 }
 function overdueAlert(){
   const od = openTasks().filter(t => t.due && t.due < today);
   if (!od.length) return '';
   const oldest = Math.max(...od.map(t => -daysTo(t.due)));
-  return `<div class="alert"><span>${od.length} overdue task${od.length === 1 ? '' : 's'} · oldest ${oldest} day${oldest === 1 ? '' : 's'} late</span><button class="lnk" style="color:inherit" data-go="tasks">Open tasks</button></div>`;
+  const noReason = od.filter(t => !(t.comments || []).length).length;
+  return `<div class="alert"><span>${od.length} overdue · oldest ${oldest} day${oldest === 1 ? '' : 's'} late${noReason ? ` · ${noReason} without a reason` : ''}</span></div>`;
 }
 
 /* ----- Clients list ----- */
@@ -885,6 +931,8 @@ document.addEventListener('click', async e => {
   const md_ = e.target.closest('[data-pick-mode]'); if (md_){ setLook('mode', md_.dataset.pickMode); return; }
   const b = e.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, c = C(ui.cid), tid = b.closest('[data-tid]')?.dataset.tid;
+  if (a === 'toggleTask'){ ui.openTask = ui.openTask === tid ? null : tid; render(); const i = document.getElementById('cm-' + tid); if (i) i.focus(); return; }
+  if (a === 'closePlan'){ ui.dayPlan = null; delete ui.out.day; render(); return; }
   if (a === 'delTask') await write(() => tasksCol().doc(tid).delete());
   else if (a === 'planDay') planDay();
   else if (a === 'ideas') ideas(c);
@@ -931,6 +979,7 @@ document.addEventListener('change', async e => {
   const tid = el.closest('[data-tid]')?.dataset.tid;
   if (k === 'status') await write(() => tasksCol().doc(tid).update({status:el.value, doneMonth: el.value === 'done' ? monthKey : ''}));
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
+  else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
   else if (k === 'filt'){ ui.filt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); }
   else if (k === 'local'){ const c = C(ui.cid); const items = (c.local?.items || []).map((it, n) => n === Number(el.dataset.n) ? {...it, done:el.checked} : it); await upd(c.id, {local:{items}}); }
 });
@@ -938,6 +987,14 @@ document.addEventListener('submit', async e => {
   const f = e.target.closest('[data-form]'); if (!f) return;
   e.preventDefault();
   const k = f.dataset.form, c = C(ui.cid), v = id => (document.getElementById(id)?.value ?? '').trim();
+  if (k === 'comment'){
+    const tid = f.closest('[data-tid]').dataset.tid, t = S.tasks.find(x => x.id === tid); const text = v('cm-' + tid), nd = v('nd-' + tid);
+    if (!t || !text) return;
+    const upd_ = {comments:[...(t.comments || []), {who:myMember || '', text:text.slice(0, 500), at:Date.now()}].slice(-30)};
+    if (nd) upd_.due = nd;
+    if (await write(() => tasksCol().doc(tid).update(upd_), nd ? 'Comment posted, due date moved' : 'Comment posted')){ ui.keep['cm-' + tid] = ''; render(); }
+    return;
+  }
   if (k === 'next'){ const val = v('next-' + c.id); if (await upd(c.id, {next:val}, 'Saved')) delete ui.keep['next-' + c.id]; }
   else if (k === 'quickTask'){ const title = v('qt-' + c.id); if (!title) return; if (await addTask({title, client:c.id, kind:v('qk-' + c.id)})){ ui.keep['qt-' + c.id] = ''; toast('Task added'); render(); } }
   else if (k === 'task'){ const title = v('t-title'); if (!title) return; ['t-client','t-kind','t-who'].forEach(id => ui.keep[id] = v(id));
@@ -982,10 +1039,9 @@ async function boot(){
     try { myUid = await userNs.id(); } catch(e){}
   }
   listen('tasks'); listen('team', (a,b) => (a.createdAt||0) - (b.createdAt||0));
-  if (role === 'editor'){
-    if (myUid){ try { const p = await db.doc(`data/users/${myUid}/profile`).get(); if (p.exists) myMember = p.data().member; } catch(e){} }
-    render(); return;
-  }
+  if (myUid){ try { const p = await db.doc(`data/users/${myUid}/profile`).get(); if (p.exists) myMember = p.data().member; } catch(e){} }
+  if (role === 'editor'){ render(); return; }
+  if (!myMember) myMember = 'me';
   listen('clients', (a,b) => (a.order ?? 99) - (b.order ?? 99));
   listen('insights');
   listen('prompts');
