@@ -424,6 +424,11 @@ span.gchip{cursor:inherit;display:block}
 .daypanel{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
 .evnote{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:8px;background:var(--sunk);margin-bottom:10px;font-size:13px}
 .evnote span{color:var(--muted)}
+
+.genprog{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--muted)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none;border-top-color:var(--muted)}}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -541,7 +546,7 @@ let role = 'admin', myUid = null, myMember = null;
 const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[]};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
+  pending:[], ctl:{}, t0:{}, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.allClients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
@@ -735,7 +740,7 @@ function suggestions(key, items){
     <button class="b" data-act="addSug">Add</button></div></div>`; }).join('')}</div>
     <div class="row" style="margin-top:10px"><button class="lnk" data-act="addAllSug" data-key="${esc(key)}">Add all as tasks</button></div>`;
 }
-const busyOr = (k, html) => ui.busy[k] ? `<p class="empty">Thinking… this can take up to a minute.</p>` : html;
+const busyOr = (k, html, partial) => ui.busy[k] ? (partial || '') + progress(k) : html;
 
 /* ----- Today ----- */
 function viewToday(){
@@ -753,7 +758,7 @@ function viewToday(){
   ${waiting ? `<div class="alert warn"><span>${waiting} screenshot${waiting===1?'':'s'} waiting to be read</span><span class="muted" style="font-weight:400">Read every morning at 7:50, or say “read new insights” in chat</span></div>` : ''}
   ${paymentsDue()}
   ${showPlan ? `<div class="sec"><div class="lab">Today’s plan<span class="acts"><button class="lnk" data-act="closePlan">Close</button></span></div>
-    ${busyOr('day', ui.out.day ? `<p class="empty">${esc(ui.out.day)}</p>` : suggestions('day', ui.dayPlan || []))}</div>` : ''}
+    ${busyOr('day', ui.out.day && !(ui.dayPlan || []).length ? `<p class="empty">${esc(ui.out.day)}</p>` : suggestions('day', ui.dayPlan || []), (ui.dayPlan || []).length ? suggestions('day', ui.dayPlan) : '')}</div>` : ''}
 
   <div class="sec"><div class="lab">Due now</div>
   <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Use “Plan my day” to line up work.' : LOADING}</p>`}</div></div>
@@ -869,7 +874,7 @@ function tabOverview(c){
       <label class="vh" for="qt-${esc(c.id)}">New task</label><input class="grow" type="text" id="qt-${esc(c.id)}" data-keep="qt-${esc(c.id)}" value="${esc(keep('qt-'+c.id))}" placeholder="Add a task for ${esc(c.name)}">
       <label class="vh" for="qk-${esc(c.id)}">Type</label><select id="qk-${esc(c.id)}">${kindOptions(c.target?.kind === 'ai' ? 'ai' : 'carousel')}</select>
       <button class="b" type="submit">Add</button></form>
-    ${ui.busy['ideas:'+c.id] || ui.ideas[c.id] || ui.out['ideas:'+c.id] ? `<div style="margin-top:16px">${busyOr('ideas:'+c.id, ui.out['ideas:'+c.id] ? `<p class="empty">${esc(ui.out['ideas:'+c.id])}</p>` : suggestions('ideas:'+c.id, ui.ideas[c.id] || []))}</div>` : ''}
+    ${ui.busy['ideas:'+c.id] || ui.ideas[c.id] || ui.out['ideas:'+c.id] ? `<div style="margin-top:16px">${busyOr('ideas:'+c.id, ui.out['ideas:'+c.id] && !(ui.ideas[c.id] || []).length ? `<p class="empty">${esc(ui.out['ideas:'+c.id])}</p>` : suggestions('ideas:'+c.id, ui.ideas[c.id] || []), (ui.ideas[c.id] || []).length ? suggestions('ideas:'+c.id, ui.ideas[c.id]) : '')}</div>` : ''}
   </div>
 
   ${!pl.goal && sample ? `<div class="sec"><div class="lab">Get started</div><p style="margin:0 0 12px">${esc(c.name)} has no growth plan yet. Claude can draft the plan, a research brief and a brand kit from what you entered.</p>
@@ -1049,7 +1054,7 @@ function tabPrompts(c){
       <div class="row"><button class="b pri" type="submit" ${sample && !ui.busy[k] ? '' : 'disabled'}>Write prompts</button>
       <span class="muted" style="font-size:12px">Uses ${esc(c.name)}’s brand kit, research, insights and upcoming dates.</span></div>
     </form>
-    <div style="margin-top:6px">${busyOr(k, ui.out[k] ? `<p class="empty">${esc(ui.out[k])}</p>` : gen.map((x,i) => promptCard(x, i, false)).join(''))}</div></div>
+    <div style="margin-top:6px">${busyOr(k, (ui.out[k] ? `<p class="${gen.length ? 'late' : 'empty'}" style="font-size:13px">${esc(ui.out[k])}</p>` : '') + gen.map((x,i) => promptCard(x, i, false)).join(''), gen.map((x,i) => promptCard(x, i, false)).join(''))}</div></div>
   <div class="sec"><div class="lab">Saved prompts<span class="acts">${saved.length ? `<span class="muted">${saved.length}</span>` : ''}</span></div>
     ${saved.length ? saved.map(x => promptCard(x, 0, true)).join('') : '<p class="empty">Prompts that work go here. Save them so you can reuse them.</p>'}</div>`;
 }
@@ -1205,30 +1210,41 @@ function validItems(arr, fallbackClient){
       why:String(i.why || ''), need:String(i.need || ''), assignee:String(i.assignee || '')}));
 }
 async function run(key, fn){
-  ui.busy[key] = true; delete ui.out[key]; render();
-  try { await fn(); } catch(e){ ui.out[key] = errCopy(e); }
-  ui.busy[key] = false; render();
+  ui.busy[key] = true; ui.t0[key] = Date.now(); delete ui.out[key]; render();
+  try { await fn(); } catch(e){ if (!(e && e.code === 'cancelled')) ui.out[key] = errCopy(e); }
+  ui.busy[key] = false; delete ui.ctl[key]; render();
 }
-const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Reply with only a JSON array. Each item: {"client": client id, "title": specific task (what exactly to make, with the hook or angle), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or ""}.`;
+// Ask Claude for one JSON object per line and hand each over as soon as its line is complete.
+async function streamItems(prompt, key, onItem){
+  const ctl = new AbortController(); ui.ctl[key] = ctl;
+  let pending = '', n = 0;
+  const eat = line => { line = line.trim().replace(/^```\w*|```$/g, '').replace(/^[-*]\s+/, '').replace(/,\s*$/, ''); if (!line.startsWith('{')) return; try { const o = JSON.parse(line); if (onItem(o) !== false) n++; schedule(); } catch(e){} };
+  const {text} = await sample(prompt + '\n\nOUTPUT FORMAT: one complete JSON object per line (NDJSON). No array brackets, no code fences, no other text. Write the most useful item first.', {cache:false, signal:ctl.signal,
+    onText:({delta}) => { const lines = (pending + delta).split('\n'); pending = lines.pop(); lines.forEach(eat); }});
+  eat(pending);
+  if (!n){ try { const m = text.match(/\[[\s\S]*\]/); if (m) JSON.parse(m[0]).forEach(o => { if (onItem(o) !== false) n++; }); } catch(e){} }
+  return n;
+}
+const progress = k => `<div class="genprog"><span class="spin" aria-hidden="true"></span><span>Writing… <span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span><button class="lnk" data-act="stopGen" data-k="${esc(k)}">Stop</button></div>`;
+setInterval(() => document.querySelectorAll('[data-el]').forEach(el => { const t = ui.t0[el.dataset.el]; if (t) el.textContent = Math.round((Date.now() - t) / 1000) + 's'; }), 1000);
+const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Each item: {"client": client id, "title": specific task (what exactly to make, with the hook or angle), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or ""}.`;
 
 function planDay(){
   run('day', async () => {
     const data = S.clients.filter(c => c.status !== 'paused').map(c => ({id:c.id, ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
       openTasks:openTasks(c.id).map(t => t.title).slice(0, 8), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
     const team = S.team.map(m => `${m.name} (${m.role})`);
-    const arr = await sample.json(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). The Reach Story is our own studio page: grow it too, ideally with case studies from client results. Give 7 to 10 tasks, each finishable today. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, {cache:false});
-    const items = validItems(arr);
-    if (!items.length) throw {code:'empty'};
-    ui.dayPlan = items;
+    ui.dayPlan = [];
+    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). The Reach Story is our own studio page: grow it too, ideally with case studies from client results. Give 7 to 10 tasks, each finishable today. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; ui.dayPlan.push(v[0]); });
+    if (!n) throw {code:'empty'};
   });
 }
 function ideas(c){
   run('ideas:' + c.id, async () => {
     const left = Math.max(4, Math.min(10, target(c) - posted(c)));
-    const arr = await sample.json(`${preamble}\n\nYou are the content strategist for ${c.name}. Suggest ${left} content pieces for the rest of this month that grow recognition and sales. Use the research, pillars, recent insight learnings (repeat what worked), and upcoming moments. Mix formats: carousels, reels edited from client clips${c.id === 'eroe' ? ', AI product visuals' : ''}, photo posts, stories. Each title must be concrete: the exact angle, first-slide text or hook. Write hooks in the client's language.\n\nContext:\n${JSON.stringify(clientContext(c))}\n\n${itemSpec} Use "${c.id}" as the client id.`, {cache:false});
-    const items = validItems(arr, c.id);
-    if (!items.length) throw {code:'empty'};
-    ui.ideas[c.id] = items;
+    ui.ideas[c.id] = [];
+    const n = await streamItems(`${preamble}\n\nYou are the content strategist for ${c.name}. Suggest ${left} content pieces for the rest of this month that grow recognition and sales. Use the research, pillars, recent insight learnings (repeat what worked), and upcoming moments. Mix formats: carousels, reels edited from client clips${c.id === 'eroe' ? ', AI product visuals' : ''}, photo posts, stories. Each title must be concrete: the exact angle, first-slide text or hook. Write hooks in the client's language.\n\nContext:\n${JSON.stringify(clientContext(c))}\n\n${itemSpec} Use "${c.id}" as the client id.`, 'ideas:' + c.id, o => { const v = validItems([o], c.id); if (!v.length) return false; ui.ideas[c.id].push(v[0]); });
+    if (!n) throw {code:'empty'};
   });
 }
 async function chat(c, text){
@@ -1297,10 +1313,11 @@ function makePrompts(c){
   Object.assign(ui.keep, {'pm-what':what, 'pm-tool':tool, 'pm-ratio':ratio, 'pm-n':String(n)});
   const k = 'prompts:' + c.id;
   run(k, async () => {
-    const arr = await sample.json(`${preamble}\n\nYou are the creative director for ${c.name}. Write ${n} ${what === 'edit' ? 'edit briefs' : 'prompts'} for: ${P_WHAT[what]}. Format ${ratio}.\n${P_GUIDE[what]}\n${what === 'edit' ? '' : P_TOOLTIPS[tool] + ' Keep products realistic and accurate (jewellery details, garment seams, wheel spokes, fabric texture). Match the brand kit look. Local clients are in Khanna, Punjab: settings, people and styling should feel Punjabi and real, never generic stock.'}\nWhat the owner wants: ${brief || '(nothing specific: choose the most useful next posts from the plan, recent insights and upcoming moments)'}\n\nContext:\n${JSON.stringify(clientContext(c, {insights:6}))}\n\nReply with only a JSON array. Each item: {"title": short name, "prompt": the full ready-to-paste prompt or brief, "negative": what to avoid (or ""), "settings": aspect ratio / duration / tool settings (or ""), "use": which post or slot this is for and the caption angle}.`, {cache:false});
-    const items = (Array.isArray(arr) ? arr : []).filter(x => x && x.prompt).map(x => ({title:String(x.title||''), prompt:String(x.prompt), negative:String(x.negative||''), settings:String(x.settings||''), use:String(x.use||''), what, tool, ratio}));
-    if (!items.length) throw {code:'invalid_json'};
-    ui.gen[c.id] = items;
+    ui.gen[c.id] = [];
+    const lite = {name:c.name, business:c.tag, city:c.city, language:c.brand?.language, brand:c.brand, pillars:c.plan?.pillars, focus:c.plan?.focus,
+      recentLearnings:clientInsights(c.id).slice(0, 4).flatMap(i => i.learnings || []).slice(0, 6), upcoming:eventsFor(c.id).slice(0, 3).map(e => `${e.d} ${e.name}: ${ownPrep(c, e)}`)};
+    const got = await streamItems(`${preamble}\n\nYou are the creative director for ${c.name}. Write ${n} ${what === 'edit' ? 'edit briefs' : 'prompts'} for: ${P_WHAT[what]}. Format ${ratio}.\n${P_GUIDE[what]}\n${what === 'edit' ? '' : P_TOOLTIPS[tool] + ' Keep products realistic and accurate (jewellery details, garment seams, wheel spokes, fabric texture). Match the brand kit look. Local clients are in Khanna, Punjab: settings, people and styling should feel Punjabi and real, never generic stock.'}\nWhat the owner wants: ${brief || '(nothing specific: choose the most useful next posts from the plan, recent insights and upcoming moments)'}\n\nClient:\n${JSON.stringify(lite)}\n\nEach item: {"title": short name, "prompt": the full ready-to-paste prompt or brief (keep newlines out: use spaces or " / "), "negative": what to avoid (or ""), "settings": aspect ratio / duration / tool settings (or ""), "use": which post or slot this is for and the caption angle}.`, k, x => { if (!x || !x.prompt) return false; ui.gen[c.id].push({title:String(x.title||''), prompt:String(x.prompt), negative:String(x.negative||''), settings:String(x.settings||''), use:String(x.use||''), what, tool, ratio}); });
+    if (!got) throw {code:'invalid_json'};
   });
 }
 
@@ -1822,6 +1839,7 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, c = C(ui.cid), tid = b.closest('[data-tid]')?.dataset.tid;
   if (a === 'cmd'){ openCmd(); return; }
+  if (a === 'stopGen'){ ui.ctl[b.dataset.k]?.abort(); return; }
   if (a === 'toggleTask'){ ui.openTask = ui.openTask === tid ? null : tid; render(); const i = document.getElementById('cm-' + tid); if (i) i.focus(); return; }
   if (a === 'closePlan'){ ui.dayPlan = null; delete ui.out.day; render(); return; }
   if (a === 'delTask') await write(() => tasksCol().doc(tid).delete());
