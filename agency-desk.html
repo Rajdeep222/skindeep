@@ -479,6 +479,35 @@ button, .it.click, .ccard{-webkit-tap-highlight-color:transparent}
 .proposal.flash{animation:flash 2.4s ease}
 @keyframes flash{0%,30%{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 45%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:reduce){.pressed,.proposal.flash{animation:none}.b:active,.lnk:active{transform:none}}
+
+/* ---- v19: calmer task list ---- */
+.th{font-weight:500;line-height:1.35}
+.tdesc{all:unset;cursor:pointer;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;color:var(--muted);line-height:1.45;margin-top:2px;max-width:62ch}
+.tdesc.open{display:block;-webkit-line-clamp:unset;color:var(--ink)}
+.tdesc:hover{color:var(--ink)}
+.tdesc:focus-visible{outline:2px solid var(--accent);border-radius:4px}
+.quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.qchip{all:unset;cursor:pointer;display:inline-flex;align-items:baseline;gap:6px;padding:7px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-size:13px;color:var(--muted);transition:background .15s,border-color .15s,transform .08s}
+.qchip b{font-family:var(--m);font-weight:500;color:var(--ink);font-size:14px}
+.qchip.bad b{color:var(--bad)}.qchip.warn b{color:var(--warn)}
+.qchip:hover{border-color:var(--muted)}
+.qchip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.qchip.on b{color:var(--bg)}
+.qchip:active{transform:scale(.96)}
+.qchip:focus-visible{outline:2px solid var(--accent)}
+.toolbar{padding:12px 16px}
+.toolbar select{padding:5px 8px;font-size:13px}
+.tgroup{padding-top:0;overflow:hidden}
+.tgh{display:flex;align-items:center;gap:10px;margin:0 -20px 4px;padding:12px 20px;background:color-mix(in srgb,var(--cc,var(--muted)) 8%,var(--surface));border-bottom:1px solid var(--line);position:relative}
+.tgh::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cc,transparent)}
+.tgh b{font-weight:600;font-size:14.5px}
+.mono-av.sm{width:26px;height:26px;border-radius:7px;font-size:11px;box-shadow:none}
+.gdot{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.gdot.bad{background:var(--bad)}.gdot.warn{background:var(--warn)}
+.tgroup .it .c select{opacity:.75}
+.tgroup .it:hover .c select,.tgroup .it .c select:focus{opacity:1}
+.tgroup .it .c select[data-s]{border-radius:99px;padding:4px 10px}
+@media (max-width:820px){.tgh{margin:0 -16px 4px;padding:12px 16px}}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -596,7 +625,7 @@ let role = 'admin', myUid = null, myMember = null;
 const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[], backup:null};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false, campaigns:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], askPend:{}, impLive:{}, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
+  pending:[], askPend:{}, impLive:{}, expand:{}, groupBy:'client', addOpen:false, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.allClients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
@@ -769,12 +798,22 @@ function renderCmd(){
 function runCmd(n){ const i = cmdMatches()[n]; closeCmd(); if (i) i.run(); }
 
 const ago = ms => { const d = Math.round((Date.now() - ms) / 864e5); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'; };
+// Long task text → short bold headline + muted detail.
+function splitTitle(txt){
+  const t = String(txt || '').trim();
+  if (t.length <= 72) return [t, ''];
+  let best = -1, len = 0;
+  for (const sep of [' — ', ' – ', ': ', '; ', '. ', ' - ', ', ']){ const k = t.indexOf(sep, 24); if (k > 0 && k <= 90 && (best < 0 || k < best)){ best = k; len = sep.length; } }
+  if (best > 0) return [t.slice(0, best).replace(/[,:;.]$/, ''), t.slice(best + len).trim()];
+  const cut = t.lastIndexOf(' ', 64); const k = cut > 30 ? cut : 64;
+  return [t.slice(0, k) + '…', '…' + t.slice(k).trim()];
+}
 function taskRow(t, opts = {}){
   const c = C(t.client), late = t.status !== 'done' && t.due && t.due < today;
   const cm = t.comments || [], last = cm[cm.length - 1], open = ui.openTask === t.id;
   const lateBy = late ? -daysTo(t.due) : 0;
   return `<div class="it ${late ? 'is-late' : ''}" data-tid="${esc(t.id)}">
-    <div><div class="t">${esc(t.title)}</div>
+    <div>${(() => { const [h, d] = splitTitle(t.title), ex = ui.expand[t.id]; return `<div class="t th">${esc(h)}</div>${d ? `<button class="tdesc ${ex ? 'open' : ''}" data-act="expandTask" aria-expanded="${!!ex}">${esc(d)}</button>` : ''}`; })()}
       <div class="s">${opts.noClient ? '' : `<span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span>`}<span class="k">${esc(SHORT[t.kind] || t.kind)}</span>
       ${t.due ? `<span class="${late ? 'late' : ''}">${late ? `${lateBy} day${lateBy === 1 ? '' : 's'} late` : esc(fmt(t.due))}</span>` : ''}
       ${opts.showWho && t.assignee ? `<span>${esc(M(t.assignee)?.name || '')}</span>` : ''}
@@ -1238,9 +1277,12 @@ function presetMatch(t){
   if (p === 'overdue') return t.status !== 'done' && t.due && t.due < today;
   if (p === 'sent') return t.status === 'sent';
   if (p === 'open') return t.status !== 'done';
+  if (p === 'today') return t.status !== 'done' && t.due === today;
+  if (p === 'week') return t.status !== 'done' && t.due && t.due >= today && daysTo(t.due) <= 7;
+  if (p === 'unassigned') return t.status !== 'done' && !t.assignee;
   return true;
 }
-const PRESETS = {overdue:'Overdue', sent:'With client', open:'Open'};
+const PRESETS = {overdue:'Overdue', sent:'With client', open:'Open', today:'Due today', week:'This week', unassigned:'Unassigned'};
 function viewTasks(){
   const f = ui.filt, board = ui.taskView === 'board';
   const list = S.tasks.filter(t => presetMatch(t) && (board || f.done || f.preset || t.status !== 'done') && (!f.client || t.client === f.client) && (!f.who || (f.who === 'none' ? !t.assignee : t.assignee === f.who)))
@@ -1248,25 +1290,48 @@ function viewTasks(){
     .sort((a,b) => (a.due || '9999').localeCompare(b.due || '9999'));
   return `<header class="top"><div><p class="eyebrow">To do → editing → with client → approved → done</p><h1>Tasks</h1></div>
     <div class="seg" role="group" aria-label="Task view"><button data-tv="list" aria-pressed="${!board}">List</button><button data-tv="board" aria-pressed="${board}">Board</button></div></header>
-  <div class="sec">
-    <form class="addline" data-form="task">
-      <label class="vh" for="t-title">Task</label><input type="text" id="t-title" data-keep="t-title" value="${esc(keep('t-title'))}" placeholder="Add a task… e.g. Edit 3 reels from Sunday’s wedding clips">
+  ${(() => { const op = S.tasks.filter(t => t.status !== 'done');
+    const q = [['overdue','Overdue', op.filter(t => t.due && t.due < today).length, 'bad'], ['today','Today', op.filter(t => t.due === today).length, 'warn'], ['week','This week', op.filter(t => t.due && t.due >= today && daysTo(t.due) <= 7).length, ''], ['sent','With client', op.filter(t => t.status === 'sent').length, ''], ['unassigned','Unassigned', op.filter(t => !t.assignee).length, '']];
+    return `<div class="quick">${q.map(([k,l,n,cl]) => `<button class="qchip ${cl} ${f.preset === k ? 'on' : ''}" data-act="${f.preset === k ? 'clearPreset' : 'quick'}" data-q="${k}" aria-pressed="${f.preset === k}"><b>${n}</b>${l}</button>`).join('')}</div>`; })()}
+  <div class="sec toolbar">
+    <div class="row" style="justify-content:space-between;gap:10px">
+      <button class="b ${ui.addOpen ? '' : 'pri'}" data-act="toggleAdd">${ui.addOpen ? 'Close' : ico('plus') + ' New task'}</button>
+      <div class="row" style="gap:8px">
+        <label class="vh" for="f-client">Client</label><select id="f-client" data-change="filt" data-k="client"><option value="">All pages</option>${S.clients.map(c => `<option value="${esc(c.id)}"${c.id===f.client?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
+        <label class="vh" for="f-who">Person</label><select id="f-who" data-change="filt" data-k="who"><option value="">Everyone</option><option value="none"${f.who==='none'?' selected':''}>Unassigned</option>${S.team.map(m => `<option value="${esc(m.id)}"${m.id===f.who?' selected':''}>${esc(m.name)}</option>`).join('')}</select>
+        ${board ? '' : `<div class="seg" role="group" aria-label="Group by"><span class="muted" style="font-size:12px;padding:4px 6px">Group</span>${[['client','Client'],['due','Due'],['person','Person']].map(([k,l]) => `<button data-gb="${k}" aria-pressed="${ui.groupBy === k}">${l}</button>`).join('')}</div>
+        <label class="row" style="gap:4px;color:var(--muted);font-size:13px"><input type="checkbox" id="f-done" data-change="filt" data-k="done" ${f.done?'checked':''}> Done</label>`}
+      </div></div>
+    ${ui.addOpen ? `<form class="addline" data-form="task" style="margin-top:12px">
+      <label class="vh" for="t-title">Task</label><input type="text" id="t-title" data-keep="t-title" value="${esc(keep('t-title'))}" placeholder="Short task name, e.g. Edit 3 reels from Sunday’s wedding clips">
       <label class="vh" for="t-client">Client</label><select id="t-client">${S.clients.map(c => `<option value="${esc(c.id)}"${c.id===keep('t-client')?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
       <label class="vh" for="t-kind">Type</label><select id="t-kind">${kindOptions(keep('t-kind','carousel'))}</select>
       <label class="vh" for="t-who">Assign</label><select id="t-who">${whoOptions(keep('t-who'))}</select>
       <label class="vh" for="t-due">Due</label><input type="date" id="t-due" value="${esc(keep('t-due', today))}">
-      <button class="b pri" type="submit">Add</button></form>
-    <div class="filters">
-      ${f.preset ? `<span class="fchip">${esc(PRESETS[f.preset])}<button data-act="clearPreset" aria-label="Clear filter">×</button></span>` : ''}
-      <label class="vh" for="f-client">Client</label><select id="f-client" data-change="filt" data-k="client"><option value="">All pages</option>${S.clients.map(c => `<option value="${esc(c.id)}"${c.id===f.client?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
-      <label class="vh" for="f-who">Person</label><select id="f-who" data-change="filt" data-k="who"><option value="">Everyone</option><option value="none"${f.who==='none'?' selected':''}>Unassigned</option>${S.team.map(m => `<option value="${esc(m.id)}"${m.id===f.who?' selected':''}>${esc(m.name)}</option>`).join('')}</select>
-      ${board ? '' : `<label class="row" style="gap:4px;color:var(--muted)"><input type="checkbox" id="f-done" data-change="filt" data-k="done" ${f.done?'checked':''}> Show done</label>`}
-      <span class="muted" style="margin-left:auto;font-size:12px">${list.length} task${list.length === 1 ? '' : 's'}</span>
-    </div>
+      <button class="b pri" type="submit">Add</button></form>` : ''}
+    ${f.preset ? `<div class="row" style="margin-top:10px"><span class="fchip">${esc(PRESETS[f.preset])}<button data-act="clearPreset" aria-label="Clear filter">×</button></span><span class="muted" style="font-size:12px">${list.length} task${list.length === 1 ? '' : 's'}</span></div>` : ''}
   </div>
-  ${board ? boardView(list) : `<div class="sec"><div class="items">${list.length ? list.map(t => taskRow(t, {showWho:true})).join('') : `<p class="empty">${loaded.tasks ? 'No tasks match.' : LOADING}</p>`}</div></div>`}
+  ${board ? boardView(list) : (list.length ? taskGroups(list) : `<div class="sec"><p class="empty">${loaded.tasks ? 'No tasks match.' : LOADING}</p></div>`)}
   ${teamSection()}
   <div class="sec phone-only">${lookPicker()}</div>`;
+}
+function taskGroups(list){
+  const g = ui.groupBy, groups = [];
+  if (g === 'due'){
+    const B = [['Overdue', t => t.status !== 'done' && t.due && t.due < today, 'bad'], ['Today', t => t.due === today, 'warn'], ['This week', t => t.due > today && daysTo(t.due) <= 7, ''], ['Later', t => t.due && daysTo(t.due) > 7, ''], ['No date', t => !t.due, ''], ['Done', t => t.status === 'done' && t.due && t.due < today, '']];
+    const used = new Set();
+    for (const [l, fn, cl] of B){ const items = list.filter(t => !used.has(t.id) && fn(t)); items.forEach(t => used.add(t.id)); if (items.length) groups.push({l, items, cl}); }
+  } else if (g === 'person'){
+    for (const m of [...S.team, {id:'', name:'Unassigned'}]){ const items = list.filter(t => (t.assignee || '') === m.id); if (items.length) groups.push({l:m.name, items, av:m.id ? m : null}); }
+  } else {
+    for (const c of S.allClients){ const items = list.filter(t => t.client === c.id); if (items.length) groups.push({l:c.name, items, c}); }
+    const orphan = list.filter(t => !C(t.client)); if (orphan.length) groups.push({l:'Other', items:orphan});
+  }
+  return groups.map(gr => { const od = gr.items.filter(t => t.status !== 'done' && t.due && t.due < today).length;
+    return `<section class="sec tgroup" style="${gr.c ? hueStyle(gr.c) : ''}"><div class="tgh">${gr.c ? `<span class="mono-av sm">${esc(monogram(gr.c.name))}</span>` : gr.av ? `<span class="av">${initials(gr.av)}</span>` : `<span class="gdot ${gr.cl || ''}"></span>`}
+      <b>${esc(gr.l)}</b><span class="muted">${gr.items.length}</span>${od && g !== 'due' ? `<span class="pill bad" style="font-size:11.5px">${od} overdue</span>` : ''}
+      ${gr.c ? `<button class="lnk" style="margin-left:auto;font-size:12.5px" data-go="client" data-cid="${esc(gr.c.id)}">Open page →</button>` : ''}</div>
+      <div class="items">${gr.items.map(t => taskRow(t, {showWho:g !== 'person', noClient:g === 'client'})).join('')}</div></section>`; }).join('');
 }
 const initials = m => m ? esc(m.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase()) : '';
 function boardView(list){
@@ -1344,7 +1409,7 @@ async function streamItems(prompt, key, onItem){
 }
 const progress = k => `<div class="genprog"><span class="spin" aria-hidden="true"></span><span>Writing… <span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span><button class="lnk" data-act="stopGen" data-k="${esc(k)}">Stop</button></div>`;
 setInterval(() => document.querySelectorAll('[data-el]').forEach(el => { const t = ui.t0[el.dataset.el]; if (t) el.textContent = Math.round((Date.now() - t) / 1000) + 's'; }), 1000);
-const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Each item: {"client": client id, "title": specific task (what exactly to make, with the hook or angle), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or ""}.`;
+const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Each item: {"client": client id, "title": a short action of under 8 words, then ": " and the specifics (e.g. "Groom-season carousel: slide 1 fabric roll, slide 2 cutting… caption pushes fittings"), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or ""}.`;
 
 function planDay(){
   run('day', async () => {
@@ -2213,6 +2278,7 @@ document.addEventListener('click', async e => {
   if (e.target.closest('#cmdk') && !e.target.closest('.cmdbox')){ closeCmd(); return; }
   const ci = e.target.closest('[data-cmd]'); if (ci){ runCmd(Number(ci.dataset.cmd)); return; }
   const dd = e.target.closest('[data-day]'); if (dd){ ui.calDay = ui.calDay === dd.dataset.day ? null : dd.dataset.day; render(); if (ui.calDay) setTimeout(() => document.getElementById('daypanel')?.scrollIntoView({behavior:'smooth', block:'nearest'}), 30); return; }
+  const gb = e.target.closest('[data-gb]'); if (gb){ ui.groupBy = gb.dataset.gb; try { localStorage.setItem('rsd-gb', ui.groupBy); } catch(_){} render(); return; }
   const cal = e.target.closest('[data-cal]'); if (cal){ ui.calMode = cal.dataset.cal; render(); return; }
   const tv = e.target.closest('[data-tv]'); if (tv){ ui.taskView = tv.dataset.tv; render(); return; }
   const sk = e.target.closest('[data-pick-skin]'); if (sk){ setLook('skin', sk.dataset.pickSkin); return; }
@@ -2220,6 +2286,9 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, c = C(ui.cid), tid = b.closest('[data-tid]')?.dataset.tid;
   if (a === 'cmd'){ openCmd(); return; }
+  if (a === 'expandTask'){ const id = b.closest('[data-tid]').dataset.tid; ui.expand[id] = !ui.expand[id]; render(); return; }
+  if (a === 'toggleAdd'){ ui.addOpen = !ui.addOpen; render(); if (ui.addOpen) setTimeout(() => $('#t-title')?.focus(), 30); return; }
+  if (a === 'quick'){ ui.filt = {client:'', who:'', done:false, preset:b.dataset.q}; render(); return; }
   if (a === 'openCampaign'){ ui.campId = b.dataset.id; ui.campOpen = null; go('campaign'); return; }
   if (a === 'campItem'){ const k = ui.campId + ':' + b.dataset.i; ui.campOpen = ui.campOpen === k ? null : k; render(); return; }
   if (a === 'stopGen'){ ui.ctl[b.dataset.k]?.abort(); return; }
@@ -2442,6 +2511,7 @@ function listen(name, sort){
   }, () => { loaded[name] = true; schedule(); });
 }
 async function boot(){
+  try { const gb = localStorage.getItem('rsd-gb'); if (['client','due','person'].includes(gb)) ui.groupBy = gb; } catch(e){}
   try { const n = JSON.parse(localStorage.getItem('rsd-nav') || 'null'); if (n && n.view){ ui.view = n.view; ui.cid = n.cid; ui.ctab = n.ctab || 'overview'; } } catch(e){}
   try { userNs = await claude.use('user'); } catch(e){}
   try { db = await claude.use('db'); } catch(e){}
