@@ -429,6 +429,24 @@ span.gchip{cursor:inherit;display:block}
 .spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none;border-top-color:var(--muted)}}
+
+/* ---- v14: campaigns ---- */
+.camb{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.phases{position:relative;height:46px;margin-top:16px;border-radius:8px;background:var(--sunk);overflow:hidden}
+.ph{position:absolute;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;padding:0 8px;background:color-mix(in srgb,var(--cc,var(--accent)) calc(var(--o) * 100%),var(--surface));border-right:2px solid var(--surface);min-width:0;overflow:hidden}
+.ph b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph span{font-size:10.5px;color:var(--muted);font-family:var(--m)}
+.phnow{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);font-style:normal}
+.phnow span{position:absolute;top:-1px;left:4px;font-size:10px;font-family:var(--m);color:var(--ink)}
+.phgroup + .phgroup{margin-top:14px}
+.phname{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.citem{border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:var(--surface)}
+.citem.open{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.cihead{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:10px;align-items:center;width:100%;padding:9px 12px;flex-wrap:wrap}
+.cihead:focus-visible{outline:2px solid var(--accent);border-radius:10px}
+.cidate{font-size:12px;color:var(--muted);min-width:48px}
+.cititle{flex:1;min-width:160px}
+.cibody{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -543,10 +561,10 @@ const monthName = now.toLocaleDateString(undefined, {month:'long'});
 let db = null, sample = null, assets = null, userNs = null, downloads = null;
 let canImages = false, maxImages = 0, canTools = false;
 let role = 'admin', myUid = null, myMember = null;
-const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[]};
-const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false};
+const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[]};
+const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false, campaigns:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], ctl:{}, t0:{}, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
+  pending:[], ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.allClients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
@@ -618,6 +636,7 @@ document.addEventListener('focusout', () => setTimeout(() => { if (pendingRender
 /* ---------- render ---------- */
 const IC = {
   today:'<path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10M10 20v-5h4v5"/>',
+  campaigns:'<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a3 3 0 0 1 0 6M18 6a7 7 0 0 1 0 12"/>',
   studio:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   reports:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 17v-3M13 17v-5M16 17v-2"/>',
   tasks:'<path d="M10 6h10M10 12h10M10 18h10M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17"/>',
@@ -639,7 +658,7 @@ function render(){
     `<button data-act="cmd" aria-label="Search">${ico('search')}<span>Search</span></button>`;
   const c = C(ui.cid);
   const v = ui.view === 'client' && c ? viewClient(c) : ui.view === 'report' && c ? viewReport(c) :
-    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'studio' ? viewStudio() : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
+    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'studio' ? viewStudio() : ui.view === 'campaigns' ? viewCampaigns() : ui.view === 'campaign' && S.campaigns.find(x => x.id === ui.campId) ? viewCampaign(S.campaigns.find(x => x.id === ui.campId)) : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
   $('#main').innerHTML = v;
   if (ui.view === 'client' && c && ui.ctab === 'followers') wireChart();
   if (ui.view === 'report') fitRep();
@@ -647,7 +666,7 @@ function render(){
 function fitRep(){ const el = document.getElementById('rep'), w = el && el.parentElement; if (!el) return; el.style.zoom = ''; const z = Math.min(1, (w.clientWidth - 36) / 794); if (z < 1) el.style.zoom = z.toFixed(3); }
 addEventListener('resize', () => { if (ui.view === 'report') fitRep(); });
 
-const navBtn = (v, l, extra = '') => `<button data-go="${v}" aria-current="${ui.view === v || (v === 'clients' && ui.view === 'clients')}">${ico(v)}<span class="nm">${l}</span>${extra}</button>`;
+const navBtn = (v, l, extra = '') => `<button data-go="${v}" aria-current="${ui.view === v || (v === 'campaigns' && ui.view === 'campaign')}">${ico(v)}<span class="nm">${l}</span>${extra}</button>`;
 function side(){
   const od = openTasks().filter(t => t.due && t.due < today).length, open = openTasks().length;
   const me = M(myMember);
@@ -657,6 +676,7 @@ function side(){
     ${navBtn('today', 'Home', od ? `<span class="ct badge" title="${od} overdue">${od}</span>` : '')}
     ${navBtn('tasks', 'Tasks', open ? `<span class="ct">${open}</span>` : '')}
     ${navBtn('calendar', 'Calendar')}
+    ${navBtn('campaigns', 'Campaigns', (() => { const n = S.campaigns.filter(x => campState(x)[1].startsWith('Live')).length; return n ? `<span class="ct">${n} live</span>` : ''; })())}
     ${navBtn('reports', 'Reports')}
     ${navBtn('studio', 'Studio review')}
     ${navBtn('clients', 'All pages')}
@@ -673,6 +693,8 @@ function cmdItems(){
   const it = [
     {l:'Home', k:'Go to', run:() => go('today')},
     {l:'Reports', k:'Go to', run:() => go('reports')},
+    {l:'Campaigns', k:'Go to', run:() => go('campaigns')},
+    {l:'New campaign', k:'Action', run:() => openBuilder()},
     {l:'Studio review: where am I lacking?', k:'Go to', run:() => go('studio')},
     {l:'Tasks: list', k:'Go to', run:() => { ui.taskView = 'list'; go('tasks'); }},
     {l:'Tasks: board', k:'Go to', run:() => { ui.taskView = 'board'; go('tasks'); }},
@@ -687,8 +709,10 @@ function cmdItems(){
   for (const c of S.clients){
     it.push({l:c.name, k:'Page', c, run:() => go('client', c.id, 'overview')});
     for (const [t, l] of CTABS) if (t !== 'overview') it.push({l:`${c.name} · ${l}`, k:'Page', c, run:() => go('client', c.id, t)});
+    it.push({l:`${c.name} · New campaign`, k:'Action', c, run:() => openBuilder(c.id)});
     it.push({l:`${c.name} · Monthly report`, k:'Report', c, run:() => { ui.rMonth = monthKey; go('report', c.id); }});
   }
+  for (const x of S.campaigns) it.push({l:`Campaign: ${x.name}`, k:'Campaign', c:C(x.client), run:() => { ui.campId = x.id; go('campaign'); }});
   return it;
 }
 function cmdMatches(){
@@ -756,6 +780,7 @@ function viewToday(){
   ${statsStrip()}
   ${overdueAlert()}
   ${waiting ? `<div class="alert warn"><span>${waiting} screenshot${waiting===1?'':'s'} waiting to be read</span><span class="muted" style="font-weight:400">Read every morning at 7:50, or say “read new insights” in chat</span></div>` : ''}
+  ${liveCampaigns()}
   ${paymentsDue()}
   ${showPlan ? `<div class="sec"><div class="lab">Today’s plan<span class="acts"><button class="lnk" data-act="closePlan">Close</button></span></div>
     ${busyOr('day', ui.out.day && !(ui.dayPlan || []).length ? `<p class="empty">${esc(ui.out.day)}</p>` : suggestions('day', ui.dayPlan || []), (ui.dayPlan || []).length ? suggestions('day', ui.dayPlan) : '')}</div>` : ''}
@@ -788,6 +813,12 @@ function overdueAlert(){
   return `<button class="alert" data-go="tasks" data-preset="overdue"><span>${od.length} overdue · oldest ${oldest} day${oldest === 1 ? '' : 's'} late${noReason ? ` · ${noReason} without a reason` : ''}</span><span>Review →</span></button>`;
 }
 
+function liveCampaigns(){
+  const list = S.campaigns.filter(x => x.status !== 'done' && x.start && x.end && daysTo(x.start) <= 14 && today <= x.end);
+  if (!list.length) return '';
+  return `<div class="sec"><div class="lab">Campaigns now and next<span class="acts"><button class="lnk" data-go="campaigns">All campaigns</button></span></div><div class="items">${list.map(x => { const c = C(x.client), st = campState(x), dueToday = campTasks(x).filter(t => t.status !== 'done' && t.due && t.due <= today).length;
+    return `<div class="it click prow2" data-act="openCampaign" data-id="${esc(x.id)}" tabindex="0" role="link" style="${hueStyle(c)}"><div><div class="t" style="font-weight:500">${esc(x.name)} <span class="muted" style="font-weight:400;font-size:12.5px">· ${esc(c ? c.name : '')}</span></div><div class="s"><span>${campReady(x)}% produced</span>${dueToday ? `<span class="late">${dueToday} piece${dueToday === 1 ? '' : 's'} due</span>` : ''}${x.target ? `<span>${kpiNow(x)}/${x.target} ${esc((GOALS[x.goal] || '').split(' ')[0].toLowerCase())}</span>` : ''}</div></div><div class="c"><span class="pill ${st[0]}">${esc(st[1])}</span></div></div>`; }).join('')}</div></div>`;
+}
 function paymentsDue(){
   const due = S.clients.filter(c => c.fee && Number(c.billingDay) && day >= Number(c.billingDay) && c.paidMonth !== monthKey);
   if (!due.length) return '';
@@ -867,6 +898,7 @@ function tabOverview(c){
     <input class="grow" type="text" id="next-${esc(c.id)}" data-keep="next-${esc(c.id)}" value="${esc(keep('next-'+c.id, c.next || ''))}" placeholder="The one thing that moves this page forward">
     <button class="b" type="submit">Save</button></form></div>
 
+  ${campsSection(c)}
   ${asksSection(c)}
   <div class="sec"><div class="lab">Open work<span class="acts">${sample ? `<button class="lnk" data-act="ideas">Content ideas</button>` : ''}</span></div>
     <div class="items">${tasks.length ? tasks.map(t => taskRow(t, {noClient:true, showWho:true})).join('') : '<p class="empty">No open tasks for this page.</p>'}</div>
@@ -1072,7 +1104,8 @@ function calList(){
     return head + `<div class="ev ${dt < 0 ? 'past' : ''}"><div class="dd"><b>${new Date(e.d+'T00:00:00').getDate()}</b>${esc(new Date(e.d+'T00:00:00').toLocaleDateString(undefined,{weekday:'short'}))}</div>
       <div><div class="row" style="justify-content:space-between"><b style="font-weight:500">${esc(e.name)}</b><span class="mono muted" style="font-size:12px">${dt < 0 ? 'passed' : dt === 0 ? 'today' : 'in ' + dt + ' days'}</span></div>
       <div class="s muted" style="font-size:13px;margin-top:4px">${esc(e.prep)}</div>
-      <div class="row" style="margin-top:6px;gap:10px">${e.who.map(id => { const c = C(id); return c ? `<button class="lnk" style="color:var(--muted);font-weight:400;display:inline-flex;gap:5px;align-items:center" data-go="client" data-cid="${esc(id)}">${dot(c)}${esc(c.name)}</button>` : ''; }).join('')}</div></div></div>`; }).join('')}
+      <div class="row" style="margin-top:6px;gap:10px">${e.who.map(id => { const c = C(id); return c ? `<button class="lnk" style="color:var(--muted);font-weight:400;display:inline-flex;gap:5px;align-items:center" data-go="client" data-cid="${esc(id)}">${dot(c)}${esc(c.name)}</button>` : ''; }).join('')}</div>
+      ${dt >= 0 ? `<div class="row" style="margin-top:6px;gap:8px"><span class="muted" style="font-size:12px">Build campaign for:</span>${e.who.map(id => C(id) ? `<button class="lnk" style="font-size:12px" data-act="newCampaignFor" data-cid="${esc(id)}" data-ev="${esc(e.d)}">${esc(C(id).name)}</button>` : '').join('')}</div>` : ''}</div></div>`; }).join('')}
   <p class="muted" style="font-size:12px;margin-top:14px">Lunar dates can shift by a day. Check the local panchang for Lohri and Dev Uthani.</p></div>`;
 }
 function calGrid(){
@@ -1569,7 +1602,7 @@ function readiness(c, mk, d){
     {ok:!!repDoc(c, mk)?.narrative, l:'Wording polished (optional)', fix:sample ? 'repAi' : '', fixL:'Polish'}
   ];
 }
-const REP_SECTIONS = [['analytics','Analytics'],['highlights','Highlights'],['followers','Follower growth'],['delivered','What we delivered'],['top','Top posts'],['next','Next month'],['needs','What we need'],['note','Note from us']];
+const REP_SECTIONS = [['analytics','Analytics'],['campaigns','Campaigns'],['highlights','Highlights'],['followers','Follower growth'],['delivered','What we delivered'],['top','Top posts'],['next','Next month'],['needs','What we need'],['note','Note from us']];
 async function saveRep(c, mk, patch, ok){
   const cur = repDoc(c, mk); const base = cur ? Object.fromEntries(Object.entries(cur).filter(([k]) => k !== 'id')) : {client:c.id, month:mk, status:'draft'};
   return write(() => db.collection('reports').doc(`${c.id}_${mk}`).set({...base, ...patch, at:Date.now()}), ok);
@@ -1631,6 +1664,7 @@ function viewReport(c){
       return `<div><span class="rep-al">${esc(a.l)}</span><b>${fmtV(a, d.cur.val[a.k])}</b>${x !== null ? `<span class="rep-ch ${good === null ? '' : good ? 'up' : 'down'}">${x >= 0 ? '▲' : '▼'} ${Math.abs(x).toFixed(0)}%</span>` : `<span class="rep-ch">&nbsp;</span>`}</div>`; }).join('')}
       <div><span class="rep-al">Content delivered</span><b>${d.content}<small>/${d.target}</small></b><span class="rep-ch ${d.content >= d.target ? 'up' : ''}">${d.target ? Math.round(d.content / d.target * 100) + '% of plan' : '&nbsp;'}</span></div></div>
       ${der.length ? `<p class="rep-der">${der.map(esc).join('  ·  ')}</p>` : ''}` : ''}
+    ${(() => { const cs = S.campaigns.filter(x => x.client === c.id && x.start && x.start.slice(0,7) <= mk && (x.end || x.start).slice(0,7) >= mk); return show('campaigns') && cs.length ? `<h3 class="rep-s">Campaigns</h3><table class="rep-t"><tbody>${cs.map(x => `<tr><td>${esc(x.name)}<div class="rep-sm">${esc(fmt(x.start))}–${esc(fmt(x.end || x.start))}${x.offer ? ' · ' + esc(x.offer) : ''}</div></td><td class="rep-v">${x.target ? `${kpiNow(x)} / ${x.target} ${esc((GOALS[x.goal] || '').split(' ')[0].toLowerCase())}` : ''}</td></tr>`).join('')}</tbody></table>` : ''; })()}
     ${show('highlights') && nv.highlights?.length ? `<h3 class="rep-s">Highlights</h3><ul class="rep-ul">${nv.highlights.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     ${show('followers') && d.series.length > 1 ? `<h3 class="rep-s">Follower growth${d.followersNow ? ` · ${fmtN(d.followersNow)} now` : ''}</h3><div class="rep-chart">${chartSvg(d.series, {w:680, h:170, static:true, ink:'#6b6f76', grid:'#e6e7ea', color:ccol(c), surface:'#ffffff'})}</div>` : ''}
     ${show('delivered') && Object.keys(d.byKind).length ? `<h3 class="rep-s">What we delivered</h3><div class="rep-kinds">${Object.entries(d.byKind).map(([k, v]) => `<span><b>${v}</b> ${esc(k)}${v === 1 ? '' : 's'}</span>`).join('')}</div>` : ''}
@@ -1676,6 +1710,188 @@ function reportText(c){
     .filter((x, i, a) => !(x === '' && (a[i - 1] === '' || i === 0))).join('\n');
 }
 
+function openBuilder(cid, evd){
+  const c = C(cid) || S.clients[0], d = {client:c?.id, channels:null};
+  if (evd){ const e = EVENTS.find(x => x.d === evd); if (e) Object.assign(d, occDefaults(e)); }
+  ui.campDraft = d; ui.campNew = true; go('campaigns');
+}
+const occName = e => e.name.replace(/ \(.*\)$/, '').replace(/:.*$/, '').replace(/ begins$/, '').trim();
+function occDefaults(e){
+  const st = iso(new Date(Math.max(new Date(today + 'T00:00:00').getTime(), new Date(e.d + 'T00:00:00').getTime() - 21 * 864e5)));
+  return {occ:e.d + '|' + e.name, occasion:occName(e), name:occName(e) + ' campaign', start:st, end:iso(new Date(new Date(e.d + 'T00:00:00').getTime() + 864e5))};
+}
+function readCampForm(){
+  const v = id => (document.getElementById(id)?.value ?? '').trim();
+  return {...(ui.campDraft || {}), client:v('cb-client'), name:v('cb-name'), offer:v('cb-offer'), goal:v('cb-goal'), target:v('cb-target'), budget:v('cb-budget'), start:v('cb-start'), end:v('cb-end'), notes:v('cb-notes'),
+    channels:[...document.querySelectorAll('input[name="cb-ch"]:checked')].map(x => x.value)};
+}
+/* ----- Campaigns: plan → produce → run → measure → learn ----- */
+const CH = {ig_post:'Instagram post', ig_carousel:'Carousel', ig_reel:'Reel (client clips)', ig_story:'Story', meta_ad:'Meta ad', whatsapp:'WhatsApp broadcast', gbp:'Google post', web:'Website banner / page', email:'Email'};
+const CH_KIND = {ig_post:'post', ig_carousel:'carousel', ig_reel:'reel', ig_story:'story', meta_ad:'ad', whatsapp:'other', gbp:'gbp', web:'website', email:'other'};
+const GOALS = {leads:'WhatsApp leads / enquiries', visits:'Store visits', sales:'Sales', bookings:'Bookings', reach:'Reach and followers', wholesale:'Wholesale enquiries'};
+const RES = [['leads','Leads / enquiries'],['sales','Sales'],['revenue','Revenue (₹/$)'],['spend','Ad spend'],['reach','Reach']];
+const campsFor = cid => S.campaigns.filter(x => x.client === cid);
+function campState(x){
+  if (x.status === 'done') return ['good', 'Done'];
+  if (!x.start) return ['neutral', 'Draft'];
+  if (today < x.start) return ['warn', `Starts in ${daysTo(x.start)}d`];
+  if (x.end && today > x.end) return ['neutral', 'Ended · debrief'];
+  return ['bad', `Live · ${x.end ? daysTo(x.end) + 'd left' : ''}`];
+}
+const campTasks = x => S.tasks.filter(t => t.campaign === x.id);
+const campReady = x => { const ts = campTasks(x); return ts.length ? Math.round(ts.filter(t => t.status === 'done' || t.status === 'approved').length / ts.length * 100) : 0; };
+const kpiNow = x => Number(x.results?.[x.goal === 'sales' ? 'sales' : x.goal === 'reach' ? 'reach' : 'leads']) || 0;
+
+function viewCampaigns(){
+  const list = S.campaigns.slice().sort((a,b) => (a.status === 'done') - (b.status === 'done') || (a.start || '9').localeCompare(b.start || '9'));
+  return `<header class="top"><div><p class="eyebrow">Festive and seasonal pushes, from idea to results</p><h1>Campaigns</h1></div>
+    <button class="b pri" data-act="newCampaign">${ico('plus')} New campaign</button></header>
+  ${ui.campNew ? campBuilder() : ''}
+  <div class="ccards">${list.map(x => { const c = C(x.client), st = campState(x), r = campReady(x), tgt = Number(x.target) || 0, now_ = kpiNow(x);
+    return `<article class="ccard" data-act="openCampaign" data-id="${esc(x.id)}" tabindex="0" role="link" style="${hueStyle(c)}">
+      <div class="cc-top"><span class="mono-av">${esc(c ? monogram(c.name) : '?')}</span><div class="cc-name"><b>${esc(x.name || 'Untitled campaign')}</b><span>${esc(c ? c.name : '')}${x.start ? ' · ' + esc(fmt(x.start)) + (x.end ? '–' + esc(fmt(x.end)) : '') : ''}</span></div><span class="pill ${st[0]}">${esc(st[1])}</span></div>
+      <div class="cc-kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+        <div><b>${(x.items || []).length}</b><span>pieces</span></div>
+        <div><b>${r}%</b><span>produced</span></div>
+        <div><b>${tgt ? `${now_}<small>/${tgt}</small>` : '—'}</b><span>${esc((GOALS[x.goal] || 'goal').split(' ')[0].toLowerCase())}</span></div>
+      </div>
+      <p class="cc-next"><span class="muted">Idea ·</span> ${esc(x.brief?.bigIdea || x.offer || '—')}</p>
+    </article>`; }).join('') || (ui.campNew ? '' : `<p class="empty">No campaigns yet. Press “New campaign”: Dhanteras for RK Jewellers is the most urgent.</p>`)}</div>`;
+}
+function campBuilder(){
+  const d = ui.campDraft || {};
+  const cid = d.client || S.clients[0]?.id, c = C(cid);
+  const evs = c ? eventsFor(cid).filter(e => daysTo(e.d) >= 0).slice(0, 6) : [];
+  const chs = d.channels || ['ig_carousel','ig_reel','ig_story','meta_ad','whatsapp','gbp'];
+  return `<div class="sec camb"><div class="lab">New campaign<span class="acts"><button class="x" data-act="cancelCampaign" aria-label="Close">×</button></span></div>
+    <form class="form" data-form="campaign">
+      <div class="g2">
+        <label>Client<select id="cb-client" data-change="cbClient">${S.clients.map(x => `<option value="${esc(x.id)}"${x.id === cid ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
+        <label>Occasion<select id="cb-occ" data-change="cbOcc"><option value="">Custom / no festival</option>${evs.map(e => `<option value="${esc(e.d)}|${esc(e.name)}"${d.occ === e.d + '|' + e.name ? ' selected' : ''}>${esc(e.name)} · ${esc(fmt(e.d))} (in ${daysTo(e.d)}d)</option>`).join('')}</select></label>
+        <label>Campaign name<input type="text" id="cb-name" value="${esc(d.name || '')}" placeholder="e.g. Dhanteras Gold Utsav"></label>
+        <label>Offer<input type="text" id="cb-offer" value="${esc(d.offer || '')}" placeholder="e.g. No making charges on 22k sets"></label>
+        <label>Goal<select id="cb-goal">${Object.entries(GOALS).map(([k,v]) => `<option value="${k}"${k === (d.goal || 'leads') ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
+        <label>Target number<input type="number" id="cb-target" min="0" value="${esc(d.target || '')}" placeholder="e.g. 40"></label>
+        <label>Budget<input type="text" id="cb-budget" value="${esc(d.budget || c?.ads?.budget || '')}" placeholder="e.g. ₹8,000"></label>
+        <div class="row" style="gap:10px"><label class="grow">Start<input type="date" id="cb-start" value="${esc(d.start || '')}"></label><label class="grow">End<input type="date" id="cb-end" value="${esc(d.end || '')}"></label></div>
+      </div>
+      <div><span class="muted" style="font-size:12px">Channels</span><div class="secs" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">${Object.entries(CH).map(([k,v]) => `<label class="check"><input type="checkbox" name="cb-ch" value="${k}" ${chs.includes(k) ? 'checked' : ''}><span>${esc(v)}</span></label>`).join('')}</div></div>
+      <label>Anything else<textarea id="cb-notes" rows="2" placeholder="e.g. focus on bridal sets; client can send 20 product photos and 5 showroom clips">${esc(d.notes || '')}</textarea></label>
+      <div class="row">${sample ? `<button class="b pri" type="submit">Build campaign with Claude</button>` : ''}<button class="b" type="button" data-act="blankCampaign">Create empty campaign</button>
+        <span class="muted" style="font-size:12px">Claude writes the phases, budget split and every piece with copy and prompts. You can edit everything after.</span></div>
+    </form></div>`;
+}
+function campPrompt(x, c){
+  const lite = {name:c.name, business:c.tag, city:c.city, language:c.brand?.language, brand:c.brand, plan:c.plan, research:c.research && {summary:c.research.summary, opportunities:c.research.opportunities},
+    recentLearnings:clientInsights(c.id).slice(0, 8).flatMap(i => i.learnings || []).slice(0, 10), competitors:(c.competitors || []).map(k => k.name), openClientAsks:(c.asks || []).filter(a => a.status !== 'done').map(a => a.text)};
+  return `${preamble}\n\nYou are the campaign lead at The Reach Story. Build a complete, professional campaign for ${c.name}.\nCampaign: ${JSON.stringify({name:x.name, occasion:x.occasion, offer:x.offer, goal:GOALS[x.goal], target:x.target, budget:x.budget, start:x.start, end:x.end, channels:(x.channels || []).map(k => CH[k]), notes:x.notes, today})}\nClient: ${JSON.stringify(lite)}\n\nRules: every date between start and end (or pick sensible dates if missing, starting no earlier than today). Phases usually: Tease, Launch, Push, Last call, Thank you. Copy in the client’s language (Roman Punjabi for Khanna clients unless the brand kit says otherwise; English for Eroe). Ad copy under 125 characters of primary text. WhatsApp messages warm and personal, one clear ask. For each piece include an image/visual prompt or an edit brief for client clips — never ask us to shoot. Put the client’s phone/WhatsApp as [WhatsApp number] placeholders.\n\nFirst line: {"type":"brief","name": string,"bigIdea": one line,"audience": string,"offerAngle": string,"kpi": what we measure,"hashtags": string,"phases":[{"name","start":"YYYY-MM-DD","end":"YYYY-MM-DD","goal"}],"budget":[{"phase","amount","objective","targeting"}]}\nThen one line per piece (8–18 pieces): {"type":"item","date":"YYYY-MM-DD","phase": phase name,"channel": one of ${Object.keys(CH).join('|')},"title": short name,"hook": first line / first 3 seconds,"copy": the full ready-to-post copy (caption, ad text, WhatsApp message, banner text),"visual": image prompt or edit brief,"need": what to ask the client for or "","assignee": a team name or ""}`;
+}
+async function buildCampaign(x){
+  const c = C(x.client), key = 'camp:' + x.id;
+  ui.busy[key] = true; ui.t0[key] = Date.now(); delete ui.out[key];
+  ui.campLive[x.id] = {brief:null, items:[]}; render();
+  try {
+    await streamItems(campPrompt(x, c), key, o => {
+      if (o.type === 'brief'){ ui.campLive[x.id].brief = o; return; }
+      if (o.type === 'item' && o.title){ ui.campLive[x.id].items.push({date:/^\d{4}-\d\d-\d\d$/.test(o.date) ? o.date : '', phase:String(o.phase || ''), channel:CH[o.channel] ? o.channel : 'ig_post', title:String(o.title), hook:String(o.hook || ''), copy:String(o.copy || ''), visual:String(o.visual || ''), need:String(o.need || ''), assignee:String(o.assignee || '')}); return; }
+      return false;
+    });
+    const L = ui.campLive[x.id];
+    if (!L.items.length && !L.brief) throw {code:'invalid_json'};
+    const b = L.brief || {};
+    const patch = {brief:{bigIdea:String(b.bigIdea || ''), audience:String(b.audience || ''), offerAngle:String(b.offerAngle || ''), kpi:String(b.kpi || ''), hashtags:String(b.hashtags || ''),
+      phases:(b.phases || []).map(p => ({name:String(p.name || ''), start:String(p.start || ''), end:String(p.end || ''), goal:String(p.goal || '')})), budget:(b.budget || []).map(p => ({phase:String(p.phase || ''), amount:String(p.amount || ''), objective:String(p.objective || ''), targeting:String(p.targeting || '')}))},
+      items:L.items.slice(0, 30), builtAt:Date.now()};
+    if (!x.name && b.name) patch.name = String(b.name);
+    if (!x.start && patch.brief.phases[0]?.start) patch.start = patch.brief.phases[0].start;
+    if (!x.end && patch.brief.phases.at(-1)?.end) patch.end = patch.brief.phases.at(-1).end;
+    await write(() => db.collection('campaigns').doc(x.id).update(patch), 'Campaign saved');
+    delete ui.campLive[x.id];
+  } catch(e){ if (!(e && e.code === 'cancelled')) ui.out[key] = errCopy(e); }
+  ui.busy[key] = false; render();
+}
+function phaseBar(x){
+  const ph = (x.brief?.phases || []).filter(p => p.start && p.end);
+  if (!ph.length) return '';
+  const ds = [x.start, x.end, ...ph.flatMap(p => [p.start, p.end])].filter(Boolean).sort();
+  const t0 = new Date(ds[0] + 'T00:00:00').getTime(), t1 = new Date(ds.at(-1) + 'T00:00:00').getTime() + 864e5, span = Math.max(864e5, t1 - t0);
+  const pos = d => Math.min(100, Math.max(0, (new Date(d + 'T00:00:00').getTime() - t0) / span * 100));
+  const tn = Date.now(), tp = (tn - t0) / span * 100;
+  return `<div class="phases">${ph.map((p, i) => `<div class="ph" style="left:${pos(p.start)}%;width:${Math.max(4, pos(p.end) + 100 / (span / 864e5) - pos(p.start))}%;--o:${.18 + i * .14}"><b>${esc(p.name)}</b><span>${esc(fmt(p.start))}</span></div>`).join('')}
+    ${tp >= 0 && tp <= 100 ? `<i class="phnow" style="left:${tp}%"><span>today</span></i>` : ''}</div>`;
+}
+function viewCampaign(x){
+  const c = C(x.client), st = campState(x), key = 'camp:' + x.id, live = ui.campLive[x.id];
+  const items = live ? live.items : (x.items || []), brief = live ? (live.brief || {}) : (x.brief || {});
+  const ts = campTasks(x), tgt = Number(x.target) || 0, now_ = kpiNow(x);
+  const byPhase = {}; items.forEach((it, i) => { (byPhase[it.phase || 'Plan'] = byPhase[it.phase || 'Plan'] || []).push({...it, i}); });
+  const taskFor = i => ts.find(t => t.itemIdx === i);
+  return `<nav class="crumb" aria-label="Breadcrumb"><button class="lnk" data-go="campaigns">Campaigns</button><span>/</span>${c ? `<button class="lnk" data-go="client" data-cid="${esc(c.id)}">${esc(c.name)}</button><span>/</span>` : ''}<span>${esc(x.name || 'Campaign')}</span></nav>
+  <div class="hero" style="${hueStyle(c)}"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:16px">
+    <div style="min-width:0"><h1>${esc(x.name || 'Untitled campaign')}</h1><p class="sub">${esc(c ? c.name : '')}${x.occasion ? ' · ' + esc(x.occasion) : ''}${x.start ? ' · ' + esc(fmt(x.start)) + (x.end ? ' – ' + esc(fmt(x.end)) : '') : ''}</p></div>
+    <div class="row" style="gap:18px;align-items:flex-start">
+      <div class="kpi" style="cursor:default"><b>${tgt ? `${now_}<small>/${tgt}</small>` : '—'}</b><span>${esc(GOALS[x.goal] || 'Goal')}</span></div>
+      <div class="kpi" style="cursor:default"><b>${campReady(x)}%</b><span class="pill ${st[0]}">${esc(st[1])}</span></div></div></div>
+    ${x.offer ? `<p style="margin:12px 0 0"><span class="muted">Offer ·</span> ${esc(x.offer)}</p>` : ''}
+    ${phaseBar(x)}
+    <div class="row" style="margin-top:14px">
+      ${items.length && !live ? (ts.length ? `<span class="muted" style="font-size:13px">${ts.length} tasks created</span>${ts.length < items.length ? `<button class="b" data-act="campTasks">Create ${items.length - ts.length} missing tasks</button>` : ''}` : `<button class="b pri" data-act="campTasks">Create ${items.length} tasks on the calendar</button>`) : ''}
+      ${sample && !live ? `<button class="b" data-act="campBuild">${items.length ? 'Rebuild with Claude' : 'Build with Claude'}</button>` : ''}
+      <button class="b" data-act="campWA">Copy WhatsApp broadcast</button>
+      ${x.status === 'done' ? `<button class="b" data-act="campStatus" data-s="">Reopen</button>` : `<button class="b" data-act="campStatus" data-s="done">Mark done</button>`}
+      <button class="x" data-act="campDelete" aria-label="Delete campaign" title="Delete campaign">×</button>
+    </div></div>
+  ${ui.busy[key] ? progress(key) : ''}${ui.out[key] ? `<p class="late" style="font-size:13px">${esc(ui.out[key])}</p>` : ''}
+  ${brief.bigIdea || brief.audience ? `<div class="sec"><div class="lab">Strategy</div><dl class="kv">
+    ${brief.bigIdea ? `<dt>Big idea</dt><dd><b style="font-weight:600">${esc(brief.bigIdea)}</b></dd>` : ''}${brief.audience ? `<dt>Audience</dt><dd>${esc(brief.audience)}</dd>` : ''}
+    ${brief.offerAngle ? `<dt>Offer angle</dt><dd>${esc(brief.offerAngle)}</dd>` : ''}${brief.kpi ? `<dt>We measure</dt><dd>${esc(brief.kpi)}</dd>` : ''}${brief.hashtags ? `<dt>Hashtags</dt><dd class="mono" style="font-size:12.5px">${esc(brief.hashtags)}</dd>` : ''}</dl></div>` : ''}
+  ${(brief.budget || []).length ? `<div class="sec"><div class="lab">Budget plan<span class="acts muted">${esc(x.budget || '')}</span></div><div class="tbl"><table><thead><tr><th>Phase</th><th>Amount</th><th>Objective</th><th>Targeting</th></tr></thead><tbody>${brief.budget.map(b => `<tr><td>${esc(b.phase)}</td><td class="mono">${esc(b.amount)}</td><td>${esc(b.objective)}</td><td class="muted">${esc(b.targeting)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
+  <div class="sec"><div class="lab">Content plan<span class="acts muted">${items.length} piece${items.length === 1 ? '' : 's'}</span></div>
+    ${items.length ? Object.entries(byPhase).map(([ph, arr]) => `<div class="phgroup"><div class="phname">${esc(ph)}</div>${arr.map(it => { const t = taskFor(it.i), open = ui.campOpen === x.id + ':' + it.i;
+      return `<div class="citem ${open ? 'open' : ''}"><button class="cihead" data-act="campItem" data-i="${it.i}" aria-expanded="${open}">
+          <span class="mono cidate">${it.date ? esc(fmt(it.date)) : '—'}</span><span class="k">${esc(CH[it.channel] || it.channel)}</span><span class="cititle">${esc(it.title)}</span>
+          ${t ? `<span class="pill ${t.status === 'done' ? 'good' : t.status === 'todo' ? 'neutral' : 'warn'}">${esc(STATUS[t.status])}</span>` : ''}</button>
+        ${open ? `<div class="cibody">
+          ${it.hook ? `<p style="margin:0"><span class="muted">Hook ·</span> ${esc(it.hook)}</p>` : ''}
+          ${it.copy ? `<div class="out" id="cc-${it.i}">${esc(it.copy)}</div><div class="row"><button class="lnk" data-act="copy" data-src="cc-${it.i}">Copy text</button></div>` : ''}
+          ${it.visual ? `<div class="out muted" id="cv-${it.i}" style="font-size:13px">${esc(it.visual)}</div><div class="row"><button class="lnk" data-act="copy" data-src="cv-${it.i}">Copy visual prompt</button></div>` : ''}
+          ${it.need ? `<p class="muted" style="margin:0;font-size:13px">Ask client for: ${esc(it.need)}</p>` : ''}
+          ${t ? `<div class="items">${taskRow(t, {noClient:true, showWho:true})}</div>` : live ? '' : `<button class="b" data-act="campOneTask" data-i="${it.i}">Make this a task</button>`}
+        </div>` : ''}</div>`; }).join('')}</div>`).join('') : `<p class="empty">${live ? LOADING : 'No pieces yet. Build with Claude, or add tasks yourself.'}</p>`}</div>
+  <div class="sec"><div class="lab">Results</div>
+    <form class="anform" data-form="campRes" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${RES.map(([k,l]) => `<label><span>${esc(l)}</span><input type="text" inputmode="decimal" id="cr-${k}" value="${esc(x.results?.[k] ?? '')}"></label>`).join('')}
+      <label style="grid-column:1/-1"><span>Notes</span><input type="text" id="cr-notes" value="${esc(x.results?.notes || '')}" placeholder="e.g. most leads came from the bridal carousel ad"></label>
+      <div class="row" style="grid-column:1/-1"><button class="b" type="submit">Save results</button>${x.results?.spend && x.results?.leads ? `<span class="muted" style="font-size:13px">Cost per lead ≈ ${esc(String(Math.round(num(x.results.spend) / num(x.results.leads))))}</span>` : ''}</div></form>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Tip: paste the Ads Manager screenshot in this client’s Insights too, so the monthly report picks up the numbers.</p></div>
+  <div class="sec"><div class="lab">Debrief<span class="acts">${sample ? `<button class="b" data-act="campDebrief" ${ui.busy['deb:' + x.id] ? 'disabled' : ''}>${ui.busy['deb:' + x.id] ? 'Thinking…' : x.debrief ? 'Debrief again' : 'Debrief with Claude'}</button>` : ''}</span></div>
+    ${ui.out['deb:' + x.id] ? `<p class="late" style="font-size:13px">${esc(ui.out['deb:' + x.id])}</p>` : ''}
+    ${x.debrief ? `<p style="margin:0 0 10px">${esc(x.debrief.summary)}</p><div class="g2"><div><p class="muted" style="margin:0 0 6px;font-size:13px">Worked</p><ul class="ls">${(x.debrief.worked || []).map(w => `<li>${esc(w)}</li>`).join('')}</ul></div><div><p class="muted" style="margin:0 0 6px;font-size:13px">Didn’t</p><ul class="ls">${(x.debrief.didnt || []).map(w => `<li>${esc(w)}</li>`).join('')}</ul></div></div><p class="muted" style="margin:12px 0 6px;font-size:13px">Next time</p><ul class="ls">${(x.debrief.next || []).map(w => `<li>${esc(w)}</li>`).join('')}</ul>` : `<p class="empty">After the campaign, log results and debrief. The learnings are saved to ${esc(c ? c.name : 'the client')}’s insights, so the next campaign starts smarter.</p>`}</div>`;
+}
+async function campToTasks(x, only){
+  const have = new Set(campTasks(x).map(t => t.itemIdx));
+  const idx = (only !== undefined ? [only] : (x.items || []).map((_, i) => i)).filter(i => !have.has(i));
+  for (const i of idx){ const it = x.items[i];
+    const who = S.team.find(m => m.name.toLowerCase() === String(it.assignee || '').toLowerCase())?.id || (['ig_reel','ig_carousel','ig_post','ig_story'].includes(it.channel) ? (S.team.find(m => m.role === 'editor')?.id || '') : '');
+    const ok = await write(() => tasksCol().add({title:`${x.name}: ${it.title}`, client:x.client, clientName:C(x.client)?.name || '', kind:CH_KIND[it.channel] || 'other', status:'todo', assignee:who, due:it.date || '', doneMonth:'', createdAt:Date.now(), campaign:x.id, itemIdx:i}));
+    if (!ok) break;
+  }
+  toast(idx.length === 1 ? 'Task created' : `${idx.length} tasks created`);
+}
+function campDebrief(x){
+  const c = C(x.client);
+  run('deb:' + x.id, async () => {
+    const r = await sample.json(`${preamble}\n\nDebrief this finished campaign for ${c.name}. Be honest and specific, based only on the data. Reply with only JSON: {"summary": "2 sentences", "worked": [3 points], "didnt": [2-3 points], "next": [3 things to do differently next time]}\n\nCampaign: ${JSON.stringify({name:x.name, occasion:x.occasion, offer:x.offer, goal:GOALS[x.goal], target:x.target, budget:x.budget, start:x.start, end:x.end, bigIdea:x.brief?.bigIdea, pieces:(x.items || []).length, produced:campReady(x) + '%', results:x.results, tasksLate:campTasks(x).filter(t => t.status !== 'done' && t.due && t.due < today).length})}\nInsights during the campaign: ${JSON.stringify(clientInsights(c.id).filter(i => (i.date || '') >= (x.start || '') && (i.date || '') <= (x.end || '9')).map(i => ({title:i.title, metrics:i.metrics, learnings:i.learnings})).slice(0, 8))}`, {cache:false});
+    if (!r || !r.summary) throw {code:'invalid_json'};
+    const deb = {summary:String(r.summary), worked:(r.worked || []).map(String), didnt:(r.didnt || []).map(String), next:(r.next || []).map(String), at:Date.now()};
+    await write(() => db.collection('campaigns').doc(x.id).update({debrief:deb}));
+    await write(() => db.collection('insights').add({client:c.id, type:'Other', title:`Campaign debrief: ${x.name}`, date:x.end || today, metrics:Object.fromEntries(RES.filter(([k]) => x.results?.[k]).map(([k,l]) => [l, x.results[k]])), summary:deb.summary, learnings:[...deb.worked.slice(0, 2), ...deb.next.slice(0, 2)], next:deb.next.slice(0, 2), note:'', assets:[], createdAt:Date.now()}), 'Debrief saved to insights');
+  });
+}
+function campWhatsApp(x){
+  const wa = (x.items || []).filter(it => it.channel === 'whatsapp').map(it => it.copy).filter(Boolean);
+  return wa.length ? wa.join('\n\n———\n\n') : `${x.name}\n\n${x.offer || ''}\n\nMessage us on WhatsApp: [WhatsApp number]`;
+}
+
 /* ----- Studio review: where the agency is lacking ----- */
 const daysSince = ms => ms ? Math.floor((Date.now() - ms) / 864e5) : Infinity;
 const lastInsightAt = c => Math.max(0, ...S.insights.filter(i => i.client === c.id).map(i => Math.max(i.date ? new Date(i.date + 'T00:00:00').getTime() : 0, (i.createdAt || 0) > 1e12 ? i.createdAt : 0)));
@@ -1711,7 +1927,7 @@ function studioReview(mk){
     if (c.plan?.goal && planAt && daysSince(planAt) > 60){ area['Growth work'].push(40); add('Growth work', 1, `${c.name}: strategy not reviewed in 60+ days`, 'Brands change. Review the plan with the latest insights and client asks.', {go:'client', cid:c.id, l:'Review plan'}, 'plan', c.name); }
     for (const e of EVENTS.filter(e => e.who.includes(c.id) && daysTo(e.d) >= 0 && daysTo(e.d) <= 21)){
       const has = S.tasks.some(t => t.client === c.id && ((t.due && t.due >= today && t.due <= e.d) || new RegExp(e.name.split(/[\s(:]/)[0], 'i').test(t.title)));
-      if (!has){ area['Growth work'].push(20); add('Growth work', 3, `Nothing planned for ${e.name} (${c.name})`, `${daysTo(e.d)} days away. ${ownPrep(c, e)}`, {act:'ideas', cid:c.id, l:'Get ideas'}, 'fest-' + c.id, c.name); }
+      if (!has){ area['Growth work'].push(20); add('Growth work', 3, `Nothing planned for ${e.name} (${c.name})`, `${daysTo(e.d)} days away. ${ownPrep(c, e)}`, {act:'ideas', cid:c.id, l:'Build campaign'}, 'fest-' + c.id, c.name); }
     }
     const doneC = S.tasks.filter(t => t.client === c.id && t.status === 'done' && CONTENT.includes(t.kind) && t.doneMonth === mk);
     if (doneC.length >= 6 && c.id !== 'eroe'){ const car = doneC.filter(t => t.kind === 'carousel').length / doneC.length; if (car < .15) add('Delivery', 1, `${c.name}: only ${Math.round(car * 100)}% carousels`, 'Carousels get the highest engagement on Instagram and are easy to make from client photos. Aim for about a third.', {go:'client', cid:c.id, tab:'create', l:'Make carousel prompts'}, 'carousel', c.name); }
@@ -1788,6 +2004,13 @@ function coach(){
 }
 
 /* ----- Client asks and updates ----- */
+function campsSection(c){
+  const list = campsFor(c.id).filter(x => x.status !== 'done' || daysSince(x.createdAt) < 45);
+  const ev = eventsFor(c.id).filter(e => daysTo(e.d) >= 0 && daysTo(e.d) <= 35 && !campsFor(c.id).some(x => x.occasion && e.name.startsWith(x.occasion)))[0];
+  return `<div class="sec"><div class="lab">Campaigns<span class="acts"><button class="lnk" data-act="newCampaignFor" data-cid="${esc(c.id)}">New campaign</button></span></div>
+    ${ev ? `<div class="alert warn" style="margin:0 0 10px"><span>${esc(ev.name)} is in ${daysTo(ev.d)} days and has no campaign yet.</span><button class="lnk" style="color:inherit" data-act="newCampaignFor" data-cid="${esc(c.id)}" data-ev="${esc(ev.d)}">Build it →</button></div>` : ''}
+    ${list.length ? `<div class="items">${list.map(x => { const st = campState(x); return `<div class="it click" data-act="openCampaign" data-id="${esc(x.id)}" tabindex="0" role="link"><div><div class="t" style="font-weight:500">${esc(x.name)}</div><div class="s"><span>${x.start ? esc(fmt(x.start)) + '–' + esc(fmt(x.end || x.start)) : 'No dates'}</span><span>${(x.items || []).length} pieces · ${campReady(x)}% produced</span></div></div><div class="c"><span class="pill ${st[0]}">${esc(st[1])}</span></div></div>`; }).join('')}</div>` : (ev ? '' : '<p class="empty">No campaigns yet.</p>')}</div>`;
+}
 function asksSection(c){
   const a = (c.asks || []).slice().sort((x, y) => (x.status === 'done') - (y.status === 'done') || y.at - x.at);
   const open = a.filter(x => x.status !== 'done');
@@ -1824,7 +2047,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape'){ e.preventDefault(); closeCmd(); return; }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); const n = cmdMatches().length; ui.cmd.sel = (ui.cmd.sel + (e.key === 'ArrowDown' ? 1 : -1) + n) % Math.max(1, n); renderCmd(); return; }
     if (e.key === 'Enter' && e.target.id === 'cmdq'){ e.preventDefault(); runCmd(ui.cmd.sel); return; }
-  } if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.it.click')){ e.preventDefault(); e.target.click(); } });
+  } if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.it.click, [role=link]')){ e.preventDefault(); e.target.click(); } });
 document.addEventListener('click', async e => {
   const g = e.target.closest('[data-go]');
   if (g && !e.target.closest('select,input,button:not([data-go])')){ if (g.dataset.preset) ui.filt = {client:'', who:'', done:false, preset:g.dataset.preset}; else if (g.dataset.go === 'tasks') ui.filt.preset = ''; go(g.dataset.go, g.dataset.cid ?? ui.cid, g.dataset.go === 'client' && g.dataset.cid !== ui.cid ? 'overview' : undefined); return; }
@@ -1839,6 +2062,8 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, c = C(ui.cid), tid = b.closest('[data-tid]')?.dataset.tid;
   if (a === 'cmd'){ openCmd(); return; }
+  if (a === 'openCampaign'){ ui.campId = b.dataset.id; ui.campOpen = null; go('campaign'); return; }
+  if (a === 'campItem'){ const k = ui.campId + ':' + b.dataset.i; ui.campOpen = ui.campOpen === k ? null : k; render(); return; }
   if (a === 'stopGen'){ ui.ctl[b.dataset.k]?.abort(); return; }
   if (a === 'toggleTask'){ ui.openTask = ui.openTask === tid ? null : tid; render(); const i = document.getElementById('cm-' + tid); if (i) i.focus(); return; }
   if (a === 'closePlan'){ ui.dayPlan = null; delete ui.out.day; render(); return; }
@@ -1855,11 +2080,27 @@ document.addEventListener('click', async e => {
   else if (a === 'openReport'){ ui.rMonth = ui.rMonth || monthKey; go('report', c.id); }
   else if (a === 'repPdf') reportPdf(c);
   else if (a === 'coach') coach();
+  else if (a === 'newCampaign') openBuilder(ui.view === 'client' ? ui.cid : undefined);
+  else if (a === 'newCampaignFor') openBuilder(b.dataset.cid, b.dataset.ev);
+  else if (a === 'cancelCampaign'){ ui.campNew = false; ui.campDraft = null; render(); }
+  else if (a === 'blankCampaign' || a === 'campBuild' || a === 'campTasks' || a === 'campOneTask' || a === 'campWA' || a === 'campStatus' || a === 'campDelete' || a === 'campDebrief'){
+    if (a === 'blankCampaign'){ const d = readCampForm(); const id = 'cmp' + Date.now().toString(36);
+      if (await write(() => db.collection('campaigns').doc(id).set({client:d.client, name:d.name, offer:d.offer, goal:d.goal, budget:d.budget, start:d.start, end:d.end, channels:d.channels, notes:d.notes, occasion:d.occasion || '', target:Number(d.target) || 0, items:[], status:'', createdAt:Date.now()}), 'Campaign created')){ ui.campNew = false; ui.campDraft = null; ui.campId = id; go('campaign'); } return; }
+    const x = S.campaigns.find(q => q.id === ui.campId); if (!x) return;
+    if (a === 'campBuild') buildCampaign(x);
+    else if (a === 'campTasks') await campToTasks(x);
+    else if (a === 'campOneTask') await campToTasks(x, Number(b.dataset.i));
+    else if (a === 'campWA'){ try { await navigator.clipboard.writeText(campWhatsApp(x)); toast('WhatsApp text copied'); } catch(_){ toast('Copy isn’t allowed here. Open a WhatsApp piece and select its text.'); } }
+    else if (a === 'campStatus') await write(() => db.collection('campaigns').doc(x.id).update({status:b.dataset.s}), b.dataset.s ? 'Campaign marked done' : 'Campaign reopened');
+    else if (a === 'campDebrief') campDebrief(x);
+    else if (a === 'campDelete'){ if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Delete?'; b.style.fontSize = '12px'; setTimeout(() => { if (b.isConnected){ b.dataset.confirm = ''; b.textContent = '×'; b.style.fontSize = ''; } }, 3000); return; }
+      if (await write(() => db.collection('campaigns').doc(x.id).delete(), 'Campaign deleted')) go('campaigns'); }
+  }
   else if (a === 'srAll'){ ui.srAll = !ui.srAll; render(); }
   else if (a === 'srFix'){ const g = studioReview(ui.srMonth || monthKey).gaps[Number(b.dataset.i)]; if (!g) return; const f = g.fix;
     if (f.preset){ ui.filt = {client:'', who:'', done:false, preset:f.preset}; ui.taskView = 'list'; go('tasks'); }
     else if (f.act === 'openReportFor'){ ui.rMonth = f.month; go('report', f.cid); }
-    else if (f.act === 'ideas'){ go('client', f.cid, 'overview'); ideas(C(f.cid)); }
+    else if (f.act === 'ideas'){ const ev = eventsFor(f.cid).find(e => daysTo(e.d) >= 0 && daysTo(e.d) <= 21); openBuilder(f.cid, ev?.d); }
     else if (f.go === 'tasks'){ ui.filt = {client:'', who:'', done:false, preset:'open'}; go('tasks'); }
     else go('client', f.cid, f.tab || 'overview'); }
   else if (a === 'openReportFor'){ ui.rMonth = ui.rMonth || monthKey; go('report', b.dataset.cid); }
@@ -1930,6 +2171,8 @@ document.addEventListener('change', async e => {
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
   else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
   else if (k === 'repMonth'){ ui.rMonth = el.value; render(); }
+  else if (k === 'cbClient'){ ui.campDraft = {...readCampForm(), occ:'', client:el.value}; render(); }
+  else if (k === 'cbOcc'){ const d = readCampForm(); if (el.value){ const e = EVENTS.find(x => x.d + '|' + x.name === el.value); if (e) Object.assign(d, occDefaults(e)); } else { d.occ = ''; d.occasion = ''; } ui.campDraft = d; render(); }
   else if (k === 'schedule'){ if (el.value) await write(() => tasksCol().doc(tid).update({due:el.value, month:el.value.slice(0, 7)}), 'Scheduled for ' + fmt(el.value)); }
   else if (k === 'iType'){ ui.keep['i-type'] = el.value; render(); }
   else if (k === 'srMonth'){ ui.srMonth = el.value; render(); }
@@ -1960,6 +2203,11 @@ document.addEventListener('submit', async e => {
     await upd(c.id, {followers:[...(c.followers || []).filter(x => x.d !== d_), {d:d_, n}].sort((a,b) => a.d.localeCompare(b.d)).slice(-200)}, 'Count added'); return; }
   if (k === 'folGoal'){ await upd(c.id, {followerGoal:Math.max(0, Number(v('fo-goal')) || 0)}, 'Goal saved'); return; }
   if (k === 'details'){ await upd(c.id, {name:v('d-name') || c.name, tag:v('d-tag'), handle:v('d-handle'), website:v('d-web'), city:v('d-city'), source:v('d-source'), fee:v('d-fee'), billingDay:Math.min(28, Math.max(0, Number(v('d-bill')) || 0))}, 'Details saved'); return; }
+  if (k === 'campaign'){ const d = readCampForm(); if (!d.client) return; const id = 'cmp' + Date.now().toString(36);
+    const doc = {client:d.client, name:d.name, occasion:d.occasion || '', offer:d.offer, goal:d.goal, target:Number(d.target) || 0, budget:d.budget, start:d.start, end:d.end, channels:d.channels, notes:d.notes, items:[], status:'', createdAt:Date.now()};
+    if (await write(() => db.collection('campaigns').doc(id).set(doc))){ ui.campNew = false; ui.campDraft = null; ui.campId = id; go('campaign'); buildCampaign({id, ...doc}); } return; }
+  if (k === 'campRes'){ const x = S.campaigns.find(q => q.id === ui.campId); if (!x) return; const r = {}; for (const [key] of RES){ const val = v('cr-' + key); if (val !== '') r[key] = val; } r.notes = v('cr-notes');
+    await write(() => db.collection('campaigns').doc(x.id).update({results:r}), 'Results saved'); return; }
   if (k === 'dayTask'){ const title = v('dt-title'); if (!title || !ui.calDay) return; ['t-client','t-kind','t-who'].forEach((id, n) => ui.keep[id] = v(['dt-client','dt-kind','dt-who'][n]));
     if (await addTask({title, client:v('dt-client'), kind:v('dt-kind'), assignee:v('dt-who'), due:ui.calDay})){ ui.keep['dt-title'] = ''; toast('Task added'); render(); } return; }
   if (k === 'repStats'){ const mk = ui.rMonth || monthKey, stats = {}; for (const a of AN){ const x = v('an-' + a.k); if (x !== '' && Number.isFinite(num(x))) stats[a.k] = num(x); } await saveRep(c, mk, {stats}, 'Numbers saved'); return; }
@@ -2030,6 +2278,7 @@ async function boot(){
   listen('insights');
   listen('prompts');
   listen('reports');
+  listen('campaigns', (a,b) => (b.createdAt||0) - (a.createdAt||0));
   render();
   try { sample = await claude.use('sample'); } catch(e){}
   if (sample){ try { const l = await sample.limits(); canImages = !!l.images; maxImages = l.images ? l.images.maxCount : 0; canTools = !!l.tools; } catch(e){} }
