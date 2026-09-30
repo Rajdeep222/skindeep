@@ -454,6 +454,31 @@ span.gchip{cursor:inherit;display:block}
 
 .bk{display:flex;flex-direction:column;gap:6px;padding:0 8px 14px;border-bottom:1px solid var(--line);margin-bottom:12px}
 .bk .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.impact{grid-column:1/-1;margin-top:8px;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--accent) 5%,var(--sunk));border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));display:flex;flex-direction:column;gap:8px}
+.imp{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.imp:first-of-type{border-top:0}
+.imp.settled{opacity:.6}
+.imptag{flex:none;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--sunk);white-space:nowrap}
+.imptag.change{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,var(--surface))}
+.imptag.drop{color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
+.imptag.add{color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+.imptag.plan{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+@media (max-width:820px){.imp{flex-wrap:wrap}}
+
+/* ---- press and busy feedback ---- */
+button, .it.click, .ccard{-webkit-tap-highlight-color:transparent}
+.b:active:not([disabled]), .lnk:active:not([disabled]), .stat:active, .kpi:active, .nav button:active, .tabs2 button:active, .seg button:active{transform:scale(.96)}
+.b, .lnk, .stat, .kpi, .nav button, .tabs2 button, .seg button{transition:transform .08s ease, background .15s, color .15s, border-color .15s, box-shadow .15s}
+.pressed{animation:press .35s ease}
+@keyframes press{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}100%{box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 0%,transparent)}}
+.lnk[disabled]{opacity:.65;cursor:progress}
+.b[disabled]{cursor:progress}
+.lnk.working, .b .spin, .lnk .spin{display:inline-flex;align-items:center;gap:6px}
+.lnk .spin, .b .spin{width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:-2px}
+.proposal.flash{animation:flash 2.4s ease}
+@keyframes flash{0%,30%{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 45%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.pressed,.proposal.flash{animation:none}.b:active,.lnk:active{transform:none}}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -571,7 +596,7 @@ let role = 'admin', myUid = null, myMember = null;
 const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[], backup:null};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false, campaigns:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], askPend:{}, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
+  pending:[], askPend:{}, impLive:{}, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.allClients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
@@ -671,6 +696,7 @@ function render(){
   $('#main').innerHTML = v;
   if (ui.view === 'client' && c && ui.ctab === 'followers') wireChart();
   if (ui.view === 'report') fitRep();
+  if (ui.scrollTo){ const el = document.getElementById(ui.scrollTo); ui.scrollTo = null; if (el) setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'center'}), 40); }
 }
 function fitRep(){ const el = document.getElementById('rep'), w = el && el.parentElement; if (!el) return; el.style.zoom = ''; const z = Math.min(1, (w.clientWidth - 36) / 794); if (z < 1) el.style.zoom = z.toFixed(3); }
 addEventListener('resize', () => { if (ui.view === 'report') fitRep(); });
@@ -958,7 +984,7 @@ function tabOverview(c){
 
   ${campsSection(c)}
   ${asksSection(c)}
-  <div class="sec"><div class="lab">Open work<span class="acts">${sample ? `<button class="lnk" data-act="ideas">Content ideas</button>` : ''}</span></div>
+  <div class="sec"><div class="lab">Open work<span class="acts">${sample ? `<button class="lnk" data-act="ideas" ${ui.busy['ideas:'+c.id] ? 'disabled' : ''}>${ui.busy['ideas:'+c.id] ? '<span class="spin"></span> Writing ideas…' : 'Content ideas'}</button>` : ''}</span></div>
     <div class="items">${tasks.length ? tasks.map(t => taskRow(t, {noClient:true, showWho:true})).join('') : '<p class="empty">No open tasks for this page.</p>'}</div>
     <form class="row" data-form="quickTask" style="margin-top:10px">
       <label class="vh" for="qt-${esc(c.id)}">New task</label><input class="grow" type="text" id="qt-${esc(c.id)}" data-keep="qt-${esc(c.id)}" value="${esc(keep('qt-'+c.id))}" placeholder="Add a task for ${esc(c.name)}">
@@ -969,9 +995,9 @@ function tabOverview(c){
 
   ${!pl.goal && sample ? `<div class="sec"><div class="lab">Get started</div><p style="margin:0 0 12px">${esc(c.name)} has no growth plan yet. Claude can draft the plan, a research brief and a brand kit from what you entered.</p>
     ${busyOr('draft:' + c.id, ui.out['draft:' + c.id] ? `<p class="empty">${esc(ui.out['draft:' + c.id])}</p>` : '')}<button class="b pri" data-act="draftPlan" ${ui.busy['draft:' + c.id] ? 'disabled' : ''}>Draft plan and research with Claude</button></div>` : ''}
-  <div class="sec"><div class="lab">Growth plan<span class="acts">${ui.editing === 'plan' ? '' : `${sample && pl.goal ? `<button class="lnk" data-act="reviewStrategy" ${ui.busy['review:' + c.id] ? 'disabled' : ''}>${ui.busy['review:' + c.id] ? 'Reviewing…' : 'Review with Claude'}</button>` : ''}<button class="lnk" data-act="editPlan">Edit</button>`}</span></div>
+  <div class="sec"><div class="lab">Growth plan<span class="acts">${ui.editing === 'plan' ? '' : `${sample && pl.goal ? `<button class="lnk" data-act="reviewStrategy" ${ui.busy['review:' + c.id] ? 'disabled' : ''}>${ui.busy['review:' + c.id] ? '<span class="spin"></span> Reviewing…' : 'Review with Claude'}</button>` : ''}<button class="lnk" data-act="editPlan">Edit</button>`}</span></div>
     ${ui.out['review:' + c.id] ? `<p class="empty">${esc(ui.out['review:' + c.id])}</p>` : ''}
-    ${ui.review[c.id] ? (() => { const r = ui.review[c.id]; return `<div class="proposal"><p style="margin:0 0 8px"><b style="font-weight:600">Claude suggests:</b> ${esc(r.verdict || '')}</p>
+    ${ui.review[c.id] ? (() => { const r = ui.review[c.id]; return `<div class="proposal ${ui.flash === 'proposal' ? 'flash' : ''}" id="proposal"><p style="margin:0 0 8px"><b style="font-weight:600">Claude suggests:</b> ${esc(r.verdict || '')}</p>
       ${(r.changes || []).length ? `<ul class="ls">${r.changes.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       <dl class="kv" style="margin-top:12px"><dt>Goal</dt><dd>${esc(r.plan.goal)}</dd><dt>Audience</dt><dd>${esc(r.plan.audience)}</dd><dt>Pillars</dt><dd>${esc((r.plan.pillars || []).join(' · '))}</dd><dt>Focus</dt><dd>${esc(r.plan.focus)}</dd><dt>Per month</dt><dd>${esc(r.target || target(c))}</dd></dl>
       <div class="row" style="margin-top:12px"><button class="b pri" data-act="applyReview">Apply as new strategy</button><button class="b" data-act="dismissReview">Keep current</button></div></div>`; })() : ''}
@@ -1577,6 +1603,7 @@ function reviewStrategy(c){
     if (!r || !r.plan) throw {code:'invalid_json'};
     ui.review[c.id] = r;
     if (ui.ctab !== 'overview') ui.ctab = 'overview';
+    ui.scrollTo = 'proposal'; ui.flash = 'proposal'; setTimeout(() => { ui.flash = null; }, 2600);
   });
 }
 
@@ -2073,7 +2100,8 @@ function asksSection(c){
   const a = (c.asks || []).slice().sort((x, y) => (x.status === 'done') - (y.status === 'done') || y.at - x.at);
   const open = a.filter(x => x.status !== 'done');
   const pend = ui.askPend[c.id] || [];
-  return `<div class="sec" id="askzone"><div class="lab">Client asks and updates<span class="acts">${open.length && sample ? `<button class="lnk" data-act="reviewStrategy" ${ui.busy['review:' + c.id] ? 'disabled' : ''}>Update plan from these</button>` : ''}</span></div>
+  return `<div class="sec" id="askzone"><div class="lab">Client asks and updates<span class="acts">${open.length && sample ? `<button class="lnk ${ui.busy['review:' + c.id] ? 'working' : ''}" data-act="reviewStrategy" ${ui.busy['review:' + c.id] ? 'disabled' : ''}>${ui.busy['review:' + c.id] ? '<span class="spin"></span> Reviewing plan… <span class="mono" data-el="review:' + esc(c.id) + '"></span>' : 'Update plan from these'}</button>` : ''}</span></div>
+    ${ui.out['review:' + c.id] ? `<p class="late" style="font-size:13px;margin:0 0 8px">${esc(ui.out['review:' + c.id])}</p>` : ''}
     <form class="addline" data-form="ask">
       <label class="vh" for="ask-k">Type</label><select id="ask-k"><option value="ask">They want</option><option value="update">Update from them</option></select>
       <label class="vh" for="ask-t">What</label><input type="text" id="ask-t" data-keep="ask-${esc(c.id)}" value="${esc(keep('ask-' + c.id))}" placeholder="e.g. Wants more focus on bridal sets · New showroom opening 15 Nov · Budget up to ₹8,000">
@@ -2084,11 +2112,77 @@ function asksSection(c){
     ${a.length ? `<div class="items" style="margin-top:6px">${a.slice(0, ui.allAsks === c.id ? 99 : 6).map(x => `<div class="it ${x.status === 'done' ? 'dim' : ''}" data-ask="${esc(x.id)}"><div><div class="t"><span class="k ${x.kind === 'ask' ? 'ask' : ''}">${x.kind === 'ask' ? 'Wants' : 'Update'}</span> ${esc(x.text)}</div>
       <div class="s"><span>${esc(M(x.by)?.name || '')}</span><span>${esc(ago(x.at))}</span>${x.status === 'done' ? '<span>Handled</span>' : x.planned ? '<span>In the plan</span>' : ''}</div>
       ${(x.imgs || []).length ? `<div class="thumbs sm">${x.imgs.map(id => `<figure><a href="/_blob/${esc(id)}" target="_blank" rel="noopener"><img src="/_blob/${esc(id)}" alt="Attachment from client" loading="lazy"></a></figure>`).join('')}</div>` : ''}</div>
-      <div class="c">${x.status === 'done' ? `<button class="lnk" data-act="askReopen">Reopen</button>` : `<button class="lnk" data-act="askTask">Make task</button><button class="lnk" data-act="askDone">Handled</button>`}<button class="x" data-act="askDel" aria-label="Delete">×</button></div></div>`).join('')}</div>
+      <div class="c">${x.status === 'done' ? `<button class="lnk" data-act="askReopen">Reopen</button>` : `${sample ? `<button class="lnk" data-act="askImpact" ${ui.busy['imp:' + x.id] ? 'disabled' : ''}>What should change?</button>` : ''}<button class="lnk" data-act="askTask">Make task</button><button class="lnk" data-act="askDone">Handled</button>`}<button class="x" data-act="askDel" aria-label="Delete">×</button></div>
+      ${impactBlock(c, x)}</div>`).join('')}</div>
       ${a.length > 6 && ui.allAsks !== c.id ? `<button class="lnk" data-act="allAsks" style="margin-top:8px">Show all ${a.length}</button>` : ''}` : `<p class="empty" style="margin-top:4px">Log what the client asks for and news from them (a sale, a new product, a budget change). Claude uses these when it updates the plan.</p>`}
   </div>`;
 }
 const saveAsks = (c, asks, ok) => upd(c.id, {asks}, ok);
+
+/* ----- Ask impact: what should change in open work ----- */
+const IMP_L = {change:'Change task', drop:'Drop task', add:'New task', plan:'Update plan'};
+function impactBlock(c, x){
+  const k = 'imp:' + x.id, live = ui.impLive[x.id], list = live || x.suggest || [];
+  if (!ui.busy[k] && !list.length && !ui.out[k]) return '';
+  const pending = list.map((s, i) => ({...s, i})).filter(s => !s.state);
+  return `<div class="impact"><div class="row" style="justify-content:space-between"><b style="font-weight:600;font-size:13px">Claude suggests for this ${x.kind === 'ask' ? 'ask' : 'update'}</b>
+      ${!live && pending.length > 1 ? `<button class="lnk" data-act="impAll">Apply all ${pending.length}</button>` : ''}</div>
+    ${list.map((s, i) => { const t = s.taskId ? S.tasks.find(q => q.id === s.taskId) : null;
+      return `<div class="imp ${s.state ? 'settled' : ''}" data-imp="${i}"><span class="imptag ${s.action}">${esc(IMP_L[s.action] || s.action)}</span>
+        <div class="grow" style="min-width:0">${s.action === 'change' ? `<div class="muted" style="font-size:12.5px;text-decoration:line-through">${esc(s.oldTitle || (t ? t.title : 'task'))}</div><div>${esc(s.title || (t && t.title) || '')}${s.due ? ` <span class="mono muted" style="font-size:12px">· due ${esc(fmt(s.due))}</span>` : ''}${s.assignee ? ` <span class="muted" style="font-size:12px">· ${esc(s.assignee)}</span>` : ''}</div>` :
+          s.action === 'drop' ? `<div>${esc(s.oldTitle || (t ? t.title : 'task'))}</div>` : s.action === 'add' ? `<div>${esc(s.title)}${s.due ? ` <span class="mono muted" style="font-size:12px">· due ${esc(fmt(s.due))}</span>` : ''}${s.assignee ? ` <span class="muted" style="font-size:12px">· ${esc(s.assignee)}</span>` : ''}</div>` : `<div>${esc(s.change || '')}</div>`}
+          ${s.why ? `<div class="muted" style="font-size:12.5px">${esc(s.why)}</div>` : ''}
+          ${(s.action === 'change' || s.action === 'drop') && !t && !s.state ? `<div class="late" style="font-size:12px">That task no longer exists.</div>` : ''}</div>
+        <div class="row" style="gap:6px;flex:none">${s.state ? `<span class="pill ${s.state === 'applied' ? 'good' : 'neutral'}">${s.state === 'applied' ? 'Applied' : 'Skipped'}</span>` : live ? '' :
+          `<button class="b" data-act="impApply">${s.action === 'plan' ? 'Review plan' : 'Apply'}</button><button class="lnk" data-act="impSkip">Skip</button>`}</div></div>`; }).join('')}
+    ${ui.busy[k] ? progress(k) : ''}${ui.out[k] ? `<p class="${list.length ? 'late' : 'empty'}" style="font-size:13px;margin:4px 0 0">${esc(ui.out[k])}</p>` : ''}
+    ${!ui.busy[k] && !list.length && !ui.out[k] ? '' : ''}</div>`;
+}
+async function askImpact(c, x){
+  const k = 'imp:' + x.id;
+  ui.busy[k] = true; ui.t0[k] = Date.now(); delete ui.out[k]; ui.impLive[x.id] = []; render();
+  const tasks = openTasks(c.id).map(t => ({id:t.id, title:t.title, kind:t.kind, status:t.status, due:t.due || '', assignee:M(t.assignee)?.name || '', campaign:t.campaign ? (S.campaigns.find(q => q.id === t.campaign)?.name || 'campaign') : ''}));
+  try {
+    await streamItems(`${preamble}\n\nA client of Reach Theory just sent this ${x.kind === 'ask' ? 'request' : 'update'}. Decide what should change in our open work for ${c.name}. Be practical and minimal: only suggest changes the message actually requires. Prefer changing an existing task over adding a new one. Never suggest filming or shooting.\n\nClient message (${new Date(x.at).toISOString().slice(0,10)}): ${x.text}${x.imgNote ? '\nAttached image shows: ' + x.imgNote : (x.imgs || []).length ? '\n(' + x.imgs.length + ' image(s) attached; not visible to you)' : ''}\n\nOpen tasks: ${JSON.stringify(tasks)}\nTeam: ${S.team.map(m => m.name).join(', ')}\nToday: ${today}\nClient plan: ${JSON.stringify({goal:c.plan?.goal, focus:c.plan?.focus, pillars:c.plan?.pillars})}\n\nEach line is one of:\n{"action":"change","taskId": id from open tasks,"title": new wording or "","due":"YYYY-MM-DD" or "","assignee": team name or "","why": one short reason}\n{"action":"drop","taskId": id,"why": reason}\n{"action":"add","title": specific task,"kind": one of ${Object.keys(KINDS).join('|')},"due":"YYYY-MM-DD" or "","assignee": team name or "","why": reason}\n{"action":"plan","change": what should change in the growth plan,"why": reason}\nGive 1 to 6 lines. If nothing needs to change, give one "plan" line that says so.`, k, o => {
+      if (!o || !IMP_L[o.action]) return false;
+      if ((o.action === 'change' || o.action === 'drop') && !tasks.some(t => t.id === o.taskId)) return false;
+      const s = {action:o.action, why:String(o.why || '')};
+      if (o.taskId) { s.taskId = String(o.taskId); s.oldTitle = tasks.find(t => t.id === o.taskId)?.title || ''; }
+      if (o.title) s.title = String(o.title); if (/^\d{4}-\d\d-\d\d$/.test(o.due || '')) s.due = o.due;
+      if (o.assignee) s.assignee = String(o.assignee); if (o.kind) s.kind = KINDS[o.kind] ? o.kind : 'other'; if (o.change) s.change = String(o.change);
+      ui.impLive[x.id].push(s);
+    });
+    const list = ui.impLive[x.id];
+    if (!list.length) throw {code:'empty_completion'};
+    const fresh = C(c.id);
+    await saveAsks(fresh, (fresh.asks || []).map(q => q.id === x.id ? {...q, suggest:list} : q));
+  } catch(e){ if (!(e && e.code === 'cancelled')) ui.out[k] = e && e.code === 'empty_completion' ? 'Claude found nothing to change.' : errCopy(e); }
+  delete ui.impLive[x.id]; ui.busy[k] = false; render();
+}
+async function applyImpact(c, x, i){
+  const s = (x.suggest || [])[i]; if (!s || s.state) return;
+  const who = s.assignee ? (S.team.find(m => m.name.toLowerCase() === s.assignee.toLowerCase())?.id || '') : '';
+  const note = {who:myMember || '', text:`Changed after client ${x.kind === 'ask' ? 'ask' : 'update'}: “${x.text.slice(0, 120)}”${s.why ? ' — ' + s.why : ''}`, at:Date.now()};
+  let ok = true;
+  if (s.action === 'plan'){ reviewStrategy(c); }
+  else if (s.action === 'add') ok = await addTask({title:s.title, client:c.id, kind:s.kind || 'other', due:s.due || '', assignee:who});
+  else {
+    const t = S.tasks.find(q => q.id === s.taskId);
+    if (!t){ toast('That task no longer exists.'); ok = false; }
+    else if (s.action === 'drop') ok = await write(() => tasksCol().doc(t.id).delete());
+    else { const patch = {comments:[...(t.comments || []), note].slice(-30)}; if (s.title) patch.title = s.title; if (s.due){ patch.due = s.due; patch.month = s.due.slice(0, 7); } if (who) patch.assignee = who;
+      ok = await write(() => tasksCol().doc(t.id).update(patch)); }
+  }
+  return ok;
+}
+async function settleImpact(c, askId, idxs, state){
+  const fresh = C(c.id), x = (fresh.asks || []).find(q => q.id === askId); if (!x) return;
+  const done = [];
+  for (const i of idxs){ if (state === 'applied'){ if (await applyImpact(fresh, x, i)) done.push(i); else break; } else done.push(i); }
+  if (!done.length) return;
+  const asks = (C(c.id).asks || []).map(q => q.id === askId ? {...q, suggest:(q.suggest || []).map((s, i) => done.includes(i) ? {...s, state} : s), planned: state === 'applied' ? true : q.planned} : q);
+  await saveAsks(C(c.id), asks, state === 'applied' ? (done.length > 1 ? `Applied ${done.length} changes` : 'Applied') : 'Skipped');
+}
 
 /* ----- shared thread ----- */
 function threadHtml(t, late){
@@ -2111,6 +2205,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); const n = cmdMatches().length; ui.cmd.sel = (ui.cmd.sel + (e.key === 'ArrowDown' ? 1 : -1) + n) % Math.max(1, n); renderCmd(); return; }
     if (e.key === 'Enter' && e.target.id === 'cmdq'){ e.preventDefault(); runCmd(ui.cmd.sel); return; }
   } if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.it.click, [role=link]')){ e.preventDefault(); e.target.click(); } });
+document.addEventListener('pointerdown', e => { const bt = e.target.closest && e.target.closest('button, .it.click, .ccard, [role=link]'); if (bt && !bt.disabled){ bt.classList.remove('pressed'); void bt.offsetWidth; bt.classList.add('pressed'); setTimeout(() => bt.classList.remove('pressed'), 350); } });
 document.addEventListener('click', async e => {
   const g = e.target.closest('[data-go]');
   if (g && !e.target.closest('select,input,button:not([data-go])')){ if (g.dataset.preset) ui.filt = {client:'', who:'', done:false, preset:g.dataset.preset}; else if (g.dataset.go === 'tasks') ui.filt.preset = ''; go(g.dataset.go, g.dataset.cid ?? ui.cid, g.dataset.go === 'client' && g.dataset.cid !== ui.cid ? 'overview' : undefined); return; }
@@ -2182,7 +2277,7 @@ document.addEventListener('click', async e => {
   else if (a === 'setStatus'){ await upd(c.id, {status:b.dataset.s}, b.dataset.s === 'archived' ? 'Client archived' : b.dataset.s === 'paused' ? 'Client paused' : 'Client resumed'); if (b.dataset.s === 'archived') go('clients'); }
   else if (a === 'draftPlan') draftPlan(c);
   else if (a === 'reviewStrategy') reviewStrategy(c);
-  else if (a === 'dismissReview'){ delete ui.review[c.id]; render(); }
+  else if (a === 'dismissReview'){ delete ui.review[c.id]; toast('Kept the current plan'); render(); }
   else if (a === 'applyReview'){ const r = ui.review[c.id]; if (!r) return;
     const asks = (c.asks || []).map(x => x.status !== 'done' ? {...x, planned:true} : x);
     if (await savePlanVersion(c, {plan:{goal:String(r.plan.goal || ''), audience:String(r.plan.audience || ''), pillars:(r.plan.pillars || []).map(String), focus:String(r.plan.focus || '')}, target:{count:Math.max(0, Number(r.target) || target(c))}, asks}, 'Updated with Claude: ' + String(r.verdict || '').slice(0, 120))){ delete ui.review[c.id]; render(); } }
@@ -2191,6 +2286,10 @@ document.addEventListener('click', async e => {
     if (a === 'askTask'){ if (await addTask({title:(x.kind === 'ask' ? 'Client ask: ' : 'Act on update: ') + x.text, client:c.id, kind:'strategy'})) toast('Task added'); return; }
     const asks = a === 'askDel' ? c.asks.filter(q => q.id !== id) : c.asks.map(q => q.id === id ? {...q, status: a === 'askDone' ? 'done' : 'open'} : q);
     if (await saveAsks(c, asks) && a === 'askDel' && assets) for (const im of (x.imgs || [])){ try { await assets.delete(im); } catch(_){} } }
+  else if (a === 'askImpact'){ const x = (c.asks || []).find(q => q.id === b.closest('[data-ask]').dataset.ask); if (x) askImpact(c, x); }
+  else if (a === 'impApply' || a === 'impSkip'){ const askId = b.closest('[data-ask]').dataset.ask, i = Number(b.closest('[data-imp]').dataset.imp); b.disabled = true; await settleImpact(c, askId, [i], a === 'impApply' ? 'applied' : 'skipped'); }
+  else if (a === 'impAll'){ const askId = b.closest('[data-ask]').dataset.ask, x = (c.asks || []).find(q => q.id === askId); if (!x) return; b.disabled = true;
+    await settleImpact(c, askId, (x.suggest || []).map((s, i) => (!s.state && s.action !== 'plan') ? i : -1).filter(i => i >= 0), 'applied'); }
   else if (a === 'askPick'){ ui.pickTarget = 'ask'; $('#filePick').click(); }
   else if (a === 'askUnpend'){ const [f] = (ui.askPend[c.id] || []).splice(Number(b.dataset.i), 1); if (f) URL.revokeObjectURL(f.url); render(); }
   else if (a === 'ideas') ideas(c);
@@ -2271,7 +2370,7 @@ document.addEventListener('submit', async e => {
       for (const f of pend){ const r = await assets.upload(f.file); imgs.push(r.id); }
       const item = {id:Date.now().toString(36), kind:v('ask-k'), text:(text || 'See attached image' + (imgs.length > 1 ? 's' : '')).slice(0, 400), by:myMember || '', at:Date.now(), status:'open'};
       if (imgs.length) item.imgs = imgs;
-      if (await saveAsks(c, [...(c.asks || []), item].slice(-60), 'Added')){ ui.keep['ask-' + c.id] = ''; pend.forEach(f => URL.revokeObjectURL(f.url)); ui.askPend[c.id] = []; }
+      if (await saveAsks(c, [...(c.asks || []), item].slice(-60), 'Added')){ ui.keep['ask-' + c.id] = ''; if (sample) setTimeout(() => askImpact(C(c.id), item), 300); pend.forEach(f => URL.revokeObjectURL(f.url)); ui.askPend[c.id] = []; }
     } catch(e){ toast(e && e.code === 'quota_exceeded' ? 'Image storage is full. Delete old images first.' : 'Couldn’t upload the image. Try a PNG or JPG under 20 MB.'); }
     ui.busy.ask = false; render();
     return;
