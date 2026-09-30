@@ -447,6 +447,10 @@ span.gchip{cursor:inherit;display:block}
 .cidate{font-size:12px;color:var(--muted);min-width:48px}
 .cititle{flex:1;min-width:160px}
 .cibody{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
+
+.thumbs.sm figure{width:56px;height:56px}
+.thumbs.sm{margin-top:6px}
+#askzone.dropon{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -564,7 +568,7 @@ let role = 'admin', myUid = null, myMember = null;
 const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[]};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false, campaigns:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
+  pending:[], askPend:{}, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.allClients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
@@ -602,7 +606,7 @@ function clientContext(c, opts = {}){
     client:{name:c.name, business:c.tag, instagram:c.handle, website:c.website, city:c.city, language:c.brand?.language || c.lang,
       contentSource:c.source, adBudgetPerMonth:c.ads?.budget, services:c.services, monthlyTarget:target(c), postedThisMonth:posted(c),
       nextAction:c.next, brand:c.brand, growthPlan:c.plan, research:c.research && {summary:c.research.summary, opportunities:c.research.opportunities, fixFirst:c.research.fixes},
-      competitors:(c.competitors || []).map(x => ({...x, learnings:S.insights.filter(i => i.client === c.id && i.type === 'Competitor post' && i.competitor === x.name).flatMap(i => i.learnings || []).slice(0, 4)})), clientAsksAndUpdates:(c.asks || []).filter(x => x.status !== 'done').slice(0, 10).map(x => `${x.kind === 'ask' ? 'Client wants' : 'Client update'} (${new Date(x.at).toISOString().slice(0,10)}): ${x.text}`)},
+      competitors:(c.competitors || []).map(x => ({...x, learnings:S.insights.filter(i => i.client === c.id && i.type === 'Competitor post' && i.competitor === x.name).flatMap(i => i.learnings || []).slice(0, 4)})), clientAsksAndUpdates:(c.asks || []).filter(x => x.status !== 'done').slice(0, 10).map(x => `${x.kind === 'ask' ? 'Client wants' : 'Client update'} (${new Date(x.at).toISOString().slice(0,10)}): ${x.text}${(x.imgs || []).length ? ` [${x.imgs.length} image(s) attached${x.imgNote ? ': ' + x.imgNote : ''}]` : ''}`)},
     recentInsights:ins,
     openTasks:openTasks(c.id).slice(0, 15).map(t => `${t.title} [${SHORT[t.kind]||t.kind}, ${STATUS[t.status]}${t.due ? ', due ' + t.due : ''}]`),
     upcomingMoments:eventsFor(c.id).slice(0, 4).map(e => `${e.d} ${e.name}: ${e.prep}`)
@@ -641,6 +645,7 @@ const IC = {
   reports:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 17v-3M13 17v-5M16 17v-2"/>',
   tasks:'<path d="M10 6h10M10 12h10M10 18h10M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17"/>',
   calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  clip:'<path d="M20.5 11.5 12 20a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/>',
   clients:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 5.2a3 3 0 0 1 0 5.6M21 20c0-2.6-1.6-4.5-4-5.2"/>',
   search:'<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
@@ -2014,13 +2019,18 @@ function campsSection(c){
 function asksSection(c){
   const a = (c.asks || []).slice().sort((x, y) => (x.status === 'done') - (y.status === 'done') || y.at - x.at);
   const open = a.filter(x => x.status !== 'done');
-  return `<div class="sec"><div class="lab">Client asks and updates<span class="acts">${open.length && sample ? `<button class="lnk" data-act="reviewStrategy" ${ui.busy['review:' + c.id] ? 'disabled' : ''}>Update plan from these</button>` : ''}</span></div>
+  const pend = ui.askPend[c.id] || [];
+  return `<div class="sec" id="askzone"><div class="lab">Client asks and updates<span class="acts">${open.length && sample ? `<button class="lnk" data-act="reviewStrategy" ${ui.busy['review:' + c.id] ? 'disabled' : ''}>Update plan from these</button>` : ''}</span></div>
     <form class="addline" data-form="ask">
       <label class="vh" for="ask-k">Type</label><select id="ask-k"><option value="ask">They want</option><option value="update">Update from them</option></select>
       <label class="vh" for="ask-t">What</label><input type="text" id="ask-t" data-keep="ask-${esc(c.id)}" value="${esc(keep('ask-' + c.id))}" placeholder="e.g. Wants more focus on bridal sets · New showroom opening 15 Nov · Budget up to ₹8,000">
-      <button class="b" type="submit">Add</button></form>
+      ${assets ? `<button class="b" type="button" data-act="askPick" title="Attach images (or paste / drop them here)" aria-label="Attach images">${ico('clip')}${pend.length ? ' ' + pend.length : ''}</button>` : ''}
+      <button class="b" type="submit" ${ui.busy.ask ? 'disabled' : ''}>${ui.busy.ask ? 'Saving…' : 'Add'}</button></form>
+    ${pend.length ? `<div class="thumbs" style="margin-top:10px">${pend.map((f, i) => `<figure><img src="${f.url}" alt="Attachment ${i + 1}"><button class="x" data-act="askUnpend" data-i="${i}" aria-label="Remove image">×</button></figure>`).join('')}</div>` : ''}
+    ${assets ? `<p class="muted" style="font-size:11.5px;margin:6px 0 0">Attach screenshots of the client’s WhatsApp message, a reference post or a product photo: paperclip, paste (Ctrl/Cmd + V) or drop here.</p>` : ''}
     ${a.length ? `<div class="items" style="margin-top:6px">${a.slice(0, ui.allAsks === c.id ? 99 : 6).map(x => `<div class="it ${x.status === 'done' ? 'dim' : ''}" data-ask="${esc(x.id)}"><div><div class="t"><span class="k ${x.kind === 'ask' ? 'ask' : ''}">${x.kind === 'ask' ? 'Wants' : 'Update'}</span> ${esc(x.text)}</div>
-      <div class="s"><span>${esc(M(x.by)?.name || '')}</span><span>${esc(ago(x.at))}</span>${x.status === 'done' ? '<span>Handled</span>' : x.planned ? '<span>In the plan</span>' : ''}</div></div>
+      <div class="s"><span>${esc(M(x.by)?.name || '')}</span><span>${esc(ago(x.at))}</span>${x.status === 'done' ? '<span>Handled</span>' : x.planned ? '<span>In the plan</span>' : ''}</div>
+      ${(x.imgs || []).length ? `<div class="thumbs sm">${x.imgs.map(id => `<figure><a href="/_blob/${esc(id)}" target="_blank" rel="noopener"><img src="/_blob/${esc(id)}" alt="Attachment from client" loading="lazy"></a></figure>`).join('')}</div>` : ''}</div>
       <div class="c">${x.status === 'done' ? `<button class="lnk" data-act="askReopen">Reopen</button>` : `<button class="lnk" data-act="askTask">Make task</button><button class="lnk" data-act="askDone">Handled</button>`}<button class="x" data-act="askDel" aria-label="Delete">×</button></div></div>`).join('')}</div>
       ${a.length > 6 && ui.allAsks !== c.id ? `<button class="lnk" data-act="allAsks" style="margin-top:8px">Show all ${a.length}</button>` : ''}` : `<p class="empty" style="margin-top:4px">Log what the client asks for and news from them (a sale, a new product, a budget change). Claude uses these when it updates the plan.</p>`}
   </div>`;
@@ -2123,7 +2133,9 @@ document.addEventListener('click', async e => {
   else if (a === 'askDone' || a === 'askReopen' || a === 'askDel' || a === 'askTask'){ const id = b.closest('[data-ask]').dataset.ask, x = (c.asks || []).find(q => q.id === id); if (!x) return;
     if (a === 'askTask'){ if (await addTask({title:(x.kind === 'ask' ? 'Client ask: ' : 'Act on update: ') + x.text, client:c.id, kind:'strategy'})) toast('Task added'); return; }
     const asks = a === 'askDel' ? c.asks.filter(q => q.id !== id) : c.asks.map(q => q.id === id ? {...q, status: a === 'askDone' ? 'done' : 'open'} : q);
-    await saveAsks(c, asks); }
+    if (await saveAsks(c, asks) && a === 'askDel' && assets) for (const im of (x.imgs || [])){ try { await assets.delete(im); } catch(_){} } }
+  else if (a === 'askPick'){ ui.pickTarget = 'ask'; $('#filePick').click(); }
+  else if (a === 'askUnpend'){ const [f] = (ui.askPend[c.id] || []).splice(Number(b.dataset.i), 1); if (f) URL.revokeObjectURL(f.url); render(); }
   else if (a === 'ideas') ideas(c);
   else if (a === 'addSug' || a === 'addAllSug'){
     const key = a === 'addSug' ? b.closest('[data-sug]').dataset.sug : b.dataset.key;
@@ -2136,7 +2148,7 @@ document.addEventListener('click', async e => {
   }
   else if (a === 'editPlan'){ ui.editing = 'plan'; render(); }
   else if (a === 'cancelEdit'){ ui.editing = null; render(); }
-  else if (a === 'pick') $('#filePick').click();
+  else if (a === 'pick'){ ui.pickTarget = ''; $('#filePick').click(); }
   else if (a === 'unpend'){ const [p] = ui.pending.splice(Number(b.dataset.i), 1); if (p) URL.revokeObjectURL(p.url); render(); }
   else if (a === 'clearPend'){ ui.pending.forEach(p => URL.revokeObjectURL(p.url)); ui.pending = []; render(); }
   else if (a === 'delInsight'){
@@ -2195,8 +2207,16 @@ document.addEventListener('submit', async e => {
     if (await write(() => db.collection('clients').doc(uid).set(doc), 'Client added')){ ui.addClient = false; go('client', uid, 'overview'); }
     return;
   }
-  if (k === 'ask'){ const text = v('ask-t'); if (!text) return;
-    if (await saveAsks(c, [...(c.asks || []), {id:Date.now().toString(36), kind:v('ask-k'), text:text.slice(0, 400), by:myMember || '', at:Date.now(), status:'open'}].slice(-60), 'Added')){ ui.keep['ask-' + c.id] = ''; render(); }
+  if (k === 'ask'){ const text = v('ask-t'), pend = ui.askPend[c.id] || []; if (!text && !pend.length) return;
+    ui.busy.ask = true; render();
+    try {
+      const imgs = [];
+      for (const f of pend){ const r = await assets.upload(f.file); imgs.push(r.id); }
+      const item = {id:Date.now().toString(36), kind:v('ask-k'), text:(text || 'See attached image' + (imgs.length > 1 ? 's' : '')).slice(0, 400), by:myMember || '', at:Date.now(), status:'open'};
+      if (imgs.length) item.imgs = imgs;
+      if (await saveAsks(c, [...(c.asks || []), item].slice(-60), 'Added')){ ui.keep['ask-' + c.id] = ''; pend.forEach(f => URL.revokeObjectURL(f.url)); ui.askPend[c.id] = []; }
+    } catch(e){ toast(e && e.code === 'quota_exceeded' ? 'Image storage is full. Delete old images first.' : 'Couldn’t upload the image. Try a PNG or JPG under 20 MB.'); }
+    ui.busy.ask = false; render();
     return;
   }
   if (k === 'followers'){ const n = Number(v('fo-n')), d_ = v('fo-d') || today; if (!(n >= 0) || v('fo-n') === '') return;
@@ -2236,11 +2256,12 @@ document.addEventListener('submit', async e => {
   else if (k === 'comp'){ const n = v('cp-n'); if (!n) return; await upd(c.id, {competitors:[...(c.competitors || []), {name:n, note:v('cp-note')}]}, 'Added'); }
   else if (k === 'member'){ const n = v('m-name'); if (!n) return; await write(() => db.collection('team').add({name:n, role:v('m-role'), createdAt:Date.now()}), 'Member added'); }
 });
-$('#filePick').addEventListener('change', e => { addPending(e.target.files); e.target.value = ''; });
+$('#filePick').addEventListener('change', e => { if (ui.pickTarget === 'ask') addAskPending(e.target.files); else addPending(e.target.files); ui.pickTarget = ''; e.target.value = ''; });
+function addAskPending(files){ const imgs = [...files].filter(f => /^image\//.test(f.type)); if (!imgs.length || !ui.cid) return; if (!assets){ toast('Images can’t be stored in this view.'); return; } const arr = ui.askPend[ui.cid] = ui.askPend[ui.cid] || []; for (const f of imgs.slice(0, 6 - arr.length)) arr.push({file:f, url:URL.createObjectURL(f)}); render(); }
 document.addEventListener('paste', e => {
-  if (!(ui.view === 'client' && ui.ctab === 'insights')) return;
+  if (!(ui.view === 'client' && (ui.ctab === 'insights' || ui.ctab === 'overview'))) return;
   const files = [...(e.clipboardData?.files || [])].filter(f => /^image\//.test(f.type));
-  if (files.length){ e.preventDefault(); addPending(files); }
+  if (files.length){ e.preventDefault(); ui.ctab === 'insights' ? addPending(files) : addAskPending(files); }
 });
 document.addEventListener('dragstart', e => { const cd = e.target.closest && e.target.closest('.card[data-tid]'); if (cd){ e.dataTransfer.setData('text/plain', cd.dataset.tid); e.dataTransfer.effectAllowed = 'move'; cd.classList.add('dragging'); } });
 document.addEventListener('dragend', e => { document.querySelectorAll('.dragging,.col.over').forEach(x => x.classList.remove('dragging', 'over')); });
@@ -2248,6 +2269,9 @@ document.addEventListener('dragover', e => { const col = e.target.closest && e.t
 document.addEventListener('drop', async e => { const col = e.target.closest && e.target.closest('.col[data-col]'); if (!col) return; e.preventDefault(); col.classList.remove('over');
   const tid = e.dataTransfer.getData('text/plain'), t = S.tasks.find(x => x.id === tid); if (!t || t.status === col.dataset.col) return;
   await write(() => tasksCol().doc(tid).update({status:col.dataset.col, doneMonth: col.dataset.col === 'done' ? monthKey : '', doneAt: col.dataset.col === 'done' ? Date.now() : 0, statusAt:{[col.dataset.col]:Date.now()}}), 'Moved to ' + STATUS[col.dataset.col]); });
+document.addEventListener('dragover', e => { const z = e.target.closest && e.target.closest('#askzone'); if (z && e.dataTransfer?.types?.includes('Files')){ e.preventDefault(); z.classList.add('dropon'); } });
+document.addEventListener('dragleave', e => { const z = e.target.closest && e.target.closest('#askzone'); if (z && !z.contains(e.relatedTarget)) z.classList.remove('dropon'); });
+document.addEventListener('drop', e => { const z = e.target.closest && e.target.closest('#askzone'); if (z && e.dataTransfer?.files?.length){ e.preventDefault(); z.classList.remove('dropon'); addAskPending(e.dataTransfer.files); } });
 document.addEventListener('dragover', e => { const d = e.target.closest && e.target.closest('#drop'); if (d){ e.preventDefault(); d.classList.add('on'); } });
 document.addEventListener('dragleave', e => { const d = e.target.closest && e.target.closest('#drop'); if (d) d.classList.remove('on'); });
 document.addEventListener('drop', e => { const d = e.target.closest && e.target.closest('#drop'); if (d){ e.preventDefault(); addPending(e.dataTransfer.files); } });
