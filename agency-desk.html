@@ -841,7 +841,7 @@ function taskRow(t, opts = {}){
   const cm = t.comments || [], last = cm[cm.length - 1], open = ui.openTask === t.id;
   const lateBy = late ? -daysTo(t.due) : 0;
   return `<div class="it ${late ? 'is-late' : ''}" data-tid="${esc(t.id)}">
-    <div>${(() => { const [h, d] = splitTitle(t.title), ex = ui.expand[t.id]; return `<div class="t th"><button class="tlink" data-act="openBrief" aria-expanded="${!!ui.briefOpen[t.id]}" title="Open the brief: what, steps and how">${esc(h)}<span class="chev" aria-hidden="true">${ui.briefOpen[t.id] ? '▴' : '▾'}</span></button>${t.brief ? `<span class="bdot" title="Brief written"></span>` : ''}</div>${d ? `<button class="tdesc ${ex ? 'open' : ''}" data-act="expandTask" aria-expanded="${!!ex}">${esc(d)}</button>` : ''}`; })()}
+    <div>${(() => { const [h, d] = splitTitle(t.title), ex = ui.expand[t.id]; return `<div class="t th"><button class="tlink" data-act="openBrief" aria-expanded="${!!ui.briefOpen[t.id]}" title="Open the brief: what, steps and how">${esc(h)}<span class="chev" aria-hidden="true">${ui.briefOpen[t.id] ? '▴' : '▾'}</span></button>${ui.busy['brief:' + t.id] ? '<span class="spin" style="width:10px;height:10px;margin-left:8px;vertical-align:middle" title="Writing the brief"></span>' : t.brief ? `<span class="bdot" title="Brief written"></span>` : ''}</div>${d ? `<button class="tdesc ${ex ? 'open' : ''}" data-act="expandTask" aria-expanded="${!!ex}">${esc(d)}</button>` : ''}`; })()}
       <div class="s">${opts.noClient ? '' : `<span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span>`}<span class="k">${esc(SHORT[t.kind] || t.kind)}</span>${t.todo ? '<span class="k ask">Your to-do</span>' : ''}${t.priority === 'high' && t.status !== 'done' ? '<span class="pill bad" style="font-size:11px">high</span>' : ''}
       ${t.due ? `<span class="${late ? 'late' : ''}">${late ? `${lateBy} day${lateBy === 1 ? '' : 's'} late` : esc(fmt(t.due))}</span>` : ''}
       ${opts.showWho && t.assignee ? `<span>${esc(M(t.assignee)?.name || '')}</span>` : ''}
@@ -1414,9 +1414,27 @@ function viewEditor(){
 /* ---------- data writes ---------- */
 const tasksCol = () => db.collection('tasks');
 async function addTask(t){
-  const c = C(t.client);
-  return write(() => tasksCol().add({title:String(t.title).slice(0, 300), client:t.client, clientName:c ? c.name : '', kind:KINDS[t.kind] ? t.kind : 'other',
-    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {}), ...(t.priority ? {priority:t.priority} : {})}));
+  const c = C(t.client); let id = '';
+  const ok = await write(async () => { const r = await tasksCol().add({title:String(t.title).slice(0, 300), client:t.client, clientName:c ? c.name : '', kind:KINDS[t.kind] ? t.kind : 'other',
+    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {}), ...(t.priority ? {priority:t.priority} : {})}); id = r && r.id || ''; });
+  if (ok && id && t.autoBrief) queueBrief(id);
+  return ok ? (id || true) : false;
+}
+// Briefs for tasks created by Plan my day: written two at a time in the background.
+const briefQ = []; let briefRun = 0;
+function queueBrief(id){ if (!sample || briefQ.includes(id)) return; briefQ.push(id); pumpBriefs(); }
+async function pumpBriefs(){
+  while (briefRun < 2 && briefQ.length){
+    const id = briefQ.shift(); briefRun++;
+    (async () => {
+      try {
+        for (let n = 0; n < 40 && !S.tasks.some(t => t.id === id); n++) await new Promise(r => setTimeout(r, 250));
+        const t = S.tasks.find(q => q.id === id);
+        if (t && !t.brief){ writeBrief(t); const k = 'brief:' + id; while (ui.busy[k] || !ui.t0[k]) { await new Promise(r => setTimeout(r, 400)); if (!ui.t0[k] && !ui.busy[k]) break; } }
+      } catch(e){}
+      briefRun--; pumpBriefs();
+    })();
+  }
 }
 const upd = (cid, data, ok) => write(() => db.collection('clients').doc(cid).update(data), ok);
 
@@ -2732,8 +2750,8 @@ document.addEventListener('click', async e => {
     b.disabled = true;
     for (const r of rows){ const i = items[Number(r.dataset.n)]; if (!i || i.added) continue;
       const tdx = i.todo && C(i.client) ? todoOf(i.client, i.todo) : null;
-      if (await addTask({...i, todo: tdx && !todoTask(tdx) ? i.todo : '', assignee:r.querySelector('[data-role="sugWho"]').value, due: key === 'day' ? (i.due || today) : ''})) i.added = true; else break; }
-    toast(rows.length > 1 ? 'Tasks added' : 'Task added'); render();
+      if (await addTask({...i, todo: tdx && !todoTask(tdx) ? i.todo : '', assignee:r.querySelector('[data-role="sugWho"]').value, due: key === 'day' ? (i.due || today) : '', autoBrief: key === 'day' && !!sample})) i.added = true; else break; }
+    toast(key === 'day' && sample ? (rows.length > 1 ? 'Tasks added. Writing their briefs…' : 'Task added. Writing its brief…') : (rows.length > 1 ? 'Tasks added' : 'Task added')); render();
   }
   else if (a === 'editPlan'){ ui.editing = 'plan'; render(); }
   else if (a === 'cancelEdit'){ ui.editing = null; render(); }
