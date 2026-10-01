@@ -2297,25 +2297,28 @@ function campsSection(c){
     ${list.length ? `<div class="items">${list.map(x => { const st = campState(x); return `<div class="it click" data-act="openCampaign" data-id="${esc(x.id)}" tabindex="0" role="link"><div><div class="t" style="font-weight:500">${esc(x.name)}</div><div class="s"><span>${x.start ? esc(fmt(x.start)) + '–' + esc(fmt(x.end || x.start)) : 'No dates'}</span><span>${(x.items || []).length} pieces · ${campReady(x)}% produced</span></div></div><div class="c"><span class="pill ${st[0]}">${esc(st[1])}</span></div></div>`; }).join('')}</div>` : (ev ? '' : '<p class="empty">No campaigns yet.</p>')}</div>`;
 }
 /* ----- Prompt beside a task ----- */
+const lastTool = () => { try { const v = localStorage.getItem('rsd-tool'); return P_TOOL[v] ? v : 'any'; } catch(e){ return 'any'; } };
 const TP_PLAN = {reel:['edit','9:16'], carousel:['carousel','4:5'], post:['image','4:5'], ai:['image','4:5'], story:['image','9:16'], ad:['image','1:1'], gbp:['image','1:1'], website:['image','16:9']};
 function tpKind(t){ const c = C(t.client), [what, ratio] = TP_PLAN[t.kind] || ['image', '4:5']; return {what: t.kind === 'reel' && c?.id === 'eroe' ? 'video' : what, ratio}; }
 function promptPanel(t){
-  const k = 'tprompt:' + t.id, live = ui.tpLive[t.id], g = t.gen, items = live || g?.items || [], what = g?.what || tpKind(t).what, tool = keep('tp-tool-' + t.id, g?.tool || 'any');
+  const k = 'tprompt:' + t.id, live = ui.tpLive[t.id], g = t.gen, items = live || g?.items || [], what = g?.what || tpKind(t).what, tool = keep('tp-tool-' + t.id, g?.tool || lastTool());
   return `<div class="etform" data-tp="${esc(t.id)}"><div class="row" style="justify-content:space-between"><div class="lab" style="margin:0">${what === 'edit' ? 'Edit brief' : what === 'carousel' ? 'Slide prompts' : what === 'video' ? 'Video prompt' : 'Image prompt'} for this task</div>
       <div class="row" style="gap:8px">${what !== 'edit' && sample ? `<label class="vh" for="tp-tool-${esc(t.id)}">Tool</label><select id="tp-tool-${esc(t.id)}" data-keep="tp-tool-${esc(t.id)}" style="font-size:12px;padding:3px 6px">${Object.entries(P_TOOL).map(([v, l]) => `<option value="${esc(v)}"${v === tool ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>` : ''}
-        ${sample ? `<button class="lnk" data-act="tpAgain" ${ui.busy[k] ? 'disabled' : ''}>${g ? 'Write again' : 'Write'}</button>` : ''}<button class="lnk" data-act="tpClose">Close</button></div></div>
+        ${sample && g ? `<button class="lnk" data-act="tpAgain" ${ui.busy[k] ? 'disabled' : ''}>Write again</button>` : ''}<button class="lnk" data-act="tpClose">Close</button></div></div>
+    ${sample && !g && !live && !ui.busy[k] ? `<div class="row"><button class="b pri" data-act="tpAgain">${what === 'edit' ? 'Write edit brief' : 'Write prompt'}</button><span class="muted" style="font-size:12px">${what === 'edit' ? 'Built from the clips the client sends.' : 'Pick the tool first. The prompt is written for it.'}</span></div>` : ''}
     ${ui.out[k] ? `<p class="late" style="font-size:13px;margin:0">${esc(ui.out[k])}</p>` : ''}
     ${items.map((x, i) => `<div class="tpi"><div class="row" style="justify-content:space-between"><b style="font-weight:600;font-size:13.5px">${esc(x.title || 'Prompt')}</b>${x.saved ? '<span class="pill good">Saved</span>' : g && !live ? '<button class="lnk" data-act="tpSave" data-i="' + i + '">Save to library</button>' : ''}</div>
       <div class="out" id="tp-${esc(t.id)}-${i}">${esc(x.prompt)}</div>
       ${x.negative ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Avoid:</b> ${esc(x.negative)}</p>` : ''}${x.settings ? `<p class="muted" style="margin:0;font-size:13px"><b style="font-weight:500">Settings:</b> ${esc(x.settings)}</p>` : ''}
       <div class="row"><button class="lnk" data-act="copy" data-src="tp-${esc(t.id)}-${i}">Copy prompt</button></div></div>`).join('')}
-    ${ui.busy[k] ? progress(k) : !items.length && !ui.out[k] ? '<p class="empty" style="margin:0">No prompt yet.</p>' : ''}</div>`;
+    ${ui.busy[k] ? progress(k) : !items.length && !ui.out[k] && !sample ? '<p class="empty" style="margin:0">No prompt written yet.</p>' : ''}</div>`;
 }
 function writeTaskPrompt(t){
   const c = C(t.client); if (!c || !sample) return;
-  const k = 'tprompt:' + t.id, {what, ratio} = tpKind(t), tool = keep('tp-tool-' + t.id, t.gen?.tool || 'any'), n = what === 'carousel' ? 6 : 1;
+  const k = 'tprompt:' + t.id, {what, ratio} = tpKind(t), tool = keep('tp-tool-' + t.id, t.gen?.tool || lastTool()), n = what === 'carousel' ? 6 : 1;
   const x = t.campaign ? S.campaigns.find(q => q.id === t.campaign) : null, it = x?.items?.[t.itemIdx];
   const piece = it ? {campaign:x.name, hook:it.hook, copy:it.copy, visualIdea:it.visual, channel:CH[it.channel]} : null;
+  try { localStorage.setItem('rsd-tool', tool); } catch(e){}
   ui.tpOpen[t.id] = true; ui.tpLive[t.id] = [];
   run(k, async () => {
     const lite = {name:c.name, business:c.tag, city:c.city, language:c.brand?.language, brand:c.brand, pillars:c.plan?.pillars, focus:c.plan?.focus, recentLearnings:clientInsights(c.id).slice(0, 4).flatMap(i => i.learnings || []).slice(0, 6)};
@@ -2556,7 +2559,7 @@ document.addEventListener('click', async e => {
   if (a === 'cmd'){ openCmd(); return; }
   if (a === 'taskPrompt'){ const id = b.closest('[data-tid]').dataset.tid, t = S.tasks.find(q => q.id === id); if (!t) return;
     if (ui.tpOpen[id]){ ui.tpOpen[id] = false; render(); return; }
-    ui.tpOpen[id] = true; if (!t.gen && sample) writeTaskPrompt(t); else render(); return; }
+    ui.tpOpen[id] = true; render(); return; }
   if (a === 'tpAgain'){ const t = S.tasks.find(q => q.id === b.closest('[data-tp]').dataset.tp); if (t && !ui.busy['tprompt:' + t.id]) writeTaskPrompt(t); return; }
   if (a === 'tpClose'){ ui.tpOpen[b.closest('[data-tp]').dataset.tp] = false; render(); return; }
   if (a === 'tpSave'){ const t = S.tasks.find(q => q.id === b.closest('[data-tp]').dataset.tp), i = Number(b.dataset.i), x = t?.gen?.items?.[i]; if (!x) return;
