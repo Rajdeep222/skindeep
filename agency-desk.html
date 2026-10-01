@@ -292,6 +292,21 @@ button.alert:focus-visible{outline:2px solid var(--accent)}
 .todo .it{grid-template-columns:auto minmax(0,1fr) auto}
 .todo .tick{width:18px;height:18px;border:1.5px solid var(--line2,var(--muted));border-radius:5px;background:none;padding:0;cursor:pointer}
 .todo .tick:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.tlink{all:unset;cursor:pointer;font-weight:500;line-height:1.35}
+.tlink:hover,.tlink:focus-visible{color:var(--accent)}
+.tlink .chev{font-size:10px;color:var(--muted);margin-left:6px}
+.bdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:middle}
+.brief h4{margin:14px 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.brief h4:first-of-type{margin-top:4px}
+.brief p{margin:0;line-height:1.6;font-size:14px}
+.brief ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:14px;line-height:1.55}
+.bstep{all:unset;cursor:pointer;display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);width:100%;box-sizing:border-box;font-size:14px;line-height:1.5}
+.bstep:first-of-type{border-top:0}
+.bstep .bx{flex:none;width:17px;height:17px;border:1.5px solid var(--muted);border-radius:5px;margin-top:2px;display:grid;place-items:center;font-size:11px;color:#fff}
+.bstep.on .bx{background:var(--good);border-color:var(--good)}
+.bstep.on .bt{text-decoration:line-through;color:var(--muted)}
+.bstep .bm{margin-left:auto;flex:none;font-size:12px;color:var(--muted);white-space:nowrap}
+.bpost{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .cbtn.has{color:var(--accent)}
 .etform{grid-column:1/-1;margin-top:8px;padding:12px 14px;border-radius:10px;background:var(--sunk);display:flex;flex-direction:column;gap:10px}
 .etform .g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
@@ -638,7 +653,7 @@ let role = 'admin', myUid = null, myMember = null;
 const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[], backup:null};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false, campaigns:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
-  pending:[], askPend:{}, impLive:{}, expand:{}, tpOpen:{}, tpLive:{}, groupBy:'client', addOpen:false, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
+  pending:[], askPend:{}, impLive:{}, expand:{}, tpOpen:{}, tpLive:{}, briefOpen:{}, groupBy:'client', addOpen:false, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
 
 const C = id => S.allClients.find(c => c.id === id);
 const M = id => S.team.find(m => m.id === id);
@@ -826,7 +841,7 @@ function taskRow(t, opts = {}){
   const cm = t.comments || [], last = cm[cm.length - 1], open = ui.openTask === t.id;
   const lateBy = late ? -daysTo(t.due) : 0;
   return `<div class="it ${late ? 'is-late' : ''}" data-tid="${esc(t.id)}">
-    <div>${(() => { const [h, d] = splitTitle(t.title), ex = ui.expand[t.id]; return `<div class="t th">${esc(h)}</div>${d ? `<button class="tdesc ${ex ? 'open' : ''}" data-act="expandTask" aria-expanded="${!!ex}">${esc(d)}</button>` : ''}`; })()}
+    <div>${(() => { const [h, d] = splitTitle(t.title), ex = ui.expand[t.id]; return `<div class="t th"><button class="tlink" data-act="openBrief" aria-expanded="${!!ui.briefOpen[t.id]}" title="Open the brief: what, steps and how">${esc(h)}<span class="chev" aria-hidden="true">${ui.briefOpen[t.id] ? '▴' : '▾'}</span></button>${t.brief ? `<span class="bdot" title="Brief written"></span>` : ''}</div>${d ? `<button class="tdesc ${ex ? 'open' : ''}" data-act="expandTask" aria-expanded="${!!ex}">${esc(d)}</button>` : ''}`; })()}
       <div class="s">${opts.noClient ? '' : `<span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span>`}<span class="k">${esc(SHORT[t.kind] || t.kind)}</span>${t.todo ? '<span class="k ask">Your to-do</span>' : ''}${t.priority === 'high' && t.status !== 'done' ? '<span class="pill bad" style="font-size:11px">high</span>' : ''}
       ${t.due ? `<span class="${late ? 'late' : ''}">${late ? `${lateBy} day${lateBy === 1 ? '' : 's'} late` : esc(fmt(t.due))}</span>` : ''}
       ${opts.showWho && t.assignee ? `<span>${esc(M(t.assignee)?.name || '')}</span>` : ''}
@@ -838,6 +853,7 @@ function taskRow(t, opts = {}){
       ${opts.editor ? '' : `<label class="vh" for="as-${esc(t.id)}">Assign</label><select id="as-${esc(t.id)}" data-change="assign">${whoOptions(t.assignee)}</select>
       <button class="x" data-act="delTask" aria-label="Delete task">×</button>`}
     </div>
+    ${ui.briefOpen[t.id] ? briefPanel(t) : ''}
     ${ui.editTask === t.id && !opts.editor ? editForm(t) : ''}
     ${ui.tpOpen[t.id] ? promptPanel(t) : ''}
     ${open ? threadHtml(t, late) : ''}
@@ -2296,6 +2312,49 @@ function campsSection(c){
     ${ev ? `<div class="alert warn" style="margin:0 0 10px"><span>${esc(ev.name)} is in ${daysTo(ev.d)} days and has no campaign yet.</span><button class="lnk" style="color:inherit" data-act="newCampaignFor" data-cid="${esc(c.id)}" data-ev="${esc(ev.d)}">Build it →</button></div>` : ''}
     ${list.length ? `<div class="items">${list.map(x => { const st = campState(x); return `<div class="it click" data-act="openCampaign" data-id="${esc(x.id)}" tabindex="0" role="link"><div><div class="t" style="font-weight:500">${esc(x.name)}</div><div class="s"><span>${x.start ? esc(fmt(x.start)) + '–' + esc(fmt(x.end || x.start)) : 'No dates'}</span><span>${(x.items || []).length} pieces · ${campReady(x)}% produced</span></div></div><div class="c"><span class="pill ${st[0]}">${esc(st[1])}</span></div></div>`; }).join('')}</div>` : (ev ? '' : '<p class="empty">No campaigns yet.</p>')}</div>`;
 }
+/* ----- Task brief: what it is, steps, how to do it ----- */
+const BRIEF_KINDS = {reel:'a reel edited from client clips', carousel:'a carousel post', post:'a photo or graphic post', ai:'an AI-generated product visual', story:'an Instagram story', ad:'a Meta ad', gbp:'a Google Business Profile task', seo:'an SEO task', website:'a website task', strategy:'a strategy or planning task', other:'a general task'};
+function briefText(t){
+  const b = t.brief; if (!b) return '';
+  const L = (h, a) => (a && a.length) ? `\n${h}\n${a.map(x => '- ' + x).join('\n')}\n` : '';
+  return `${t.title}\n${C(t.client)?.name || ''}${t.due ? ' · due ' + fmt(t.due) : ''}\n\n${b.what}\n${b.outcome ? '\nDone looks like: ' + b.outcome + '\n' : ''}\nSteps\n${(b.steps || []).map((x, i) => `${i + 1}. ${x.t}${x.who ? ' (' + x.who + ')' : ''}${x.mins ? ' ~' + x.mins + ' min' : ''}`).join('\n')}\n${L('How to do it', b.how)}${L('You need', b.need)}${L('Check before you finish', b.check)}${L('Avoid', b.avoid)}${b.post ? `\nPosting\n${[b.post.when && 'When: ' + b.post.when, b.post.caption && 'Caption angle: ' + b.post.caption, b.post.after && 'After: ' + b.post.after].filter(Boolean).join('\n')}\n` : ''}`;
+}
+function briefPanel(t){
+  const k = 'brief:' + t.id, b = t.brief, c = C(t.client), steps = b?.steps || [], done = steps.filter(x => x.done).length;
+  const ul = a => (a && a.length) ? `<ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
+  const sec = (h, a) => (a && a.length) ? `<h4>${h}</h4>${ul(a)}` : '';
+  const body = b ? `<div class="brief" id="bf-${esc(t.id)}">
+      <h4>What this is and why it matters</h4><p>${esc(b.what)}</p>
+      ${b.outcome ? `<h4>Done looks like</h4><p>${esc(b.outcome)}</p>` : ''}
+      <h4>Steps${steps.length ? ` · ${done} of ${steps.length} done${b.mins ? ' · about ' + esc(b.mins) + ' min' : ''}` : ''}</h4>
+      <div>${steps.map((x, i) => `<button class="bstep ${x.done ? 'on' : ''}" data-act="briefStep" data-n="${i}" role="checkbox" aria-checked="${!!x.done}"><span class="bx">${x.done ? '✓' : ''}</span><span class="bt">${esc(x.t)}</span><span class="bm">${esc([x.who, x.mins ? x.mins + ' min' : ''].filter(Boolean).join(' · '))}</span></button>`).join('')}</div>
+      ${sec('How to do it', b.how)}${sec('What you need', b.need)}${sec('Check before you finish', b.check)}${sec('Avoid', b.avoid)}
+      ${b.post && (b.post.when || b.post.caption || b.post.after) ? `<h4>Posting</h4><div class="bpost">${b.post.when ? `<div><span class="muted">When ·</span> ${esc(b.post.when)}</div>` : ''}${b.post.caption ? `<div><span class="muted">Caption angle ·</span> ${esc(b.post.caption)}</div>` : ''}${b.post.after ? `<div><span class="muted">After posting ·</span> ${esc(b.post.after)}</div>` : ''}</div>` : ''}
+      <div class="row" style="margin-top:14px"><button class="lnk" data-act="briefCopy">Copy brief</button>${t.status !== 'done' && steps.length && done === steps.length ? '<button class="b pri" data-act="briefDone">All steps done: mark task done</button>' : ''}</div></div>` : '';
+  return `<div class="etform" data-bf="${esc(t.id)}"><div class="row" style="justify-content:space-between"><div class="lab" style="margin:0">Brief${c ? ' · ' + esc(c.name) : ''}</div>
+      <div class="row" style="gap:10px">${sample && b ? `<button class="lnk" data-act="briefAgain" ${ui.busy[k] ? 'disabled' : ''}>Write again</button>` : ''}<button class="lnk" data-act="briefClose">Close</button></div></div>
+    ${ui.out[k] ? `<p class="late" style="font-size:13px;margin:0">${esc(ui.out[k])}</p>` : ''}
+    ${ui.busy[k] ? `<div class="genprog"><span class="spin" aria-hidden="true"></span><span>Writing the brief… <span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span></div>` : ''}
+    ${body}
+    ${!b && !ui.busy[k] ? (sample ? `<div class="row"><button class="b pri" data-act="briefAgain">Write the brief</button><span class="muted" style="font-size:12px">What it is, step-by-step, how to do it, what you need and what to check.</span></div>` : '<p class="empty" style="margin:0">No brief written yet. Open the desk in Claude to write one.</p>') : ''}</div>`;
+}
+function writeBrief(t){
+  const c = C(t.client); if (!c || !sample) return;
+  const k = 'brief:' + t.id, x = t.campaign ? S.campaigns.find(q => q.id === t.campaign) : null, it = x?.items?.[t.itemIdx];
+  const todo = t.todo ? todoOf(t.client, t.todo) : null;
+  const info = {task:t.title, type:BRIEF_KINDS[t.kind] || t.kind, due:t.due || '', today, assignedTo:M(t.assignee)?.name || 'unassigned', status:STATUS[t.status], priority:t.priority || '',
+    yourNote:todo?.text || '', comments:(t.comments || []).slice(-3).map(m => m.text),
+    campaignPiece:it ? {campaign:x.name, phase:it.phase, format:CH[it.channel], hook:it.hook, copy:it.copy, visual:it.visual, askClientFor:it.need} : null};
+  run(k, async () => {
+    const r = await sample.json(`${preamble}\n\nYou are the head of delivery at Reach Theory. Write a practical work brief a team member can follow without asking anything, for this task for ${c.name}. Never write one line: be concrete and complete. Plain English, short sentences. Any caption, hook or on-screen text you suggest is in the client's language (${c.brand?.language || c.lang || 'English'}). Never suggest filming or shooting: we edit clips the client sends, and for Eroe we generate AI images. ${t.kind === 'reel' ? 'For a reel, include exact edit specs: length, first 3 seconds, text on screen, subtitles, music mood, cover frame, export 9:16 1080x1920. ' : ''}${t.kind === 'carousel' ? 'For a carousel, say what each slide holds and the slide order. ' : ''}${t.kind === 'ai' || t.kind === 'post' ? 'Include a step that says to press Make prompt on this task, pick the AI tool and generate the image from that prompt. ' : ''}${t.kind === 'reel' ? 'Include a step that says to press Make prompt on this task to get the edit brief. ' : ''}Respect the festival calendar rules (no hard selling during Shradh before 11 Oct).\n\nTask: ${JSON.stringify(info)}\nClient: ${JSON.stringify(clientContext(c, {insights:4}))}\n\nReply with only JSON: {"what": "3 to 4 sentences: what the task is, why it matters for this client right now, and who it is for", "outcome": "what the finished result looks like, one or two sentences", "steps": [6 to 10 objects {"t": "one clear action with specifics", "who": "Owner" | "Editor" | "Panda" | "Client", "mins": number}], "how": [5 to 8 specifics about how to do it: format, size, length, wording, tools, settings, examples], "need": [what we need and from whom, with the message to ask the client in one line where relevant], "check": [4 to 6 quality checks before sending or posting], "avoid": [2 to 4 common mistakes for this task], "post": {"when": "best day and time to post or send, from the client's audience and activity, or empty if not content", "caption": "caption or message angle in one or two lines, or empty", "after": "what to do after it goes live: replies, DMs, saving the numbers, or empty"}, "mins": total minutes as a number}`, {cache:false});
+    if (!r || !r.what || !Array.isArray(r.steps) || !r.steps.length) throw {code:'invalid_json'};
+    const arr = a => (Array.isArray(a) ? a : []).map(String).filter(Boolean).slice(0, 10);
+    const brief = {what:String(r.what), outcome:String(r.outcome || ''), steps:r.steps.slice(0, 12).map(o => typeof o === 'string' ? {t:o, done:false} : {t:String(o.t || ''), who:String(o.who || ''), mins:Number(o.mins) || 0, done:false}).filter(o => o.t),
+      how:arr(r.how), need:arr(r.need), check:arr(r.check), avoid:arr(r.avoid), post:r.post && typeof r.post === 'object' ? {when:String(r.post.when || ''), caption:String(r.post.caption || ''), after:String(r.post.after || '')} : null, mins:Number(r.mins) || 0, at:Date.now()};
+    await write(() => tasksCol().doc(t.id).update({brief}));
+  });
+}
+
 /* ----- Prompt beside a task ----- */
 const lastTool = () => { try { const v = localStorage.getItem('rsd-tool'); return P_TOOL[v] ? v : 'any'; } catch(e){ return 'any'; } };
 const TP_PLAN = {reel:['edit','9:16'], carousel:['carousel','4:5'], post:['image','4:5'], ai:['image','4:5'], story:['image','9:16'], ad:['image','1:1'], gbp:['image','1:1'], website:['image','16:9']};
@@ -2557,6 +2616,15 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, c = C(ui.cid), tid = b.closest('[data-tid]')?.dataset.tid;
   if (a === 'cmd'){ openCmd(); return; }
+  if (a === 'openBrief'){ const id = b.closest('[data-tid]').dataset.tid, t = S.tasks.find(q => q.id === id); if (!t) return;
+    ui.briefOpen[id] = !ui.briefOpen[id];
+    if (ui.briefOpen[id] && !t.brief && sample && !ui.busy['brief:' + id]) writeBrief(t); else render(); return; }
+  if (a === 'briefAgain'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf); if (t && !ui.busy['brief:' + t.id]) writeBrief(t); return; }
+  if (a === 'briefClose'){ ui.briefOpen[b.closest('[data-bf]').dataset.bf] = false; render(); return; }
+  if (a === 'briefStep'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf); if (!t?.brief) return; const n = Number(b.dataset.n);
+    await write(() => tasksCol().doc(t.id).update({brief:{...t.brief, steps:t.brief.steps.map((x, i) => i === n ? {...x, done:!x.done} : x)}})); return; }
+  if (a === 'briefCopy'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf); if (!t) return; try { await navigator.clipboard.writeText(briefText(t)); toast('Brief copied'); } catch(_){ const el = document.getElementById('bf-' + t.id); if (el){ const r = document.createRange(); r.selectNodeContents(el); const g = getSelection(); g.removeAllRanges(); g.addRange(r); toast('Selected. Press Ctrl/Cmd + C to copy.'); } } return; }
+  if (a === 'briefDone'){ const id = b.closest('[data-bf]').dataset.bf; await write(() => tasksCol().doc(id).update({status:'done', doneMonth:monthKey, doneAt:Date.now(), statusAt:{done:Date.now()}}), 'Task marked done'); return; }
   if (a === 'taskPrompt'){ const id = b.closest('[data-tid]').dataset.tid, t = S.tasks.find(q => q.id === id); if (!t) return;
     if (ui.tpOpen[id]){ ui.tpOpen[id] = false; render(); return; }
     ui.tpOpen[id] = true; render(); return; }
