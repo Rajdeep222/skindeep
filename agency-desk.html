@@ -125,6 +125,8 @@ ul.ls li{padding-left:2px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-family:var(--m);font-size:12px;padding:2px 8px;border-radius:4px;background:var(--sunk)}
 .chip b{font-weight:500}
+button.chip{border:1px solid var(--line);cursor:pointer;font-family:inherit;font-size:12.5px;padding:4px 10px;border-radius:99px;color:var(--ink)}
+button.chip:hover{border-color:var(--accent);color:var(--accent)}
 .ins{padding:16px 0;border-bottom:1px solid var(--line);display:grid;gap:10px}
 .ins:last-child{border-bottom:0}
 .ins h3{font-size:15px}
@@ -574,11 +576,13 @@ const AGENCY_RULES = [
   'The agency is Reach Theory, a small marketing studio in Khanna, Punjab: the owner, a partner (Panda) and one editor.',
   'We NEVER shoot, film or record anything ourselves. Reels are EDITED from clips the client sends; photos come from the client. For Eroe Clothing we generate AI product images. Never write a task that says film, shoot, record or visit to capture: write “Edit … from the client’s clips” or “Ask the client to send clips of …” instead.',
   'Instagram in 2026: sends per reach (DM shares) is the strongest signal for reaching non-followers; carousels have the highest engagement of any format; original content gets more distribution than reposts; reels need a hook in the first 3 seconds and work best at 30–90 seconds.',
+  'Shradh (Pitru Paksha) runs 26 Sep to 10 Oct 2026. Many Hindu families avoid buying new gold, clothes or vehicles then, so before 11 Oct post only trust, education, behind-the-scenes and teasers, with no hard selling or offers. Navratri is 11 to 19 Oct, Dussehra 20 Oct, Karwa Chauth 29 Oct, Dhanteras 6 Nov, Diwali 8 Nov. Never write that a festival has started before its date.',
   'Local Khanna clients win through Google Business Profile, reviews and Click-to-WhatsApp ads, not only Instagram.',
   'Be specific and practical. No generic advice. Everything must be doable by a 3-person team with the materials the client can send.'
 ];
 const EVENTS = [
-  {d:'2026-10-11', name:'Navratri begins (to 20 Oct)', who:['rkjewellers','djyps','omsons','reachstory'], prep:'Festive looks and dandiya-night posts. DJ YPS: push Navratri and Dussehra night bookings now.'},
+  {d:'2026-10-10', name:'Shradh ends (Sarva Pitru Amavasya)', who:['rkjewellers','omsons','masterwheels','djyps'], prep:'Shradh runs 26 Sep to 10 Oct: many families wait to buy new gold, clothes or vehicles until Navratri. Until tonight post trust and teaser content only; start festive selling on the morning of 11 Oct.'},
+  {d:'2026-10-11', name:'Navratri begins (to 20 Oct)', who:['rkjewellers','djyps','omsons','reachstory'], prep:'Festive selling starts today, after Shradh. Festive looks and dandiya-night posts. RK: lightweight gold and coins. DJ YPS: push Navratri and Dussehra night bookings now.'},
   {d:'2026-10-20', name:'Dussehra', who:['masterwheels','rkjewellers','omsons','djyps','reachstory'], prep:'Greeting post plus a “new beginnings” offer. Many families buy vehicles on Dussehra: Master Wheels accessory and alloy packages.'},
   {d:'2026-10-29', name:'Karwa Chauth', who:['rkjewellers','omsons'], prep:'RK: gift-for-wife sets, ads from 15 Oct. Om Sons: couple festive outfits.'},
   {d:'2026-10-31', name:'Halloween (US)', who:['eroe'], prep:'Eroe: blanks for Halloween and fall merch drops. Posts in early October.'},
@@ -1941,7 +1945,7 @@ function campBuilder(){
 function campPrompt(x, c){
   const lite = {name:c.name, business:c.tag, city:c.city, language:c.brand?.language, brand:c.brand, plan:c.plan, research:c.research && {summary:c.research.summary, opportunities:c.research.opportunities},
     recentLearnings:clientInsights(c.id).slice(0, 8).flatMap(i => i.learnings || []).slice(0, 10), competitors:(c.competitors || []).map(k => k.name), openClientAsks:(c.asks || []).filter(a => a.status !== 'done').map(a => a.text)};
-  return `${preamble}\n\nYou are the campaign lead at Reach Theory. Build a complete, professional campaign for ${c.name}.\nCampaign: ${JSON.stringify({name:x.name, occasion:x.occasion, offer:x.offer, goal:GOALS[x.goal], target:x.target, budget:x.budget, start:x.start, end:x.end, channels:(x.channels || []).map(k => CH[k]), notes:x.notes, today})}\nClient: ${JSON.stringify(lite)}\n\nRules: every date between start and end (or pick sensible dates if missing, starting no earlier than today). Phases usually: Tease, Launch, Push, Last call, Thank you. Copy in the client’s language (Roman Punjabi for Khanna clients unless the brand kit says otherwise; English for Eroe). Ad copy under 125 characters of primary text. WhatsApp messages warm and personal, one clear ask. For each piece include an image/visual prompt or an edit brief for client clips — never ask us to shoot. Put the client’s phone/WhatsApp as [WhatsApp number] placeholders.\n\nFirst line: {"type":"brief","name": string,"bigIdea": one line,"audience": string,"offerAngle": string,"kpi": what we measure,"hashtags": string,"phases":[{"name","start":"YYYY-MM-DD","end":"YYYY-MM-DD","goal"}],"budget":[{"phase","amount","objective","targeting"}]}\nThen one line per piece (8–18 pieces): {"type":"item","date":"YYYY-MM-DD","phase": phase name,"channel": one of ${Object.keys(CH).join('|')},"title": short name,"hook": first line / first 3 seconds,"copy": the full ready-to-post copy (caption, ad text, WhatsApp message, banner text),"visual": image prompt or edit brief,"need": what to ask the client for or "","assignee": a team name or ""}`;
+  return `${preamble}\n\nYou are the campaign lead at Reach Theory. Build a complete, professional campaign for ${c.name}.\nCampaign: ${JSON.stringify({name:x.name, occasion:x.occasion, offer:x.offer, goal:GOALS[x.goal], target:x.target, budget:x.budget, start:x.start, end:x.end, channels:(x.channels || []).map(k => CH[k]), notes:x.notes, today})}\nClient: ${JSON.stringify(lite)}\n\nRules: every date between start and end (or pick sensible dates if missing, starting no earlier than today). Phases usually: Warm-up or Tease, Launch, Push, Last call, Thank you. Dates must follow the festival calendar in the rules (Shradh until 10 Oct: no selling before 11 Oct for Hindu-festival purchases). Copy in the client’s language (Roman Punjabi for Khanna clients unless the brand kit says otherwise; English for Eroe). Ad copy under 125 characters of primary text. WhatsApp messages warm and personal, one clear ask. For each piece include an image/visual prompt or an edit brief for client clips — never ask us to shoot. Put the client’s phone/WhatsApp as [WhatsApp number] placeholders.\n\nFirst line: {"type":"brief","name": string,"bigIdea": one line,"audience": string,"offerAngle": string,"kpi": what we measure,"hashtags": string,"phases":[{"name","start":"YYYY-MM-DD","end":"YYYY-MM-DD","goal"}],"budget":[{"phase","amount","objective","targeting"}]}\nThen one line per piece (8–18 pieces): {"type":"item","date":"YYYY-MM-DD","phase": phase name,"channel": one of ${Object.keys(CH).join('|')},"title": short name,"hook": first line / first 3 seconds,"copy": the full ready-to-post copy (caption, ad text, WhatsApp message, banner text),"visual": image prompt or edit brief,"need": what to ask the client for or "","assignee": a team name or ""}`;
 }
 async function buildCampaign(x){
   const c = C(x.client), key = 'camp:' + x.id;
@@ -1994,6 +1998,7 @@ function viewCampaign(x){
     <div class="row" style="margin-top:14px">
       ${items.length && !live ? (ts.length ? `<span class="muted" style="font-size:13px">${ts.length} tasks created</span>${ts.length < items.length ? `<button class="b" data-act="campTasks">Create ${items.length - ts.length} missing tasks</button>` : ''}` : `<button class="b pri" data-act="campTasks">Create ${items.length} tasks on the calendar</button>`) : ''}
       ${sample && !live ? `<button class="b" data-act="campBuild">${items.length ? 'Rebuild with Claude' : 'Build with Claude'}</button>` : ''}
+      ${sample && !live ? `<button class="b" data-act="ccJump">Ask or change</button>` : ''}
       <button class="b" data-act="campWA">Copy WhatsApp broadcast</button>
       ${x.status === 'done' ? `<button class="b" data-act="campStatus" data-s="">Reopen</button>` : `<button class="b" data-act="campStatus" data-s="done">Mark done</button>`}
       <button class="x" data-act="campDelete" aria-label="Delete campaign" title="Delete campaign">×</button>
@@ -2015,6 +2020,7 @@ function viewCampaign(x){
           ${it.need ? `<p class="muted" style="margin:0;font-size:13px">Ask client for: ${esc(it.need)}</p>` : ''}
           ${t ? `<div class="items">${taskRow(t, {noClient:true, showWho:true})}</div>` : live ? '' : `<button class="b" data-act="campOneTask" data-i="${it.i}">Make this a task</button>`}
         </div>` : ''}</div>`; }).join('')}</div>`).join('') : `<p class="empty">${live ? LOADING : 'No pieces yet. Build with Claude, or add tasks yourself.'}</p>`}</div>
+  ${live ? '' : campChatBlock(x)}
   <div class="sec"><div class="lab">Results</div>
     <form class="anform" data-form="campRes" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${RES.map(([k,l]) => `<label><span>${esc(l)}</span><input type="text" inputmode="decimal" id="cr-${k}" value="${esc(x.results?.[k] ?? '')}"></label>`).join('')}
       <label style="grid-column:1/-1"><span>Notes</span><input type="text" id="cr-notes" value="${esc(x.results?.notes || '')}" placeholder="e.g. most leads came from the bridal carousel ad"></label>
@@ -2034,6 +2040,120 @@ async function campToTasks(x, only){
   }
   toast(idx.length === 1 ? 'Task created' : `${idx.length} tasks created`);
 }
+/* ----- Campaign chat: ask questions, change the plan ----- */
+const CC_OPS = {edit:'Change piece', add:'New piece', drop:'Drop piece', phase:'Change phase', campaign:'Campaign dates'};
+const CC_TAG = {edit:'change', add:'add', drop:'drop', phase:'plan', campaign:'plan'};
+const CC_FIELDS = ['date','phase','channel','title','hook','copy','visual','need','assignee'];
+const validDate = d => /^\d{4}-\d\d-\d\d$/.test(String(d || ''));
+function ccClean(x, o){
+  if (!o || !CC_OPS[o.op]) return null;
+  const n = (x.items || []).length, s = {op:o.op, why:String(o.why || '').slice(0, 200)};
+  if (o.op === 'edit' || o.op === 'drop'){ s.i = Number(o.i); if (!Number.isInteger(s.i) || s.i < 0 || s.i >= n) return null; }
+  if (o.op === 'edit' || o.op === 'add'){
+    for (const k of ['phase','title','hook','copy','visual','need','assignee']) if (o[k]) s[k] = String(o[k]);
+    if (validDate(o.date)) s.date = o.date;
+    if (CH[o.channel]) s.channel = o.channel;
+    if (o.op === 'edit' && !CC_FIELDS.some(k => s[k] !== undefined)) return null;
+    if (o.op === 'add' && !s.title) return null;
+  }
+  if (o.op === 'phase'){ s.name = String(o.name || '').slice(0, 40); if (!s.name) return null; if (validDate(o.start)) s.start = o.start; if (validDate(o.end)) s.end = o.end; if (o.goal) s.goal = String(o.goal); }
+  if (o.op === 'campaign'){ if (validDate(o.start)) s.start = o.start; if (validDate(o.end)) s.end = o.end; if (o.name) s.name = String(o.name); if (!s.start && !s.end && !s.name) return null; }
+  return s;
+}
+function ccLine(x, s){
+  const it = s.i !== undefined ? (x.items || [])[s.i] : null, line = (a, b) => `<div><span class="muted" style="font-size:12.5px">${esc(a)} </span>${esc(b)}</div>`;
+  if (s.op === 'drop') return `<div>${esc(it ? it.title : 'Piece')}${it?.date ? ` <span class="mono muted" style="font-size:12px">· ${esc(fmt(it.date))}</span>` : ''}</div>`;
+  if (s.op === 'add') return `<div>${esc(s.title)}${s.date ? ` <span class="mono muted" style="font-size:12px">· ${esc(fmt(s.date))}</span>` : ''}${s.channel ? ` <span class="k">${esc(CH[s.channel])}</span>` : ''}</div>${s.copy ? `<div class="muted clamp" style="font-size:12.5px">${esc(s.copy)}</div>` : ''}`;
+  if (s.op === 'phase') return `<div>${esc(s.name)}${s.start || s.end ? ` <span class="mono muted" style="font-size:12px">· ${esc(s.start ? fmt(s.start) : '…')} – ${esc(s.end ? fmt(s.end) : '…')}</span>` : ''}</div>`;
+  if (s.op === 'campaign') return `<div>${s.name ? esc(s.name) + ' ' : ''}<span class="mono muted" style="font-size:12px">${esc(s.start ? fmt(s.start) : fmt(x.start))} – ${esc(s.end ? fmt(s.end) : fmt(x.end))}</span></div>`;
+  const ch = [];
+  if (s.date) ch.push(line('Date', `${it?.date ? fmt(it.date) + ' → ' : ''}${fmt(s.date)}`));
+  if (s.channel) ch.push(line('Format', CH[s.channel]));
+  if (s.phase) ch.push(line('Phase', s.phase));
+  for (const [k, l] of [['title','Title'],['hook','Hook'],['copy','Copy'],['visual','Visual'],['need','Ask client'],['assignee','Assign']]) if (s[k]) ch.push(line(l, s[k].length > 140 ? s[k].slice(0, 140) + '…' : s[k]));
+  return `<div class="muted" style="font-size:12.5px;text-decoration:line-through">${esc(it ? it.title : '')}</div>${ch.join('')}`;
+}
+function ccChanges(x, t, ti){
+  const list = t.changes || []; if (!list.length) return '';
+  const pending = list.filter(s => !s.state).length;
+  return `<div class="impact" data-turn="${ti}" style="margin-top:10px"><div class="row" style="justify-content:space-between"><b style="font-weight:600;font-size:13px">Proposed changes</b>${pending > 1 ? `<button class="lnk" data-act="ccApplyAll">Apply all ${pending}</button>` : ''}</div>
+    ${list.map((s, n) => `<div class="imp ${s.state ? 'settled' : ''}" data-cc="${n}"><span class="imptag ${CC_TAG[s.op]}">${esc(CC_OPS[s.op])}</span>
+      <div class="grow" style="min-width:0">${ccLine(x, s)}${s.why ? `<div class="muted" style="font-size:12.5px">${esc(s.why)}</div>` : ''}</div>
+      <div class="row" style="gap:6px;flex:none">${s.state ? `<span class="pill ${s.state === 'applied' ? 'good' : 'neutral'}">${s.state === 'applied' ? 'Applied' : 'Skipped'}</span>` : `<button class="b" data-act="ccApply">Apply</button><button class="lnk" data-act="ccSkip">Skip</button>`}</div></div>`).join('')}</div>`;
+}
+function campChatBlock(x){
+  if (!sample) return '';
+  const turns = ui.campChat?.[x.id] || [], k = 'cchat:' + x.id;
+  const chips = ['When should I start posting?', 'Is the timing right for Shradh?', 'Make the copy shorter', 'What should the ad budget be?'];
+  return `<div class="sec" id="campchat"><div class="lab">Ask or change this campaign<span class="acts">${turns.length ? '<button class="lnk" data-act="ccClear">New chat</button>' : ''}</span></div>
+    ${turns.length ? `<div class="chat">${turns.map((t, ti) => t.role === 'user' ? `<div class="msg u">${esc(t.content)}</div>` : `<div class="msg a">${md(t.content)}${ccChanges(x, t, ti)}</div>`).join('')}</div>` :
+      `<p class="empty" style="margin-bottom:10px">Ask about timing, copy or budget, or tell Claude what to change. It proposes the edits and you press Apply. Tasks already made stay in step.</p><div class="chips" style="margin-bottom:10px">${chips.map(q => `<button class="chip" type="button" data-act="ccChip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`}
+    ${ui.busy[k] ? `<p class="empty"><span class="spin"></span> Thinking… <span class="mono" data-el="${esc(k)}"></span></p>` : ''}
+    <form class="row" data-form="campChat"><label class="vh" for="cchat-${esc(x.id)}">Message</label>
+      <input class="grow" type="text" id="cchat-${esc(x.id)}" data-keep="cchat-${esc(x.id)}" value="${esc(keep('cchat-' + x.id))}" placeholder="e.g. Move the launch to 11 Oct and drop the Google post">
+      <button class="b pri" type="submit" ${ui.busy[k] ? 'disabled' : ''}>Send</button></form></div>`;
+}
+async function campChat(x, text){
+  const k = 'cchat:' + x.id, c = C(x.client);
+  ui.campChat = ui.campChat || {};
+  const turns = ui.campChat[x.id] = ui.campChat[x.id] || [];
+  turns.push({role:'user', content:text}); ui.keep['cchat-' + x.id] = '';
+  ui.busy[k] = true; ui.t0[k] = Date.now(); render();
+  const hist = turns.slice(-9, -1).map(t => `${t.role === 'user' ? 'Owner' : 'You'}: ${t.content}`).join('\n');
+  const ts = campTasks(x);
+  const view = {name:x.name, occasion:x.occasion, offer:x.offer, goal:GOALS[x.goal], target:x.target, budget:x.budget, start:x.start, end:x.end, notes:x.notes, brief:x.brief, results:x.results,
+    pieces:(x.items || []).map((it, i) => ({i, ...it, task:(() => { const t = ts.find(q => q.itemIdx === i); return t ? STATUS[t.status] : ''; })()}))};
+  try {
+    const r = await sample.json(`${preamble}\n\nYou are the campaign lead at Reach Theory, talking with the owner about this campaign for ${c.name}. Today is ${today}. Answer plainly and specifically (a short paragraph or a few bullets). If the owner wants something changed, or you spot a clear problem (a date that clashes with the calendar, a festival described as started before it begins, a weak piece), propose the changes. Never propose filming or shooting. Copy stays in the client's language. Only propose changes the owner asked for or that fix a real problem.\n\nCalendar: ${JSON.stringify(EVENTS.filter(e => daysTo(e.d) >= -2 && daysTo(e.d) <= 60).map(e => ({date:e.d, name:e.name, prep:e.prep})))}\nClient: ${JSON.stringify({name:c.name, business:c.tag, language:c.brand?.language, brand:c.brand, plan:c.plan})}\nCampaign: ${JSON.stringify(view)}\n${hist ? 'Conversation so far:\\n' + hist + '\\n' : ''}\nOwner now says: ${text}\n\nReply with only JSON: {"reply": "your answer", "changes": [0 to 12 items]} where each change is one of:\n{"op":"edit","i": piece number,"date":"YYYY-MM-DD","phase","channel": one of ${Object.keys(CH).join('|')},"title","hook","copy","visual","need","assignee" (only the fields that change),"why": short reason}\n{"op":"add","date","phase","channel","title","hook","copy","visual","need","why"}\n{"op":"drop","i": piece number,"why"}\n{"op":"phase","name": existing or new phase,"start","end","goal","why"}\n{"op":"campaign","start","end","name","why"}\nWhen the timing moves, edit every piece affected and the phases to match.`, {cache:false});
+    if (!r || !r.reply) throw {code:'invalid_json'};
+    turns.push({role:'assistant', content:String(r.reply), changes:(Array.isArray(r.changes) ? r.changes : []).map(o => ccClean(x, o)).filter(Boolean).slice(0, 24)});
+  } catch(e){ turns.push({role:'assistant', content:errCopy(e)}); }
+  ui.busy[k] = false; render();
+}
+async function applyCc(x, chs){
+  const items = (x.items || []).map(i => ({...i})), brief = JSON.parse(JSON.stringify(x.brief || {})), patch = {}, drops = new Set(), touched = new Set();
+  const ph = brief.phases = brief.phases || [];
+  for (const s of chs){
+    if (s.op === 'edit' && items[s.i]){ for (const k of CC_FIELDS) if (s[k] !== undefined) items[s.i][k] = s[k]; touched.add(s.i); }
+    else if (s.op === 'drop' && items[s.i]) drops.add(s.i);
+    else if (s.op === 'add') items.push({date:s.date || '', phase:s.phase || '', channel:s.channel || 'ig_post', title:s.title, hook:s.hook || '', copy:s.copy || '', visual:s.visual || '', need:s.need || '', assignee:s.assignee || ''});
+    else if (s.op === 'phase'){ const p = ph.find(q => q.name === s.name); if (p){ if (s.start) p.start = s.start; if (s.end) p.end = s.end; if (s.goal) p.goal = s.goal; } else ph.push({name:s.name, start:s.start || '', end:s.end || '', goal:s.goal || ''}); }
+    else if (s.op === 'campaign'){ if (s.start) patch.start = s.start; if (s.end) patch.end = s.end; if (s.name) patch.name = s.name; }
+  }
+  ph.sort((a, b) => (a.start || '9').localeCompare(b.start || '9'));
+  if (chs.some(s => s.op === 'phase')){ const ds = ph.flatMap(p => [p.start, p.end]).filter(Boolean).sort(); if (ds.length){ if (!patch.start) patch.start = ds[0]; if (!patch.end) patch.end = ds.at(-1); } }
+  const map = {}; let n = 0; items.forEach((_, i) => { if (!drops.has(i)) map[i] = n++; });
+  const out = items.filter((_, i) => !drops.has(i));
+  if (!(await write(() => db.collection('campaigns').doc(x.id).update({...patch, items:out, brief})))) return false;
+  for (const t of campTasks(x)){
+    if (drops.has(t.itemIdx)){ await write(() => tasksCol().doc(t.id).delete()); continue; }
+    const ni = map[t.itemIdx], it = out[ni]; if (!it) continue; const u = {};
+    if (ni !== t.itemIdx) u.itemIdx = ni;
+    if (touched.has(t.itemIdx)){ u.title = `${patch.name || x.name}: ${it.title}`; u.due = it.date || ''; if (CH_KIND[it.channel]) u.kind = CH_KIND[it.channel]; }
+    if (Object.keys(u).length) await write(() => tasksCol().doc(t.id).update(u));
+  }
+  // later proposals refer to piece numbers: keep them pointing at the same pieces
+  for (const t of ui.campChat?.[x.id] || []) for (const s of t.changes || []){
+    if (s.state || s.i === undefined) continue;
+    if (drops.has(s.i)) s.state = 'skipped'; else s.i = map[s.i] ?? s.i;
+  }
+  return true;
+}
+async function ccAct(a, b){
+  const x = S.campaigns.find(q => q.id === ui.campId); if (!x) return;
+  const turns = (ui.campChat = ui.campChat || {})[x.id] = ui.campChat[x.id] || [];
+  if (a === 'ccClear'){ ui.campChat[x.id] = []; render(); return; }
+  if (a === 'ccChip'){ if (!ui.busy['cchat:' + x.id]) campChat(x, b.dataset.q); return; }
+  if (a === 'ccJump'){ const el = document.getElementById('campchat'); if (el){ el.scrollIntoView({behavior:'smooth', block:'start'}); setTimeout(() => document.getElementById('cchat-' + x.id)?.focus({preventScroll:true}), 350); } return; }
+  const turn = turns[Number(b.closest('[data-turn]')?.dataset.turn)]; if (!turn) return;
+  if (a === 'ccSkip'){ const s = turn.changes[Number(b.closest('[data-cc]').dataset.cc)]; if (s) s.state = 'skipped'; render(); return; }
+  const list = a === 'ccApply' ? [turn.changes[Number(b.closest('[data-cc]').dataset.cc)]] : turn.changes.filter(s => !s.state);
+  const todo = list.filter(s => s && !s.state); if (!todo.length) return;
+  b.disabled = true;
+  if (await applyCc(x, todo)){ todo.forEach(s => s.state = 'applied'); toast(todo.length > 1 ? `${todo.length} changes applied` : 'Change applied'); }
+  render();
+}
+
 function campDebrief(x){
   const c = C(x.client);
   run('deb:' + x.id, async () => {
@@ -2381,6 +2501,7 @@ document.addEventListener('click', async e => {
   else if (a === 'restoreGo') doRestore();
   else if (a === 'restoreCancel'){ ui.restore = null; render(); }
   else if (a === 'newCampaign') openBuilder(ui.view === 'client' ? ui.cid : undefined);
+  else if (a.startsWith('cc') && a !== 'ccopy') await ccAct(a, b);
   else if (a === 'newCampaignFor') openBuilder(b.dataset.cid, b.dataset.ev);
   else if (a === 'cancelCampaign'){ ui.campNew = false; ui.campDraft = null; render(); }
   else if (a === 'blankCampaign' || a === 'campBuild' || a === 'campTasks' || a === 'campOneTask' || a === 'campWA' || a === 'campStatus' || a === 'campDelete' || a === 'campDebrief'){
@@ -2494,6 +2615,7 @@ document.addEventListener('submit', async e => {
   e.preventDefault();
   const k = f.dataset.form, c = C(ui.cid), v = id => (document.getElementById(id)?.value ?? '').trim();
   if (k === 'todoHome'){ const tc = C(v('tdh-c')), t = v('tdh-t'); if (tc && t && await todoAdd(tc, t)){ ui.keep['tdh-t'] = ''; ui.keep['tdh-c'] = tc.id; render(); } return; }
+  if (k === 'campChat'){ const x = S.campaigns.find(q => q.id === ui.campId), t = v('cchat-' + ui.campId); if (x && t && sample && !ui.busy['cchat:' + x.id]) campChat(x, t); return; }
   if (k === 'newClient'){
     const name = v('nc-name'); if (!name) return;
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'client';
