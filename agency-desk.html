@@ -287,6 +287,11 @@ button.alert:focus-visible{outline:2px solid var(--accent)}
 .tld{position:absolute;left:-25px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
 .tli.now .tld{border-color:var(--accent);background:var(--accent)}
 .proposal{background:color-mix(in srgb,var(--accent) 6%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.todo .it{grid-template-columns:auto minmax(0,1fr) auto}
+.todo .tick{width:18px;height:18px;border:1.5px solid var(--line2,var(--muted));border-radius:5px;background:none;padding:0;cursor:pointer}
+.todo .tick:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.todo .sched{color:var(--accent)}
+.todo input[type=date]{padding:3px 6px;font-size:12px}
 .k.ask{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent)}
 .it.dim .t{color:var(--muted)}
 .hf{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:var(--sunk)}
@@ -836,7 +841,7 @@ function suggestions(key, items){
   if (!rows.length) return `<p class="empty">All added. Generate again for more.</p>`;
   return `<div class="items">${rows.map(i => { const c = C(i.client); return `<div class="it" data-sug="${esc(key)}" data-n="${i.n}">
     <div><div class="t">${esc(i.title)}</div>
-    <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}<span class="k">${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
+    <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}${i.todo ? '<span class="k ask">Your to-do</span>' : ''}<span class="k">${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
     ${i.need ? `<div class="s">Ask client for: ${esc(i.need)}</div>` : ''}</div>
     <div class="c"><label class="vh" for="sw-${esc(key)}-${i.n}">Assign</label><select id="sw-${esc(key)}-${i.n}" data-role="sugWho">${whoOptions(S.team.find(m => m.name.toLowerCase() === String(i.assignee||'').toLowerCase())?.id || '')}</select>
     <button class="b" data-act="addSug">Add</button></div></div>`; }).join('')}</div>
@@ -865,6 +870,7 @@ function viewToday(){
   ${showPlan ? `<div class="sec"><div class="lab">Today’s plan<span class="acts"><button class="lnk" data-act="closePlan">Close</button></span></div>
     ${busyOr('day', ui.out.day && !(ui.dayPlan || []).length ? `<p class="empty">${esc(ui.out.day)}</p>` : suggestions('day', ui.dayPlan || []), (ui.dayPlan || []).length ? suggestions('day', ui.dayPlan) : '')}</div>` : ''}
 
+  ${todoHome()}
   <div class="sec"><div class="lab">Due now</div>
   <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Use “Plan my day” to line up work.' : LOADING}</p>`}</div></div>
 
@@ -1021,6 +1027,7 @@ function tabOverview(c){
     <input class="grow" type="text" id="next-${esc(c.id)}" data-keep="next-${esc(c.id)}" value="${esc(keep('next-'+c.id, c.next || ''))}" placeholder="The one thing that moves this page forward">
     <button class="b" type="submit">Save</button></form></div>
 
+  ${todoSection(c)}
   ${campsSection(c)}
   ${asksSection(c)}
   <div class="sec"><div class="lab">Open work<span class="acts">${sample ? `<button class="lnk" data-act="ideas" ${ui.busy['ideas:'+c.id] ? 'disabled' : ''}>${ui.busy['ideas:'+c.id] ? '<span class="spin"></span> Writing ideas…' : 'Content ideas'}</button>` : ''}</span></div>
@@ -1381,7 +1388,7 @@ const tasksCol = () => db.collection('tasks');
 async function addTask(t){
   const c = C(t.client);
   return write(() => tasksCol().add({title:String(t.title).slice(0, 300), client:t.client, clientName:c ? c.name : '', kind:KINDS[t.kind] ? t.kind : 'other',
-    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now()}));
+    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {})}));
 }
 const upd = (cid, data, ok) => write(() => db.collection('clients').doc(cid).update(data), ok);
 
@@ -1389,7 +1396,7 @@ const upd = (cid, data, ok) => write(() => db.collection('clients').doc(cid).upd
 function validItems(arr, fallbackClient){
   return (Array.isArray(arr) ? arr : []).map(i => ({...i, client: C(i && i.client) ? i.client : fallbackClient}))
     .filter(i => i && i.title && C(i.client)).map(i => ({client:i.client, title:String(i.title), kind:KINDS[i.kind] ? i.kind : 'other',
-      why:String(i.why || ''), need:String(i.need || ''), assignee:String(i.assignee || '')}));
+      why:String(i.why || ''), need:String(i.need || ''), assignee:String(i.assignee || ''), todo:typeof i.todo === 'string' && todoOf(i.client, i.todo) ? i.todo : ''}));
 }
 async function run(key, fn){
   ui.busy[key] = true; ui.t0[key] = Date.now(); delete ui.out[key]; render();
@@ -1409,15 +1416,15 @@ async function streamItems(prompt, key, onItem){
 }
 const progress = k => `<div class="genprog"><span class="spin" aria-hidden="true"></span><span>Writing… <span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span><button class="lnk" data-act="stopGen" data-k="${esc(k)}">Stop</button></div>`;
 setInterval(() => document.querySelectorAll('[data-el]').forEach(el => { const t = ui.t0[el.dataset.el]; if (t) el.textContent = Math.round((Date.now() - t) / 1000) + 's'; }), 1000);
-const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Each item: {"client": client id, "title": a short action of under 8 words, then ": " and the specifics (e.g. "Groom-season carousel: slide 1 fabric roll, slide 2 cutting… caption pushes fittings"), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or ""}.`;
+const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Each item: {"client": client id, "title": a short action of under 8 words, then ": " and the specifics (e.g. "Groom-season carousel: slide 1 fabric roll, slide 2 cutting… caption pushes fittings"), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or "", "todo": the to-do id when the item comes from ownerTodo, else ""}.`;
 
 function planDay(){
   run('day', async () => {
     const data = S.clients.filter(c => c.status !== 'paused').map(c => ({id:c.id, ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
-      openTasks:openTasks(c.id).map(t => t.title).slice(0, 8), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
+      openTasks:openTasks(c.id).map(t => t.title).slice(0, 8), ownerTodo:todosOpen(c).map(x => ({id:x.id, text:x.text})), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
     const team = S.team.map(m => `${m.name} (${m.role})`);
     ui.dayPlan = [];
-    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. Give 7 to 10 tasks, each finishable today. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; ui.dayPlan.push(v[0]); });
+    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner's own to-do items (ownerTodo) come first: turn each one into a task today, keep its meaning, sharpen the wording, and put its id in \"todo\". Then add 7 to 10 more tasks, each finishable today. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; ui.dayPlan.push(v[0]); });
     if (!n) throw {code:'empty'};
   });
 }
@@ -2161,6 +2168,56 @@ function campsSection(c){
     ${ev ? `<div class="alert warn" style="margin:0 0 10px"><span>${esc(ev.name)} is in ${daysTo(ev.d)} days and has no campaign yet.</span><button class="lnk" style="color:inherit" data-act="newCampaignFor" data-cid="${esc(c.id)}" data-ev="${esc(ev.d)}">Build it →</button></div>` : ''}
     ${list.length ? `<div class="items">${list.map(x => { const st = campState(x); return `<div class="it click" data-act="openCampaign" data-id="${esc(x.id)}" tabindex="0" role="link"><div><div class="t" style="font-weight:500">${esc(x.name)}</div><div class="s"><span>${x.start ? esc(fmt(x.start)) + '–' + esc(fmt(x.end || x.start)) : 'No dates'}</span><span>${(x.items || []).length} pieces · ${campReady(x)}% produced</span></div></div><div class="c"><span class="pill ${st[0]}">${esc(st[1])}</span></div></div>`; }).join('')}</div>` : (ev ? '' : '<p class="empty">No campaigns yet.</p>')}</div>`;
 }
+/* ----- My to-do: things on the owner's mind, per page. Sent into tasks; gone once the task is done. ----- */
+const todoOf = (cid, id) => (C(cid)?.todos || []).find(x => x.id === id);
+const todoTask = x => S.tasks.find(t => t.todo === x.id);
+const todosLive = c => (c.todos || []).filter(x => todoTask(x)?.status !== 'done');
+const todosOpen = c => todosLive(c).filter(x => !todoTask(x));
+const guessKind = (txt, c) => /\breel|video|edit\b/i.test(txt) ? 'reel' : /carousel/i.test(txt) ? 'carousel' : /\bstory|stories\b/i.test(txt) ? 'story' : /\bad\b|ads\b|boost/i.test(txt) ? 'ad' : /website|banner|landing/i.test(txt) ? 'website' : /google|gbp|review/i.test(txt) ? 'gbp' : /\bseo\b/i.test(txt) ? 'seo' : /\bpost\b/i.test(txt) ? (c?.id === 'eroe' ? 'ai' : 'post') : 'other';
+function todoItem(c, x, home){
+  const t = todoTask(x), late = t && t.due && t.due < today;
+  return `<div class="it" data-todo="${esc(x.id)}" data-tcid="${esc(c.id)}">
+    ${t ? `<span class="tick" style="border-style:dashed;cursor:default" title="In tasks: finish it there and it leaves this list"></span>` : `<button class="tick" data-act="todoDone" title="Done: remove from the list" aria-label="Done"></button>`}
+    <div><div class="t">${home ? `${dot(c)} <span class="muted" style="font-size:12.5px">${esc(c.name)} ·</span> ` : ''}${esc(x.text)}</div>
+      <div class="s">${t ? `<span class="sched ${late ? 'late' : ''}">In tasks · ${t.due ? (t.due === today ? 'today' : late ? -daysTo(t.due) + 'd late' : esc(fmt(t.due))) : 'no date'} · ${esc(STATUS[t.status] || t.status)}${t.assignee ? ' · ' + esc(M(t.assignee)?.name || '') : ''}</span>` : `<span>${esc(ago(x.at))}</span><span>Not scheduled</span>`}</div></div>
+    <div class="c">${t ? `<button class="lnk" data-act="todoUnlink" title="Delete the task and keep the note here">Unschedule</button>` :
+      `<button class="b" data-act="todoToday">Do today</button><label class="vh" for="tdd-${esc(x.id)}">Pick a day</label><input type="date" id="tdd-${esc(x.id)}" data-change="todoDue" min="${today}" title="Pick a day">`}
+      <button class="x" data-act="todoDel" aria-label="Delete">×</button></div></div>`;
+}
+function todoSection(c){
+  const list = todosLive(c), open = list.filter(x => !todoTask(x)).length;
+  return `<div class="sec todo"><div class="lab"><span>My to-do${list.length ? ` · ${list.length}` : ''}</span><span class="acts">${open > 1 ? `<button class="lnk" data-act="todoAllToday" data-cid="${esc(c.id)}">All ${open} to today</button>` : ''}</span></div>
+    <form class="addline" data-form="todo"><label class="vh" for="td-${esc(c.id)}">Add to my to-do</label>
+      <input type="text" id="td-${esc(c.id)}" data-keep="td-${esc(c.id)}" value="${esc(keep('td-' + c.id))}" placeholder="Anything on your mind for ${esc(c.name)}: an idea, a call, a fix">
+      <button class="b" type="submit">Add</button></form>
+    ${list.length ? `<div class="items" style="margin-top:6px">${list.map(x => todoItem(c, x)).join('')}</div>` : `<p class="empty" style="margin-top:4px">Jot it down here. “Do today” or a date puts it in the task list, “Plan my day” picks up the rest, and it leaves this list once the task is done.</p>`}</div>`;
+}
+function todoHome(){
+  const rows = S.clients.flatMap(c => todosOpen(c).map(x => [c, x])).sort((a, b) => a[1].at - b[1].at);
+  const cs = keep('tdh-c', ui.cid && C(ui.cid) ? ui.cid : S.clients[0]?.id || '');
+  if (!loaded.clients) return '';
+  return `<div class="sec todo"><div class="lab"><span>My to-do${rows.length ? ` · ${rows.length} not scheduled` : ''}</span><span class="acts">${rows.length > 1 ? `<button class="lnk" data-act="todoAllToday">All to today</button>` : ''}</span></div>
+    <form class="addline" data-form="todoHome"><label class="vh" for="tdh-c">Page</label><select id="tdh-c" data-change="tdhClient">${S.clients.map(c => `<option value="${esc(c.id)}"${c.id === cs ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+      <label class="vh" for="tdh-t">Add to my to-do</label><input type="text" id="tdh-t" data-keep="tdh-t" value="${esc(keep('tdh-t'))}" placeholder="Something on your mind">
+      <button class="b" type="submit">Add</button></form>
+    ${rows.length ? `<div class="items" style="margin-top:6px">${rows.slice(0, ui.allTodo ? 99 : 6).map(([c, x]) => todoItem(c, x, true)).join('')}</div>${rows.length > 6 && !ui.allTodo ? `<button class="lnk" data-act="allTodo" style="margin-top:8px">Show all ${rows.length}</button>` : ''}` : ''}</div>`;
+}
+async function todoAdd(c, text){
+  const x = {id:'td' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text:text.slice(0, 300), at:Date.now(), by:myMember || ''};
+  return upd(c.id, {todos:[...(c.todos || []), x]}, 'Added to your to-do');
+}
+const todoSchedule = (c, x, due) => addTask({title:x.text, client:c.id, kind:guessKind(x.text, c), assignee:myMember || '', due, todo:x.id});
+const todoRemove = (c, ids) => upd(c.id, {todos:(c.todos || []).filter(x => !ids.includes(x.id))});
+// Owner only: drop to-dos whose task is done, wherever it was marked done.
+let sweeping = false;
+async function todoSweep(){
+  if (role !== 'admin' || sweeping || !loaded.tasks || !loaded.clients) return;
+  sweeping = true;
+  try { for (const c of S.clients){ const gone = (c.todos || []).filter(x => todoTask(x)?.status === 'done').map(x => x.id); if (gone.length) await db.collection('clients').doc(c.id).update({todos:(c.todos || []).filter(x => !gone.includes(x.id))}); } }
+  catch(e){}
+  sweeping = false;
+}
+
 function asksSection(c){
   const a = (c.asks || []).slice().sort((x, y) => (x.status === 'done') - (y.status === 'done') || y.at - x.at);
   const open = a.filter(x => x.status !== 'done');
@@ -2294,6 +2351,18 @@ document.addEventListener('click', async e => {
   if (a === 'stopGen'){ ui.ctl[b.dataset.k]?.abort(); return; }
   if (a === 'toggleTask'){ ui.openTask = ui.openTask === tid ? null : tid; render(); const i = document.getElementById('cm-' + tid); if (i) i.focus(); return; }
   if (a === 'closePlan'){ ui.dayPlan = null; delete ui.out.day; render(); return; }
+  if (a === 'allTodo'){ ui.allTodo = true; render(); return; }
+  if (a.startsWith('todo')){
+    const row = b.closest('[data-todo]'), tc = row ? C(row.dataset.tcid) : null, x = row && tc ? todoOf(tc.id, row.dataset.todo) : null;
+    if (a === 'todoAllToday'){ const cs = b.dataset.cid ? [C(b.dataset.cid)] : S.clients; b.disabled = true; let n = 0;
+      for (const cc of cs) for (const y of todosOpen(cc)){ if (!(await todoSchedule(cc, y, today))) break; n++; }
+      toast(n ? `${n} added to today’s tasks` : 'Nothing to add'); return; }
+    if (!x) return;
+    if (a === 'todoToday'){ b.disabled = true; await todoSchedule(tc, x, today) && toast('In today’s tasks. It leaves this list when done.'); }
+    else if (a === 'todoDone' || a === 'todoDel') await todoRemove(tc, [x.id]);
+    else if (a === 'todoUnlink'){ const t = todoTask(x); if (t) await write(() => tasksCol().doc(t.id).delete(), 'Task removed, note kept'); }
+    return;
+  }
   if (a === 'delTask') await write(() => tasksCol().doc(tid).delete());
   else if (a === 'planDay') planDay();
   else if (a === 'calPrev'){ ui.calOff = (ui.calOff || 0) - 1; render(); }
@@ -2368,7 +2437,8 @@ document.addEventListener('click', async e => {
     const rows = a === 'addSug' ? [b.closest('[data-sug]')] : [...document.querySelectorAll(`[data-sug="${CSS.escape(key)}"]`)];
     b.disabled = true;
     for (const r of rows){ const i = items[Number(r.dataset.n)]; if (!i || i.added) continue;
-      if (await addTask({...i, assignee:r.querySelector('[data-role="sugWho"]').value, due: key === 'day' ? today : ''})) i.added = true; else break; }
+      const tdx = i.todo && C(i.client) ? todoOf(i.client, i.todo) : null;
+      if (await addTask({...i, todo: tdx && !todoTask(tdx) ? i.todo : '', assignee:r.querySelector('[data-role="sugWho"]').value, due: key === 'day' ? today : ''})) i.added = true; else break; }
     toast(rows.length > 1 ? 'Tasks added' : 'Task added'); render();
   }
   else if (a === 'editPlan'){ ui.editing = 'plan'; render(); }
@@ -2405,6 +2475,8 @@ document.addEventListener('change', async e => {
   const el = e.target, k = el.dataset && el.dataset.change; if (!k) return;
   const tid = el.closest('[data-tid]')?.dataset.tid;
   if (k === 'status') await write(() => tasksCol().doc(tid).update({status:el.value, doneMonth: el.value === 'done' ? monthKey : '', doneAt: el.value === 'done' ? Date.now() : 0, statusAt:{[el.value]:Date.now()}}));
+  else if (k === 'todoDue'){ const row = el.closest('[data-todo]'), tc = C(row.dataset.tcid), x = todoOf(tc?.id, row.dataset.todo); if (x && el.value) await todoSchedule(tc, x, el.value) && toast('Scheduled for ' + fmt(el.value)); }
+  else if (k === 'tdhClient'){ ui.keep['tdh-c'] = el.value; }
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
   else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
   else if (k === 'repMonth'){ ui.rMonth = el.value; render(); }
@@ -2421,6 +2493,7 @@ document.addEventListener('submit', async e => {
   const f = e.target.closest('[data-form]'); if (!f) return;
   e.preventDefault();
   const k = f.dataset.form, c = C(ui.cid), v = id => (document.getElementById(id)?.value ?? '').trim();
+  if (k === 'todoHome'){ const tc = C(v('tdh-c')), t = v('tdh-t'); if (tc && t && await todoAdd(tc, t)){ ui.keep['tdh-t'] = ''; ui.keep['tdh-c'] = tc.id; render(); } return; }
   if (k === 'newClient'){
     const name = v('nc-name'); if (!name) return;
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'client';
@@ -2465,6 +2538,7 @@ document.addEventListener('submit', async e => {
     if (await write(() => tasksCol().doc(tid).update(upd_), nd ? 'Comment posted, due date moved' : 'Comment posted')){ ui.keep['cm-' + tid] = ''; render(); }
     return;
   }
+  if (k === 'todo'){ const t = v('td-' + c.id); if (t && await todoAdd(c, t)){ ui.keep['td-' + c.id] = ''; render(); } return; }
   if (k === 'next'){ const val = v('next-' + c.id); if (await upd(c.id, {next:val}, 'Saved')) delete ui.keep['next-' + c.id]; }
   else if (k === 'quickTask'){ const title = v('qt-' + c.id); if (!title) return; if (await addTask({title, client:c.id, kind:v('qk-' + c.id)})){ ui.keep['qt-' + c.id] = ''; toast('Task added'); render(); } }
   else if (k === 'task'){ const title = v('t-title'); if (!title) return; ['t-client','t-kind','t-who'].forEach(id => ui.keep[id] = v(id));
@@ -2508,6 +2582,7 @@ function listen(name, sort){
     if (sort) S[name].sort(sort);
     if (name === 'clients'){ S.allClients = S.clients; S.clients = S.allClients.filter(c => c.status !== 'archived'); }
     loaded[name] = true; schedule();
+    if (name === 'tasks' || name === 'clients') todoSweep();
   }, () => { loaded[name] = true; schedule(); });
 }
 async function boot(){
