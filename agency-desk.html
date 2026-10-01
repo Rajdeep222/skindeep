@@ -292,6 +292,9 @@ button.alert:focus-visible{outline:2px solid var(--accent)}
 .todo .it{grid-template-columns:auto minmax(0,1fr) auto}
 .todo .tick{width:18px;height:18px;border:1.5px solid var(--line2,var(--muted));border-radius:5px;background:none;padding:0;cursor:pointer}
 .todo .tick:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.etform{grid-column:1/-1;margin-top:8px;padding:12px 14px;border-radius:10px;background:var(--sunk);display:flex;flex-direction:column;gap:10px}
+.etform .g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.etform label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
 .todo .sched{color:var(--accent)}
 .todo input[type=date]{padding:3px 6px;font-size:12px}
 .k.ask{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent)}
@@ -826,7 +829,7 @@ function taskRow(t, opts = {}){
       <div class="s">${opts.noClient ? '' : `<span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span>`}<span class="k">${esc(SHORT[t.kind] || t.kind)}</span>${t.todo ? '<span class="k ask">Your to-do</span>' : ''}${t.priority === 'high' && t.status !== 'done' ? '<span class="pill bad" style="font-size:11px">high</span>' : ''}
       ${t.due ? `<span class="${late ? 'late' : ''}">${late ? `${lateBy} day${lateBy === 1 ? '' : 's'} late` : esc(fmt(t.due))}</span>` : ''}
       ${opts.showWho && t.assignee ? `<span>${esc(M(t.assignee)?.name || '')}</span>` : ''}
-      <button class="cbtn ${late && !cm.length ? 'need' : ''}" data-act="toggleTask" aria-expanded="${open}">${cm.length ? `${cm.length} comment${cm.length === 1 ? '' : 's'}` : late ? 'Why late?' : 'Comment'}</button></div>
+      <button class="cbtn ${late && !cm.length ? 'need' : ''}" data-act="toggleTask" aria-expanded="${open}">${cm.length ? `${cm.length} comment${cm.length === 1 ? '' : 's'}` : late ? 'Why late?' : 'Comment'}</button>${opts.editor ? '' : `<button class="cbtn" data-act="editTask" aria-expanded="${ui.editTask === t.id}">Edit</button>`}${t.logged ? '<span class="k">Logged by hand</span>' : ''}</div>
       ${last && !open ? `<div class="lastc"><b>${esc(M(last.who)?.name || 'Someone')}:</b> ${esc(last.text)}</div>` : ''}</div>
     <div class="c">
       <label class="vh" for="st-${esc(t.id)}">Status</label>
@@ -834,6 +837,7 @@ function taskRow(t, opts = {}){
       ${opts.editor ? '' : `<label class="vh" for="as-${esc(t.id)}">Assign</label><select id="as-${esc(t.id)}" data-change="assign">${whoOptions(t.assignee)}</select>
       <button class="x" data-act="delTask" aria-label="Delete task">×</button>`}
     </div>
+    ${ui.editTask === t.id && !opts.editor ? editForm(t) : ''}
     ${open ? threadHtml(t, late) : ''}
   </div>`;
 }
@@ -1042,6 +1046,8 @@ function tabOverview(c){
       <button class="b" type="submit">Add</button></form>
     ${ui.busy['ideas:'+c.id] || ui.ideas[c.id] || ui.out['ideas:'+c.id] ? `<div style="margin-top:16px">${busyOr('ideas:'+c.id, ui.out['ideas:'+c.id] && !(ui.ideas[c.id] || []).length ? `<p class="empty">${esc(ui.out['ideas:'+c.id])}</p>` : suggestions('ideas:'+c.id, ui.ideas[c.id] || []), (ui.ideas[c.id] || []).length ? suggestions('ideas:'+c.id, ui.ideas[c.id]) : '')}</div>` : ''}
   </div>
+
+  ${doneSection(c)}
 
   ${!pl.goal && sample ? `<div class="sec"><div class="lab">Get started</div><p style="margin:0 0 12px">${esc(c.name)} has no growth plan yet. Claude can draft the plan, a research brief and a brand kit from what you entered.</p>
     ${busyOr('draft:' + c.id, ui.out['draft:' + c.id] ? `<p class="empty">${esc(ui.out['draft:' + c.id])}</p>` : '')}<button class="b pri" data-act="draftPlan" ${ui.busy['draft:' + c.id] ? 'disabled' : ''}>Draft plan and research with Claude</button></div>` : ''}
@@ -2216,7 +2222,7 @@ function studioReview(mk){
   area.Deadlines.push(od.length ? Math.max(0, 100 - od.length * 12 - avgLate) : 100);
   if (od.length) add('Deadlines', od.length > 4 ? 3 : 2, `${od.length} overdue task${od.length > 1 ? 's' : ''}, ${avgLate} days late on average`, noReason.length ? `${noReason.length} have no reason written. Either move the date or say what’s blocking.` : 'Every one has a reason logged. Now move the dates or clear them.', {preset:'overdue', l:'Open overdue'});
   else wins.push('No overdue tasks.');
-  const done = S.tasks.filter(t => t.status === 'done' && t.doneAt && t.createdAt && t.doneMonth === mk);
+  const done = S.tasks.filter(t => t.status === 'done' && !t.logged && t.doneAt && t.createdAt && t.doneMonth === mk);
   const turn = done.length ? done.reduce((a, t) => a + (t.doneAt - t.createdAt), 0) / done.length / 864e5 : null;
   const waits = S.tasks.filter(t => t.statusAt?.sent && t.statusAt?.approved && t.statusAt.approved > t.statusAt.sent).map(t => (t.statusAt.approved - t.statusAt.sent) / 864e5);
   const stuck = S.tasks.filter(t => t.status === 'sent' && t.statusAt?.sent && daysSince(t.statusAt.sent) > 3);
@@ -2288,6 +2294,59 @@ function campsSection(c){
     ${ev ? `<div class="alert warn" style="margin:0 0 10px"><span>${esc(ev.name)} is in ${daysTo(ev.d)} days and has no campaign yet.</span><button class="lnk" style="color:inherit" data-act="newCampaignFor" data-cid="${esc(c.id)}" data-ev="${esc(ev.d)}">Build it →</button></div>` : ''}
     ${list.length ? `<div class="items">${list.map(x => { const st = campState(x); return `<div class="it click" data-act="openCampaign" data-id="${esc(x.id)}" tabindex="0" role="link"><div><div class="t" style="font-weight:500">${esc(x.name)}</div><div class="s"><span>${x.start ? esc(fmt(x.start)) + '–' + esc(fmt(x.end || x.start)) : 'No dates'}</span><span>${(x.items || []).length} pieces · ${campReady(x)}% produced</span></div></div><div class="c"><span class="pill ${st[0]}">${esc(st[1])}</span></div></div>`; }).join('')}</div>` : (ev ? '' : '<p class="empty">No campaigns yet.</p>')}</div>`;
 }
+/* ----- Edit a task, and log work done outside the task list ----- */
+function editForm(t){
+  const k = f => 'et-' + f + '-' + t.id, kv = (f, d) => keep(k(f), d);
+  return `<form class="etform" data-form="editTask"><div class="lab" style="margin:0">Edit task</div>
+    <label>Task<input type="text" id="${k('title')}" data-keep="${k('title')}" value="${esc(kv('title', t.title))}" required></label>
+    <div class="g3">
+      <label>Page<select id="${k('client')}" data-keep="${k('client')}">${S.clients.map(c => `<option value="${esc(c.id)}"${c.id === kv('client', t.client) ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+      <label>Type<select id="${k('kind')}" data-keep="${k('kind')}">${kindOptions(kv('kind', t.kind))}</select></label>
+      <label>Due<input type="date" id="${k('due')}" data-keep="${k('due')}" value="${esc(kv('due', t.due || ''))}"></label>
+      <label>Assigned to<select id="${k('who')}" data-keep="${k('who')}">${whoOptions(kv('who', t.assignee || ''))}</select></label>
+    </div>
+    <div class="row"><button class="b pri" type="submit">Save changes</button><button class="b" type="button" data-act="editTask">Cancel</button>
+      ${t.campaign ? '<span class="muted" style="font-size:12px">Part of a campaign: a new date also moves the piece in the campaign plan.</span>' : ''}</div></form>`;
+}
+async function saveTaskEdit(t, f){
+  const g = id => (document.getElementById(`et-${id}-${t.id}`)?.value ?? '').trim();
+  const title = g('title'); if (!title) return;
+  const cl = C(g('client')) || C(t.client), due = g('due');
+  const u = {title:title.slice(0, 300), client:cl ? cl.id : t.client, clientName:cl ? cl.name : t.clientName || '', kind:KINDS[g('kind')] ? g('kind') : t.kind, due, assignee:g('who')};
+  if (due) u.month = due.slice(0, 7);
+  if (!(await write(() => tasksCol().doc(t.id).update(u), 'Task updated'))) return;
+  if (t.campaign && due !== (t.due || '')){
+    const x = S.campaigns.find(q => q.id === t.campaign);
+    if (x && x.items?.[t.itemIdx]){ const items = x.items.map((it, i) => i === t.itemIdx ? {...it, date:due} : it); await write(() => db.collection('campaigns').doc(x.id).update({items})); }
+  }
+  for (const id of ['title','client','kind','due','who']) delete ui.keep[`et-${id}-${t.id}`];
+  ui.editTask = null; render();
+}
+function doneSection(c){
+  const done = S.tasks.filter(t => t.client === c.id && t.status === 'done' && t.doneMonth === monthKey).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  const all = ui.allDone === c.id, rows = done.slice(0, all ? 99 : 6);
+  return `<div class="sec"><div class="lab"><span>Work done · ${esc(monthName)}${done.length ? ' · ' + done.length : ''}</span></div>
+    <form class="addline" data-form="logWork"><label class="vh" for="lw-t-${esc(c.id)}">What was done</label>
+      <input type="text" id="lw-t-${esc(c.id)}" data-keep="lw-t-${esc(c.id)}" value="${esc(keep('lw-t-' + c.id))}" placeholder="Something finished that wasn’t a task, e.g. Posted the Sunday groom reel" required>
+      <label class="vh" for="lw-k-${esc(c.id)}">Type</label><select id="lw-k-${esc(c.id)}" data-keep="lw-k-${esc(c.id)}">${kindOptions(keep('lw-k-' + c.id, c.target?.kind === 'ai' ? 'ai' : 'reel'))}</select>
+      <label class="vh" for="lw-d-${esc(c.id)}">Date</label><input type="date" id="lw-d-${esc(c.id)}" data-keep="lw-d-${esc(c.id)}" value="${esc(keep('lw-d-' + c.id, today))}" max="${today}" title="Date it went live">
+      <button class="b" type="submit">Log it</button></form>
+    <p class="muted" style="font-size:11.5px;margin:6px 0 0">Reels, carousels, posts and AI visuals count toward ${esc(c.name)}’s monthly target and the report.</p>
+    ${rows.length ? `<div class="items" style="margin-top:6px">${rows.map(t => `<div class="it" data-tid="${esc(t.id)}"><div><div class="t th">${esc(t.title)}</div><div class="s"><span class="k">${esc(SHORT[t.kind] || t.kind)}</span><span>${esc(fmt(t.due || (t.doneAt ? new Date(t.doneAt).toISOString().slice(0, 10) : '')))}</span>${t.logged ? '<span class="k">Logged by hand</span>' : ''}</div></div>
+      <div class="c"><button class="lnk" data-act="editTask">Edit</button>${t.logged ? '<button class="x" data-act="delTask" aria-label="Remove">×</button>' : '<button class="lnk" data-act="reopenTask">Reopen</button>'}</div>
+      ${ui.editTask === t.id ? editForm(t) : ''}</div>`).join('')}</div>${done.length > 6 && !all ? `<button class="lnk" data-act="allDone" style="margin-top:8px">Show all ${done.length}</button>` : ''}` : `<p class="empty" style="margin-top:6px">Nothing finished yet this month.</p>`}</div>`;
+}
+async function logWork(c){
+  const g = id => (document.getElementById(`lw-${id}-${c.id}`)?.value ?? '').trim();
+  const title = g('t'); if (!title) return;
+  let d = g('d') || today; if (d > today) d = today;
+  const ts = d === today ? Date.now() : new Date(d + 'T12:00:00').getTime();
+  const ok = await write(() => tasksCol().add({title:title.slice(0, 300), client:c.id, clientName:c.name, kind:KINDS[g('k')] ? g('k') : 'other', status:'done', assignee:myMember || '', due:d, doneMonth:d.slice(0, 7), doneAt:ts, createdAt:ts, logged:true, loggedBy:myMember || ''}));
+  if (!ok) return;
+  ui.keep['lw-t-' + c.id] = ''; ui.keep['lw-d-' + c.id] = today;
+  toast(d.slice(0, 7) === monthKey ? 'Logged. It counts toward this month.' : `Logged for ${monthLabel(d.slice(0, 7))}`); render();
+}
+
 /* ----- My to-do: things on the owner's mind, per page. Sent into tasks; gone once the task is done. ----- */
 const todoOf = (cid, id) => (C(cid)?.todos || []).find(x => x.id === id);
 const todoTask = x => S.tasks.find(t => t.todo === x.id);
@@ -2463,6 +2522,9 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, c = C(ui.cid), tid = b.closest('[data-tid]')?.dataset.tid;
   if (a === 'cmd'){ openCmd(); return; }
+  if (a === 'editTask'){ const id = b.closest('[data-tid]').dataset.tid; if (ui.editTask === id){ ui.editTask = null; for (const f of ['title','client','kind','due','who']) delete ui.keep[`et-${f}-${id}`]; } else ui.editTask = id; render(); return; }
+  if (a === 'reopenTask'){ const id = b.closest('[data-tid]').dataset.tid; await write(() => tasksCol().doc(id).update({status:'todo', doneMonth:'', doneAt:0}), 'Reopened'); return; }
+  if (a === 'allDone'){ ui.allDone = ui.cid; render(); return; }
   if (a === 'expandTask'){ const id = b.closest('[data-tid]').dataset.tid; ui.expand[id] = !ui.expand[id]; render(); return; }
   if (a === 'toggleAdd'){ ui.addOpen = !ui.addOpen; render(); if (ui.addOpen) setTimeout(() => $('#t-title')?.focus(), 30); return; }
   if (a === 'quick'){ ui.filt = {client:'', who:'', done:false, preset:b.dataset.q}; render(); return; }
@@ -2616,6 +2678,8 @@ document.addEventListener('submit', async e => {
   const k = f.dataset.form, c = C(ui.cid), v = id => (document.getElementById(id)?.value ?? '').trim();
   if (k === 'todoHome'){ const tc = C(v('tdh-c')), t = v('tdh-t'); if (tc && t && await todoAdd(tc, t)){ ui.keep['tdh-t'] = ''; ui.keep['tdh-c'] = tc.id; render(); } return; }
   if (k === 'campChat'){ const x = S.campaigns.find(q => q.id === ui.campId), t = v('cchat-' + ui.campId); if (x && t && sample && !ui.busy['cchat:' + x.id]) campChat(x, t); return; }
+  if (k === 'editTask'){ const t = S.tasks.find(q => q.id === f.closest('[data-tid]')?.dataset.tid); if (t) await saveTaskEdit(t, f); return; }
+  if (k === 'logWork'){ if (c) await logWork(c); return; }
   if (k === 'newClient'){
     const name = v('nc-name'); if (!name) return;
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'client';
