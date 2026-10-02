@@ -680,6 +680,19 @@ function pace(c){
   if (gap <= 0) return {cls:'good', label:'On pace', gap:0};
   return {cls: gap >= Math.max(3, n * .2) ? 'bad' : 'warn', label:`${gap} behind`, gap};
 }
+/* ----- Duplicate guard: is this already on the list? ----- */
+const DUP_STOP = new Set('a an the and or to for of in on at by as with from into per each one this that your our their its is it add set up new make then also all any more'.split(' '));
+const stem = w => w.replace(/(ing|ed|es|s)$/, '');
+const toks = str => new Set(String(str || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 1 && !DUP_STOP.has(w)).map(stem));
+function similar(a, b){
+  const A = toks(a), B = toks(b); if (!A.size || !B.size) return false;
+  let n = 0; for (const w of A) if (B.has(w)) n++;
+  const m = Math.min(A.size, B.size);
+  return n >= 2 && n / m >= .75 && (m >= 3 || n === m);
+}
+// An open task, or one finished in the last 3 weeks, that says the same thing for the same page.
+const dupOf = (cid, title) => S.tasks.find(t => t.client === cid && (t.status !== 'done' || (t.doneAt && Date.now() - t.doneAt < 21 * 864e5)) && similar(t.title, title));
+const recentDone = cid => S.tasks.filter(t => t.client === cid && t.status === 'done' && t.doneAt && Date.now() - t.doneAt < 21 * 864e5).slice(-15).map(t => t.title);
 const openTasks = cid => S.tasks.filter(t => t.status !== 'done' && (!cid || t.client === cid));
 const clientInsights = cid => S.insights.filter(i => i.client === cid).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
 const eventsFor = cid => EVENTS.filter(e => e.who.includes(cid) && daysTo(e.d) >= -1);
@@ -693,7 +706,8 @@ function clientContext(c, opts = {}){
       nextAction:c.next, brand:c.brand, growthPlan:c.plan, research:c.research && {summary:c.research.summary, opportunities:c.research.opportunities, fixFirst:c.research.fixes},
       competitors:(c.competitors || []).map(x => ({...x, learnings:S.insights.filter(i => i.client === c.id && i.type === 'Competitor post' && i.competitor === x.name).flatMap(i => i.learnings || []).slice(0, 4)})), clientAsksAndUpdates:(c.asks || []).filter(x => x.status !== 'done').slice(0, 10).map(x => `${x.kind === 'ask' ? 'Client wants' : 'Client update'} (${new Date(x.at).toISOString().slice(0,10)}): ${x.text}${(x.imgs || []).length ? ` [${x.imgs.length} image(s) attached${x.imgNote ? ': ' + x.imgNote : ''}]` : ''}`)},
     recentInsights:ins,
-    openTasks:openTasks(c.id).slice(0, 15).map(t => `${t.title} [${SHORT[t.kind]||t.kind}, ${STATUS[t.status]}${t.due ? ', due ' + t.due : ''}]`),
+    openTasks:openTasks(c.id).slice(0, 25).map(t => `${t.title} [${SHORT[t.kind]||t.kind}, ${STATUS[t.status]}${t.due ? ', due ' + t.due : ''}]`),
+    recentlyFinished:recentDone(c.id),
     upcomingMoments:eventsFor(c.id).slice(0, 4).map(e => `${e.d} ${e.name}: ${e.prep}`)
   };
 }
@@ -867,10 +881,11 @@ function suggestions(key, items){
   if (!rows.length) return `<p class="empty">All added. Generate again for more.</p>`;
   return `<div class="items">${rows.map(i => { const c = C(i.client); return `<div class="it" data-sug="${esc(key)}" data-n="${i.n}">
     <div><div class="t">${esc(i.title)}</div>
+    ${(() => { const d = dupOf(i.client, i.title); return d ? `<div class="s"><span class="late">Already on the list: ${esc(d.title.length > 70 ? d.title.slice(0, 70) + '…' : d.title)}${d.status === 'done' ? ' (done)' : ''}</span></div>` : ''; })()}
     <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}${i.todo ? '<span class="k ask">Your to-do</span>' : ''}${i.priority ? `<span class="pill ${i.priority === 'high' ? 'bad' : i.priority === 'medium' ? 'warn' : 'neutral'}" style="font-size:11px">${i.priority}</span>` : ''}${key === 'day' && i.due && i.due !== today ? `<span class="mono">due ${esc(fmt(i.due))}</span>` : ''}<span class="k">${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
     ${i.need ? `<div class="s">Ask client for: ${esc(i.need)}</div>` : ''}</div>
     <div class="c"><label class="vh" for="sw-${esc(key)}-${i.n}">Assign</label><select id="sw-${esc(key)}-${i.n}" data-role="sugWho">${whoOptions(S.team.find(m => m.name.toLowerCase() === String(i.assignee||'').toLowerCase())?.id || '')}</select>
-    <button class="b" data-act="addSug">Add</button></div></div>`; }).join('')}</div>
+    <button class="b" data-act="addSug">${dupOf(i.client, i.title) ? 'Add anyway' : 'Add'}</button></div></div>`; }).join('')}</div>
     <div class="row" style="margin-top:10px"><button class="lnk" data-act="addAllSug" data-key="${esc(key)}">Add all as tasks</button></div>`;
 }
 const busyOr = (k, html, partial) => ui.busy[k] ? (partial || '') + progress(k) : html;
@@ -1467,10 +1482,10 @@ const itemSpec = `Never use the words film, shoot or record in a title: we only 
 function planDay(){
   run('day', async () => {
     const data = S.clients.filter(c => c.status !== 'paused').map(c => ({id:c.id, ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
-      openTasks:openTasks(c.id).map(t => t.title).slice(0, 8), ownerTodo:todosOpen(c).map(x => ({id:x.id, text:x.text, addedDaysAgo:daysSince(x.at)})), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
+      alreadyOnTheList:openTasks(c.id).map(t => t.title).slice(0, 30), finishedRecently:recentDone(c.id), ownerTodo:todosOpen(c).map(x => ({id:x.id, text:x.text, addedDaysAgo:daysSince(x.at)})), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
     const team = S.team.map(m => `${m.name} (${m.role})`);
     ui.dayPlan = [];
-    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner's own to-do items (ownerTodo) come first. Assess each one's priority against deadlines, festive dates, client asks, how far behind the page is, and how long it has waited: \"high\" means it must happen today; \"medium\" within 3 days; \"low\" within 7 days. Turn every to-do into one task: keep its meaning, sharpen the wording, put its id in \"todo\", set \"priority\", and set \"due\" to today for high, or a sensible later date for the rest. List them highest priority first. Then add 7 to 10 more tasks finishable today (due today, priority by importance). Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; ui.dayPlan.push(v[0]); });
+    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner's own to-do items (ownerTodo) come first. Assess each one's priority against deadlines, festive dates, client asks, how far behind the page is, and how long it has waited: \"high\" means it must happen today; \"medium\" within 3 days; \"low\" within 7 days. Turn every to-do into one task: keep its meaning, sharpen the wording, put its id in \"todo\", set \"priority\", and set \"due\" to today for high, or a sensible later date for the rest. List them highest priority first. Then add up to 10 more tasks finishable today (due today, priority by importance). NEVER suggest anything that is already in a page's alreadyOnTheList or finishedRecently, even reworded or split into smaller parts: those are done or already planned. If a page has nothing genuinely new that matters today, give it fewer tasks or none. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; ui.dayPlan.push(v[0]); });
     if (!n) throw {code:'empty'};
   });
 }
@@ -2748,10 +2763,12 @@ document.addEventListener('click', async e => {
     const items = key === 'day' ? ui.dayPlan : ui.ideas[key.split(':')[1]];
     const rows = a === 'addSug' ? [b.closest('[data-sug]')] : [...document.querySelectorAll(`[data-sug="${CSS.escape(key)}"]`)];
     b.disabled = true;
+    let skipped = 0;
     for (const r of rows){ const i = items[Number(r.dataset.n)]; if (!i || i.added) continue;
+      if (a === 'addAllSug' && dupOf(i.client, i.title)){ skipped++; continue; }
       const tdx = i.todo && C(i.client) ? todoOf(i.client, i.todo) : null;
       if (await addTask({...i, todo: tdx && !todoTask(tdx) ? i.todo : '', assignee:r.querySelector('[data-role="sugWho"]').value, due: key === 'day' ? (i.due || today) : '', autoBrief: key === 'day' && !!sample})) i.added = true; else break; }
-    toast(key === 'day' && sample ? (rows.length > 1 ? 'Tasks added. Writing their briefs…' : 'Task added. Writing its brief…') : (rows.length > 1 ? 'Tasks added' : 'Task added')); render();
+    toast((key === 'day' && sample ? (rows.length > 1 ? 'Tasks added. Writing their briefs…' : 'Task added. Writing its brief…') : (rows.length > 1 ? 'Tasks added' : 'Task added')) + (skipped ? ` Skipped ${skipped} already on the list.` : '')); render();
   }
   else if (a === 'editPlan'){ ui.editing = 'plan'; render(); }
   else if (a === 'cancelEdit'){ ui.editing = null; render(); }
