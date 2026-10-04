@@ -308,6 +308,8 @@ button.alert:focus-visible{outline:2px solid var(--accent)}
 .bstep .bm{margin-left:auto;flex:none;font-size:12px;color:var(--muted);white-space:nowrap}
 .bpost{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .oldblock{border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line));background:color-mix(in srgb,var(--warn) 6%,var(--surface));border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.focus{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--c1,var(--accent));border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.focus h2{margin:6px 0 12px;font-size:20px;line-height:1.3;font-weight:500}
 .mbtn{all:unset;cursor:pointer;padding:0 8px;font-size:18px;line-height:1;color:var(--muted);border-radius:6px}
 .mbtn:hover,.mbtn[aria-expanded="true"]{background:var(--sunk);color:var(--ink)}
 .rmk{display:flex;flex-direction:column;gap:8px}
@@ -655,7 +657,7 @@ const monthName = now.toLocaleDateString(undefined, {month:'long'});
 let db = null, sample = null, assets = null, userNs = null, downloads = null;
 let canImages = false, maxImages = 0, canTools = false;
 let role = 'admin', myUid = null, myMember = null;
-const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[], backup:null};
+const S = {clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[], backup:null, pace:null};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false, campaigns:false};
 const ui = {view:'today', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
   pending:[], askPend:{}, impLive:{}, expand:{}, tpOpen:{}, tpLive:{}, briefOpen:{}, moreOpen:{}, moreMode:{}, alts:{}, oldDone:{}, oldConfirm:null, replaceConfirm:{}, groupBy:'client', addOpen:false, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
@@ -838,6 +840,23 @@ const recentDone = cid => S.tasks.filter(t => t.client === cid && t.status === '
 const hardTask = t => !!(t.campaign || t.hard);
 const isLate = t => t.status !== 'done' && !!t.due && t.due < today && hardTask(t);
 const needsDecision = t => t.status !== 'done' && (isLate(t) || (t.rolled || 0) >= 3);
+const clampN = (n, a, b) => Math.max(a, Math.min(b, n));
+// How many tasks to plan: the time you chose, your ratings of recent plans, and what the team really finishes.
+function paceInfo(base){
+  const recent = (S.pace?.ratings || []).filter(x => x.r === 'much' || x.r === 'right' || x.r === 'little').slice(-3);
+  const sum = recent.reduce((a, x) => a + (x.r === 'much' ? -1 : x.r === 'little' ? 1 : 0), 0);
+  const adj = sum <= -3 ? -2 : sum <= -2 ? -1 : sum >= 2 ? 1 : 0;
+  const byDay = {}; S.tasks.forEach(t => { if (t.status === 'done' && t.doneAt && Date.now() - t.doneAt < 7 * 864e5){ const d = new Date(t.doneAt).toISOString().slice(0, 10); byDay[d] = (byDay[d] || 0) + 1; } });
+  const days = Object.values(byDay), avg = days.length >= 3 ? days.reduce((a, b) => a + b, 0) / days.length : 0;
+  let max = clampN(base + adj, 2, 8); if (avg) max = Math.min(max, Math.max(2, Math.ceil(avg * 1.3)));
+  return {max, avg:Math.round(avg * 10) / 10, adj, recent};
+}
+function paceCard(){
+  const l = S.pace?.last; if (!l || l.d >= today || (S.pace.ratings || []).some(x => x.d === l.d)) return '';
+  return `<div class="sec"><div class="lab">How was ${l.d === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? 'yesterday’s' : 'the last'} plan?</div>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="b" data-act="rate" data-r="much">Too much</button><button class="b" data-act="rate" data-r="right">About right</button><button class="b" data-act="rate" data-r="little">Too little</button><button class="lnk" data-act="rate" data-r="skip">Skip</button></div>
+    <p class="muted" style="font-size:12.5px;margin:8px 0 0">It planned ${l.n} task${l.n === 1 ? '' : 's'}. Your answer sizes the next plan.</p></div>`;
+}
 const CAPS = {'1h':['About 1 hour', 3], '2h':['About 2 hours', 4], '4h':['Half a day', 6], '8h':['A full day', 8]};
 async function rollSoft(){
   if (role !== 'admin' || !loaded.tasks) return;
@@ -893,6 +912,7 @@ document.addEventListener('focusout', () => setTimeout(() => { if (pendingRender
 
 /* ---------- render ---------- */
 const IC = {
+  focus:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
   today:'<path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10M10 20v-5h4v5"/>',
   campaigns:'<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a3 3 0 0 1 0 6M18 6a7 7 0 0 1 0 12"/>',
   studio:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
@@ -912,12 +932,12 @@ function render(){
   $('#main').classList.toggle('wide', (ui.view === 'tasks' && ui.taskView === 'board') || (ui.view === 'calendar' && ui.calMode === 'grid') || ui.view === 'report' || ui.view === 'reports' && false);
   if (role === 'editor'){ $('#side').innerHTML = sideEditor(); $('#tabs').innerHTML = ''; $('#main').innerHTML = viewEditor(); return; }
   $('#side').innerHTML = side();
-  $('#tabs').innerHTML = [['today','Home'],['tasks','Tasks'],['clients','Pages'],['reports','Reports']].map(([v,l]) =>
+  $('#tabs').innerHTML = [['today','Home'],['focus','Focus'],['tasks','Tasks'],['clients','Pages']].map(([v,l]) =>
     `<button data-go="${v}" aria-current="${ui.view === v || (v === 'clients' && (ui.view === 'client' || ui.view === 'report'))}">${ico(v)}<span>${l}</span></button>`).join('') +
     `<button data-act="cmd" aria-label="Search">${ico('search')}<span>Search</span></button>`;
   const c = C(ui.cid);
   const v = ui.view === 'client' && c ? viewClient(c) : ui.view === 'report' && c ? viewReport(c) :
-    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'studio' ? viewStudio() : ui.view === 'campaigns' ? viewCampaigns() : ui.view === 'campaign' && S.campaigns.find(x => x.id === ui.campId) ? viewCampaign(S.campaigns.find(x => x.id === ui.campId)) : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : viewToday();
+    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'studio' ? viewStudio() : ui.view === 'campaigns' ? viewCampaigns() : ui.view === 'campaign' && S.campaigns.find(x => x.id === ui.campId) ? viewCampaign(S.campaigns.find(x => x.id === ui.campId)) : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : ui.view === 'focus' ? viewFocus() : viewToday();
   $('#main').innerHTML = v;
   if (ui.view === 'client' && c && ui.ctab === 'followers') wireChart();
   if (ui.view === 'report') fitRep();
@@ -933,6 +953,7 @@ function side(){
   return `<button class="mark home" data-go="today" aria-label="Home">reach theory<span>desk</span></button>
   <button class="search" data-act="cmd">${ico('search')}<span>Search</span><kbd>Ctrl K</kbd></button>
   <nav class="nav" aria-label="Sections">
+    ${navBtn('focus', 'Focus')}
     ${navBtn('today', 'Home', od ? `<span class="ct badge" title="${od} overdue">${od}</span>` : '')}
     ${navBtn('tasks', 'Tasks', open ? `<span class="ct">${open}</span>` : '')}
     ${navBtn('calendar', 'Calendar')}
@@ -1070,9 +1091,10 @@ function viewToday(){
   ${backupNudge()}
   ${restorePanel()}
   ${oldTasksBlock()}
+  ${paceCard()}
   ${liveCampaigns()}
   ${paymentsDue()}
-  ${showPlan ? `<div class="sec"><div class="lab">Today’s plan<span class="acts"><button class="lnk" data-act="closePlan">Close</button></span></div>
+  ${showPlan ? `<div class="sec"><div class="lab">Today’s plan<span class="acts">${(() => { const pi = paceInfo((CAPS[ui.cap] || CAPS['2h'])[1]); return `<span class="muted" style="font-size:12px">About ${pi.max} tasks${pi.avg ? ' · you usually finish ~' + pi.avg + ' a day' : ''}</span>`; })()}<button class="lnk" data-act="closePlan">Close</button></span></div>
     ${busyOr('day', ui.out.day && !(ui.dayPlan || []).length ? `<p class="empty">${esc(ui.out.day)}</p>` : suggestions('day', ui.dayPlan || []), (ui.dayPlan || []).length ? suggestions('day', ui.dayPlan) : '')}</div>` : ''}
 
   ${todoHome()}
@@ -1100,6 +1122,19 @@ function overdueAlert(){
   const od = openTasks().filter(isLate);
   if (!od.length) return '';
   return `<button class="alert warn" data-go="tasks" data-preset="overdue"><span>${od.length} task${od.length === 1 ? ' is' : 's are'} past a client deadline</span><span>Review →</span></button>`;
+}
+
+/* ----- Focus: the three things for today ----- */
+function viewFocus(){
+  const all = openTasks().filter(t => t.due && t.due <= today).sort((a, b) => (isLate(b) - isLate(a)) || ((b.priority === 'high') - (a.priority === 'high')) || a.due.localeCompare(b.due));
+  const top = all.slice(0, 3), rest = all.slice(3);
+  const doneToday = S.tasks.filter(t => t.status === 'done' && t.doneAt && new Date(t.doneAt).toISOString().slice(0, 10) === today).length;
+  return `<header class="top"><div><p class="eyebrow">${esc(now.toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'long'}))}${doneToday ? ' · ' + doneToday + ' done today' : ''}</p><h1>Focus</h1></div></header>
+  ${top.length ? top.map(t => { const c = C(t.client); return `<div class="focus" data-tid="${esc(t.id)}" style="${hueStyle(c)}"><div class="s" style="display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)">${dot(c)} ${esc(c ? c.name : '')}${t.brief?.mins ? ` · about ${esc(t.brief.mins)} min` : ''}</div>
+      <h2>${esc(splitTitle(t.title)[0])}</h2>${splitTitle(t.title)[1] ? `<p class="muted" style="margin:-4px 0 12px;font-size:13.5px">${esc(splitTitle(t.title)[1])}</p>` : ''}
+      <div class="row" style="gap:8px"><button class="b pri" data-act="focusDone">Done</button><button class="b" data-act="openBrief">${ui.briefOpen[t.id] ? 'Hide steps' : 'See the steps'}</button></div>
+      ${ui.briefOpen[t.id] ? briefPanel(t) : ''}</div>`; }).join('') : `<p class="empty">${loaded.tasks ? 'Nothing is planned for today. Press Plan my day on Home when you are ready.' : LOADING}</p>`}
+  ${rest.length ? `<div class="sec"><div class="lab">Next up · ${rest.length}</div><div class="items">${rest.slice(0, 6).map(t => `<div class="it"><div class="t">${dot(C(t.client))} ${esc(splitTitle(t.title)[0])}</div></div>`).join('')}</div></div>` : ''}`;
 }
 
 /* ----- Backup and restore ----- */
@@ -1628,29 +1663,31 @@ async function run(key, fn){
   ui.busy[key] = false; delete ui.ctl[key]; render();
 }
 // Ask Claude for one JSON object per line and hand each over as soon as its line is complete.
-async function streamItems(prompt, key, onItem){
+async function streamItems(prompt, key, onItem, extra = {}){
   const ctl = new AbortController(); ui.ctl[key] = ctl;
   let pending = '', n = 0;
   const eat = line => { line = line.trim().replace(/^```\w*|```$/g, '').replace(/^[-*]\s+/, '').replace(/,\s*$/, ''); if (!line.startsWith('{')) return; try { const o = JSON.parse(line); if (onItem(o) !== false) n++; schedule(); } catch(e){} };
-  const {text} = await sample(prompt + '\n\nOUTPUT FORMAT: one complete JSON object per line (NDJSON). No array brackets, no code fences, no other text. Write the most useful item first.', {cache:false, signal:ctl.signal,
+  const {text} = await sample(prompt + '\n\nOUTPUT FORMAT: one complete JSON object per line (NDJSON). No array brackets, no code fences, no other text. Write the most useful item first.', {cache:false, signal:ctl.signal, ...extra,
     onText:({delta}) => { const lines = (pending + delta).split('\n'); pending = lines.pop(); lines.forEach(eat); }});
   eat(pending);
   if (!n){ try { const m = text.match(/\[[\s\S]*\]/); if (m) JSON.parse(m[0]).forEach(o => { if (onItem(o) !== false) n++; }); } catch(e){} }
   return n;
 }
-const progress = k => `<div class="genprog"><span class="spin" aria-hidden="true"></span><span>Writing… <span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span><button class="lnk" data-act="stopGen" data-k="${esc(k)}">Stop</button></div>`;
+const progress = k => `<div class="genprog"><span class="spin" aria-hidden="true"></span><span>${/^(day|camp:)/.test(k) ? 'Thinking it through carefully (up to a minute)… ' : 'Writing… '}<span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span><button class="lnk" data-act="stopGen" data-k="${esc(k)}">Stop</button></div>`;
 setInterval(() => document.querySelectorAll('[data-el]').forEach(el => { const t = ui.t0[el.dataset.el]; if (t) el.textContent = Math.round((Date.now() - t) / 1000) + 's'; }), 1000);
 const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Each item: {"client": client id, "title": a short action of under 8 words, then ": " and the specifics (e.g. "Groom-season carousel: slide 1 fabric roll, slide 2 cutting… caption pushes fittings"), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or "", "todo": the to-do id when the item comes from ownerTodo, else "", "priority": "high"|"medium"|"low", "due": "YYYY-MM-DD" (today unless it can wait), "mins": estimated minutes as a number}.`;
 
 function planDay(){
-  const cp = CAPS[ui.cap] || CAPS['2h'];
+  const cp = CAPS[ui.cap] || CAPS['2h'], pi = paceInfo(cp[1]);
   run('day', async () => {
     const data = S.clients.filter(c => c.status !== 'paused').map(c => ({id:c.id, ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
       doNotSuggest:(c.noSuggest || []).slice(-30).map(x => x.t + (x.why ? ' (' + x.why + ')' : '')), ownerInstructions:activeNotes(c), alreadyOnTheList:openTasks(c.id).map(t => t.title).slice(0, 30), finishedRecently:recentDone(c.id), ownerTodo:todosOpen(c).map(x => ({id:x.id, text:x.text, addedDaysAgo:daysSince(x.at)})), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
     const team = S.team.map(m => `${m.name} (${m.role})`);
     ui.dayPlan = [];
-    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner has ${cp[0].toLowerCase()} for tasks today across all pages. Give ONLY as many tasks as fit in that time: no more than ${cp[1]} in total, each with an honest estimate in minutes (15 to 60) that adds up to about that time. Fewer, more important tasks are better than a long list: the team is three people and a long list causes stress. At most 2 tasks may be \"high\" priority. Choose by real urgency: client and festive deadlines first, then pages furthest behind target, then growth work. The owner's own to-do items (ownerTodo) are strong candidates, but include one only if it is truly worth doing today; for one you include, keep its meaning, sharpen the wording, put its id in \"todo\" and set \"priority\" (\"high\" must happen today, \"medium\" within 3 days, \"low\" within 7 days); the to-dos you leave out simply stay on the to-do list. Every task in this plan is due today. NEVER suggest anything that is already in a page's alreadyOnTheList or finishedRecently, even reworded or split into smaller parts: those are done or already planned. If a page has nothing genuinely new that matters today, give it fewer tasks or none. Obey each page's ownerInstructions exactly (for example work the owner asked to hold until a date, or to do later), and never suggest anything in its doNotSuggest list, even reworded. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; if (blocked(v[0].client, v[0].title)) return false; ui.dayPlan.push(v[0]); });
+    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner has ${cp[0].toLowerCase()} for tasks today across all pages. Give ONLY as many tasks as fit in that time: no more than ${pi.max} in total, each with an honest estimate in minutes (15 to 60) that adds up to about that time. Fewer, more important tasks are better than a long list: the team is three people and a long list causes stress. ${pi.recent.length ? 'The owner recently rated past plans: ' + pi.recent.map(x => x.r === 'much' ? 'too much' : x.r === 'little' ? 'too little' : 'about right').join(', ') + '. Respect that. ' : ''}${pi.avg ? 'The team has really been finishing about ' + pi.avg + ' tasks a day, so do not plan much beyond that. ' : ''}At most 2 tasks may be \"high\" priority. Choose by real urgency: client and festive deadlines first, then pages furthest behind target, then growth work. The owner's own to-do items (ownerTodo) are strong candidates, but include one only if it is truly worth doing today; for one you include, keep its meaning, sharpen the wording, put its id in \"todo\" and set \"priority\" (\"high\" must happen today, \"medium\" within 3 days, \"low\" within 7 days); the to-dos you leave out simply stay on the to-do list. Every task in this plan is due today. NEVER suggest anything that is already in a page's alreadyOnTheList or finishedRecently, even reworded or split into smaller parts: those are done or already planned. If a page has nothing genuinely new that matters today, give it fewer tasks or none. Obey each page's ownerInstructions exactly (for example work the owner asked to hold until a date, or to do later), and never suggest anything in its doNotSuggest list, even reworded. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; if (blocked(v[0].client, v[0].title)) return false; ui.dayPlan.push(v[0]); }, {modelTier:'complex'});
     if (!n) throw {code:'empty'};
+    const mins = (ui.dayPlan || []).reduce((a, i) => a + (i.mins || 0), 0);
+    write(() => db.doc('meta/pace').set({ratings:S.pace?.ratings || [], last:{d:today, n:ui.dayPlan.length, mins, cap:ui.cap || '2h'}}));
   });
 }
 function ideas(c){
@@ -2177,7 +2214,7 @@ async function buildCampaign(x){
       if (o.type === 'brief'){ ui.campLive[x.id].brief = o; return; }
       if (o.type === 'item' && o.title){ ui.campLive[x.id].items.push({date:/^\d{4}-\d\d-\d\d$/.test(o.date) ? o.date : '', phase:String(o.phase || ''), channel:CH[o.channel] ? o.channel : 'ig_post', title:String(o.title), hook:String(o.hook || ''), copy:String(o.copy || ''), visual:String(o.visual || ''), need:String(o.need || ''), assignee:String(o.assignee || '')}); return; }
       return false;
-    });
+    }, {modelTier:'complex'});
     const L = ui.campLive[x.id];
     if (!L.items.length && !L.brief) throw {code:'invalid_json'};
     const b = L.brief || {};
@@ -2845,6 +2882,8 @@ document.addEventListener('click', async e => {
   if (a === 'sugSkip'){ const r = b.closest('[data-sug]'), key = r.dataset.sug, it = (key === 'day' ? ui.dayPlan : ui.ideas[key.split(':')[1]])[Number(r.dataset.n)]; if (it) it.hidden = true; render(); return; }
   if (a === 'sugReplace' || a === 'sugReplaceNo'){ const r = b.closest('[data-sug]'); ui.replaceConfirm[r.dataset.sug + ':' + r.dataset.n] = a === 'sugReplace'; render(); return; }
   if (a.startsWith('old')){ await oldAct(a, b); return; }
+  if (a === 'rate'){ const l = S.pace?.last; if (!l) return; await write(() => db.doc('meta/pace').set({ratings:[...(S.pace.ratings || []), {d:l.d, r:b.dataset.r, n:l.n}].slice(-14), last:l}), b.dataset.r === 'skip' ? '' : 'Thanks. The next plan will adjust.'); return; }
+  if (a === 'focusDone'){ const id = b.closest('[data-tid]').dataset.tid; await write(() => tasksCol().doc(id).update({status:'done', doneMonth:monthKey, doneAt:Date.now(), statusAt:{done:Date.now()}}), 'Done. Nice.'); return; }
   if (a === 'allDue'){ ui.allDue = true; render(); return; }
   if (a === 'bkSnooze'){ try { localStorage.setItem('rsd-bk-snooze', String(Date.now() + 7 * 864e5)); } catch(e){} render(); return; }
   if (a === 'allTodo'){ ui.allTodo = true; render(); return; }
@@ -3111,6 +3150,7 @@ async function boot(){
   listen('prompts');
   listen('reports');
   db.doc('meta/backup').onSnapshot(sn => { S.backup = sn.exists ? sn.data() : null; schedule(); }, () => {});
+  db.doc('meta/pace').onSnapshot(sn => { S.pace = sn.exists ? sn.data() : null; schedule(); }, () => {});
   listen('campaigns', (a,b) => (b.createdAt||0) - (a.createdAt||0));
   render();
   try { sample = await claude.use('sample'); } catch(e){}
