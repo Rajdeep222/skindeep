@@ -687,19 +687,18 @@ function pace(c){
 }
 /* ----- Older tasks: Plan my day asks before touching them ----- */
 function oldTasksBlock(){
-  if (!ui.dayPlan && !ui.out.day) return '';
-  const od = S.tasks.filter(t => t.status !== 'done' && t.due && t.due < today && !ui.oldDone[t.id]).sort((a, b) => a.due.localeCompare(b.due));
+  const od = S.tasks.filter(t => needsDecision(t) && !ui.oldDone[t.id]).sort((a, b) => (b.rolled || 0) - (a.rolled || 0) || (a.due || '').localeCompare(b.due || ''));
   if (!od.length) return '';
-  const rows = od.slice(0, ui.allOld ? 99 : 6);
-  return `<div class="oldblock"><div class="row" style="justify-content:space-between"><b style="font-weight:600;font-size:13.5px">Your older tasks · ${od.length} late</b><button class="lnk" data-act="oldKeepAll">Keep all as they are</button></div>
-    <p class="muted" style="margin:2px 0 4px;font-size:12.5px">Plan my day never deletes or changes these by itself. Choose what happens to each one.</p>
-    ${rows.map(t => { const c = C(t.client), conf = ui.oldConfirm === t.id; return `<div class="it" data-oldid="${esc(t.id)}"><div><div class="t">${dot(c)} ${esc(splitTitle(t.title)[0])}</div><div class="s"><span>${esc(c ? c.name : '')}</span><span class="late">${-daysTo(t.due)} day${-daysTo(t.due) === 1 ? '' : 's'} late</span></div></div>
-      <div class="c">${conf ? `<span class="late" style="font-size:12.5px">Delete this task?</span><button class="b" data-act="oldDelYes">Yes, delete</button><button class="lnk" data-act="oldDelNo">No</button>` : `<button class="b" data-act="oldKeep">Keep</button><button class="lnk" data-act="oldToday">Do today</button><button class="lnk" data-act="oldDel">Delete</button>`}</div></div>`; }).join('')}
-    ${od.length > 6 && !ui.allOld ? `<button class="lnk" data-act="oldMore" style="margin-top:6px">Show all ${od.length}</button>` : ''}</div>`;
+  const rows = od.slice(0, ui.allOld ? 99 : 4);
+  return `<div class="oldblock"><div class="row" style="justify-content:space-between"><b style="font-weight:600;font-size:13.5px">${od.length} task${od.length === 1 ? '' : 's'} need${od.length === 1 ? 's' : ''} a decision</b><button class="lnk" data-act="oldKeepAll">Not now, hide these</button></div>
+    <p class="muted" style="margin:2px 0 4px;font-size:12.5px">Past a client deadline, or moved 3 times or more. Nothing is changed or deleted unless you choose.</p>
+    ${rows.map(t => { const c = C(t.client), conf = ui.oldConfirm === t.id, why = isLate(t) ? `${-daysTo(t.due)} day${-daysTo(t.due) === 1 ? '' : 's'} past its deadline` : `Moved ${t.rolled} times`; return `<div class="it" data-oldid="${esc(t.id)}"><div><div class="t">${dot(c)} ${esc(splitTitle(t.title)[0])}</div><div class="s"><span>${esc(c ? c.name : '')}</span><span class="late">${esc(why)}</span></div></div>
+      <div class="c">${conf ? `<span class="late" style="font-size:12.5px">Delete this task?</span><button class="b" data-act="oldDelYes">Yes, delete</button><button class="lnk" data-act="oldDelNo">No</button>` : `<button class="b" data-act="oldToday">Do today</button><button class="lnk" data-act="oldKeep">Keep</button><button class="lnk" data-act="oldDel">Delete</button>`}</div></div>`; }).join('')}
+    ${od.length > 4 && !ui.allOld ? `<button class="lnk" data-act="oldMore" style="margin-top:6px">Show all ${od.length}</button>` : ''}</div>`;
 }
 async function oldAct(a, b){
   const id = b.closest('[data-oldid]')?.dataset.oldid;
-  if (a === 'oldKeepAll'){ S.tasks.filter(t => t.status !== 'done' && t.due && t.due < today).forEach(t => ui.oldDone[t.id] = true); render(); return; }
+  if (a === 'oldKeepAll'){ S.tasks.filter(needsDecision).forEach(t => ui.oldDone[t.id] = true); render(); return; }
   if (a === 'oldMore'){ ui.allOld = true; render(); return; }
   if (!id) return;
   if (a === 'oldKeep'){ ui.oldDone[id] = true; render(); return; }
@@ -807,14 +806,14 @@ async function moreAct(a, b){
       else if (w === 'note'){ it.remark = note; toast('Note saved'); }
       else {
         const sel = document.querySelector(`[data-sug="${CSS.escape(host.split(':').slice(1, -1).join(':'))}"][data-n="${host.split(':').pop()}"] [data-role="sugWho"]`);
-        const id = await addTask({...it, assignee:sel ? sel.value : '', due:w === 'now' ? today : until, priority:w === 'now' ? 'high' : 'low', comments:[cm, ...(it.remark ? [{who:myMember || '', text:it.remark, at:Date.now()}] : [])], autoBrief:host.startsWith('sug:day') && !!sample});
+        const id = await addTask({...it, assignee:sel ? sel.value : '', due:w === 'now' ? today : until, priority:w === 'now' ? 'high' : 'low', hard:w === 'later', comments:[cm, ...(it.remark ? [{who:myMember || '', text:it.remark, at:Date.now()}] : [])], autoBrief:host.startsWith('sug:day') && !!sample});
         if (id) it.added = true; else return;
         toast(w === 'now' ? 'Added for today' : 'Added for ' + fmt(until));
       }
     } else {
       const u = {comments:[...(t.comments || []), cm].slice(-30)};
       if (w === 'now'){ u.due = today; u.priority = 'high'; }
-      else if (w === 'later' || w === 'hold'){ u.due = until; if (w === 'later') u.priority = 'low'; }
+      else if (w === 'later' || w === 'hold'){ u.due = until; if (w === 'later'){ u.priority = 'low'; u.hard = true; } }
       if (!(await write(() => tasksCol().doc(t.id).update(u), w === 'now' ? 'Moved to today' : w === 'note' ? 'Remark saved' : 'Moved to ' + fmt(until)))) return;
     }
     for (const k of ['rm-w-', 'rm-d-', 'rm-t-']) delete ui.keep[k + host];
@@ -835,6 +834,19 @@ function similar(a, b){
 // An open task, or one finished in the last 3 weeks, that says the same thing for the same page.
 const dupOf = (cid, title) => S.tasks.find(t => t.client === cid && (t.status !== 'done' || (t.doneAt && Date.now() - t.doneAt < 21 * 864e5)) && similar(t.title, title));
 const recentDone = cid => S.tasks.filter(t => t.client === cid && t.status === 'done' && t.doneAt && Date.now() - t.doneAt < 21 * 864e5).slice(-15).map(t => t.title);
+/* ----- Calm mode: only real deadlines turn red; other dates roll forward ----- */
+const hardTask = t => !!(t.campaign || t.hard);
+const isLate = t => t.status !== 'done' && !!t.due && t.due < today && hardTask(t);
+const needsDecision = t => t.status !== 'done' && (isLate(t) || (t.rolled || 0) >= 3);
+const CAPS = {'1h':['About 1 hour', 3], '2h':['About 2 hours', 4], '4h':['Half a day', 6], '8h':['A full day', 8]};
+async function rollSoft(){
+  if (role !== 'admin' || !loaded.tasks) return;
+  let last = ''; try { last = localStorage.getItem('rsd-roll') || ''; } catch(e){}
+  if (last === today) return;
+  try { localStorage.setItem('rsd-roll', today); } catch(e){}
+  for (const t of S.tasks.filter(q => q.status !== 'done' && q.due && q.due < today && !hardTask(q)))
+    await write(() => tasksCol().doc(t.id).update({due:today, rolled:(t.rolled || 0) + 1, origDue:t.origDue || t.due}));
+}
 const openTasks = cid => S.tasks.filter(t => t.status !== 'done' && (!cid || t.client === cid));
 const clientInsights = cid => S.insights.filter(i => i.client === cid).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
 const eventsFor = cid => EVENTS.filter(e => e.who.includes(cid) && daysTo(e.d) >= -1);
@@ -916,7 +928,7 @@ addEventListener('resize', () => { if (ui.view === 'report') fitRep(); });
 
 const navBtn = (v, l, extra = '') => `<button data-go="${v}" aria-current="${ui.view === v || (v === 'campaigns' && ui.view === 'campaign')}">${ico(v)}<span class="nm">${l}</span>${extra}</button>`;
 function side(){
-  const od = openTasks().filter(t => t.due && t.due < today).length, open = openTasks().length;
+  const od = openTasks().filter(t => isLate(t)).length, open = openTasks().length;
   const me = M(myMember);
   return `<button class="mark home" data-go="today" aria-label="Home">reach theory<span>desk</span></button>
   <button class="search" data-act="cmd">${ico('search')}<span>Search</span><kbd>Ctrl K</kbd></button>
@@ -993,7 +1005,7 @@ function splitTitle(txt){
   return [t.slice(0, k) + '…', '…' + t.slice(k).trim()];
 }
 function taskRow(t, opts = {}){
-  const c = C(t.client), late = t.status !== 'done' && t.due && t.due < today;
+  const c = C(t.client), late = isLate(t);
   const cm = t.comments || [], last = cm[cm.length - 1], open = ui.openTask === t.id;
   const lateBy = late ? -daysTo(t.due) : 0;
   return `<div class="it ${late ? 'is-late' : ''}" data-tid="${esc(t.id)}">
@@ -1027,7 +1039,7 @@ function suggestions(key, items){
     <div><div class="t">${esc(i.title)}</div>
     ${i.remark ? `<div class="s"><span class="k ask">Your note</span><span>${esc(i.remark)}</span></div>` : ''}
     ${(() => { const d = dupOf(i.client, i.title); return d ? `<div class="s"><span class="late">Already on the list: ${esc(d.title.length > 70 ? d.title.slice(0, 70) + '…' : d.title)}${d.status === 'done' ? ' (done)' : ''}</span></div>` : ''; })()}
-    <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}${i.todo ? '<span class="k ask">Your to-do</span>' : ''}${i.priority ? `<span class="pill ${i.priority === 'high' ? 'bad' : i.priority === 'medium' ? 'warn' : 'neutral'}" style="font-size:11px">${i.priority}</span>` : ''}${key === 'day' && i.due && i.due !== today ? `<span class="mono">due ${esc(fmt(i.due))}</span>` : ''}<span class="k">${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
+    <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}${i.todo ? '<span class="k ask">Your to-do</span>' : ''}${i.mins ? `<span class="mono muted" style="font-size:12px">~${i.mins} min</span>` : ''}${i.priority ? `<span class="pill ${i.priority === 'high' ? 'bad' : i.priority === 'medium' ? 'warn' : 'neutral'}" style="font-size:11px">${i.priority}</span>` : ''}${key === 'day' && i.due && i.due !== today ? `<span class="mono">due ${esc(fmt(i.due))}</span>` : ''}<span class="k">${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
     ${i.need ? `<div class="s">Ask client for: ${esc(i.need)}</div>` : ''}</div>
     <div class="c"><label class="vh" for="sw-${esc(key)}-${i.n}">Assign</label><select id="sw-${esc(key)}-${i.n}" data-role="sugWho">${whoOptions(S.team.find(m => m.name.toLowerCase() === String(i.assignee||'').toLowerCase())?.id || '')}</select>
     ${(() => { const d = dupOf(i.client, i.title), rk = key + ':' + i.n;
@@ -1037,13 +1049,13 @@ function suggestions(key, items){
         : `<button class="b" data-act="addSug">Keep both</button><button class="lnk" data-act="sugReplace">Replace old</button><button class="lnk" data-act="sugSkip">Skip</button>`; })()}
     <button class="mbtn" data-act="mmOpen" aria-expanded="${!!ui.moreOpen['sug:' + key + ':' + i.n]}" aria-label="More options" title="Edit, do now or later, don’t suggest again">⋯</button></div>
     ${ui.moreOpen['sug:' + key + ':' + i.n] ? moreMenu('sug:' + key + ':' + i.n, true) : ''}</div>`; }).join('')}</div>
-    <div class="row" style="margin-top:10px"><button class="lnk" data-act="addAllSug" data-key="${esc(key)}">Add all as tasks</button></div>`;
+    <div class="row" style="margin-top:10px"><button class="lnk" data-act="addAllSug" data-key="${esc(key)}">Add all as tasks</button>${key === 'day' && rows.some(i => i.mins) ? `<span class="muted" style="font-size:12.5px">${rows.length} task${rows.length === 1 ? '' : 's'} · about ${(() => { const m = rows.reduce((a, i) => a + (i.mins || 0), 0); return m >= 90 ? (Math.round(m / 30) / 2) + ' hours' : m + ' min'; })()}</span>` : ''}</div>`;
 }
 const busyOr = (k, html, partial) => ui.busy[k] ? (partial || '') + progress(k) : html;
 
 /* ----- Today ----- */
 function viewToday(){
-  const due = openTasks().filter(t => t.due && t.due <= today).sort((a,b) => a.due.localeCompare(b.due));
+  const dueAll = openTasks().filter(t => t.due && t.due <= today).sort((a, b) => (isLate(b) - isLate(a)) || ((b.priority === 'high') - (a.priority === 'high')) || a.due.localeCompare(b.due)), due = ui.allDue ? dueAll : dueAll.slice(0, 5);
   const soon = EVENTS.filter(e => daysTo(e.d) >= 0 && daysTo(e.d) <= 45).slice(0, 3);
   const waiting = S.insights.filter(i => i.unread).length;
   const hr = now.getHours(), hello = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
@@ -1051,21 +1063,21 @@ function viewToday(){
   const showPlan = ui.busy.day || ui.out.day || ui.dayPlan;
   return `<header class="top"><div><p class="eyebrow">${esc(now.toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'}))} · ${dim - day + 1} day${dim - day ? 's' : ''} left in ${esc(monthName)}</p>
     <h1>${hello}${me ? ', ' + esc(me.name) : ''}</h1></div>
-    ${sample ? `<button class="b pri" data-act="planDay" ${ui.busy.day ? 'disabled' : ''}>${ui.busy.day ? 'Planning…' : 'Plan my day'}</button>` : ''}</header>
+    ${sample ? `<div class="row" style="gap:8px;flex:none"><label class="vh" for="plan-cap">Time for tasks today</label><select id="plan-cap" data-change="cap" title="How much time do you have for tasks today? The plan is sized to fit.">${Object.entries(CAPS).map(([k, v]) => `<option value="${k}"${(ui.cap || '2h') === k ? ' selected' : ''}>${v[0]}</option>`).join('')}</select><button class="b pri" data-act="planDay" ${ui.busy.day ? 'disabled' : ''}>${ui.busy.day ? 'Planning…' : 'Plan my day'}</button></div>` : ''}</header>
   ${statsStrip()}
   ${overdueAlert()}
   ${waiting ? `<div class="alert warn"><span>${waiting} screenshot${waiting===1?'':'s'} waiting to be read</span><span class="muted" style="font-weight:400">Read every morning at 7:50, or say “read new insights” in chat</span></div>` : ''}
   ${backupNudge()}
   ${restorePanel()}
+  ${oldTasksBlock()}
   ${liveCampaigns()}
   ${paymentsDue()}
   ${showPlan ? `<div class="sec"><div class="lab">Today’s plan<span class="acts"><button class="lnk" data-act="closePlan">Close</button></span></div>
-    ${ui.busy.day ? '' : oldTasksBlock()}
     ${busyOr('day', ui.out.day && !(ui.dayPlan || []).length ? `<p class="empty">${esc(ui.out.day)}</p>` : suggestions('day', ui.dayPlan || []), (ui.dayPlan || []).length ? suggestions('day', ui.dayPlan) : '')}</div>` : ''}
 
   ${todoHome()}
   <div class="sec"><div class="lab">Due now</div>
-  <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Use “Plan my day” to line up work.' : LOADING}</p>`}</div></div>
+  <div class="items">${due.length ? due.map(t => taskRow(t)).join('') : `<p class="empty">${loaded.tasks ? 'Nothing due. Use “Plan my day” to line up work.' : LOADING}</p>`}</div>${dueAll.length > 5 && !ui.allDue ? `<button class="lnk" data-act="allDue" style="margin-top:8px">${dueAll.length - 5} more for today. Show them</button>` : ''}</div>
 
   <div class="sec"><div class="lab">Pages<span class="acts muted">posted this month</span></div>
   <div class="items">${S.clients.map(c => { const p = pace(c), n = target(c), d = posted(c); return `<div class="it click prow2" data-go="client" data-cid="${esc(c.id)}" tabindex="0" role="link" style="${hueStyle(c)}">
@@ -1079,17 +1091,15 @@ function viewToday(){
 
 function statsStrip(){
   const tot = S.clients.reduce((a,c) => a + target(c), 0), done = S.clients.reduce((a,c) => a + posted(c), 0);
-  const od = openTasks().filter(t => t.due && t.due < today).length;
+  const od = openTasks().filter(t => isLate(t)).length;
   const cells = [[`${done}<small>/${tot}</small>`, 'Posted this month', false, 'data-go="clients"'], [openTasks().length, 'Open tasks', false, 'data-go="tasks" data-preset="open"'], [od, 'Overdue', od > 0, 'data-go="tasks" data-preset="overdue"'],
     [S.tasks.filter(t => t.status === 'sent').length, 'With client', false, 'data-go="tasks" data-preset="sent"']];
   return `<div class="stats">${cells.map(([n,l,hot,go]) => `<button class="stat ${hot ? 'hot' : ''}" ${go}><b>${n}</b><span>${l} <span class="arr">→</span></span></button>`).join('')}</div>`;
 }
 function overdueAlert(){
-  const od = openTasks().filter(t => t.due && t.due < today);
+  const od = openTasks().filter(isLate);
   if (!od.length) return '';
-  const oldest = Math.max(...od.map(t => -daysTo(t.due)));
-  const noReason = od.filter(t => !(t.comments || []).length).length;
-  return `<button class="alert" data-go="tasks" data-preset="overdue"><span>${od.length} overdue · oldest ${oldest} day${oldest === 1 ? '' : 's'} late${noReason ? ` · ${noReason} without a reason` : ''}</span><span>Review →</span></button>`;
+  return `<button class="alert warn" data-go="tasks" data-preset="overdue"><span>${od.length} task${od.length === 1 ? ' is' : 's are'} past a client deadline</span><span>Review →</span></button>`;
 }
 
 /* ----- Backup and restore ----- */
@@ -1097,7 +1107,8 @@ const BK_COLS = ['clients','tasks','team','insights','prompts','reports','campai
 function backupAge(){ const at = S.backup?.at; if (!at) return 'Never backed up'; const d = daysSince(at); return 'Last backup ' + (d === 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'); }
 function backupNudge(){
   const at = S.backup?.at; if (!loaded.clients || (at && daysSince(at) <= 30)) return '';
-  return `<div class="alert warn"><span>${at ? `Last backup was ${daysSince(at)} days ago.` : 'Your desk has never been backed up.'} Download one and keep it on your computer or Google Drive.</span><button class="lnk" style="color:inherit" data-act="backup">Download backup →</button></div>`;
+  try { if (Number(localStorage.getItem('rsd-bk-snooze') || 0) > Date.now()) return ''; } catch(e){}
+  return `<div class="alert warn"><span>${at ? `Last backup was ${daysSince(at)} days ago.` : 'Your desk has never been backed up.'} Download one and keep it on your computer or Google Drive.</span><span class="row" style="gap:12px"><button class="lnk" style="color:inherit" data-act="backup">Download backup →</button><button class="lnk" style="color:inherit;font-weight:400" data-act="bkSnooze">Next week</button></span></div>`;
 }
 async function doBackup(){
   if (!downloads){ toast('Downloads aren’t available in this view. Open the desk in claude.ai in a browser.'); return; }
@@ -1169,7 +1180,7 @@ function viewClients(){
       <span class="muted" style="font-size:12px">Claude can draft their growth plan and research on the next screen.</span></div>
     </form></div>` : ''}
   <div class="ccards">${S.clients.map(c => { const n = target(c), d = posted(c), p = pace(c), fl = folSorted(c).at(-1), st = folStats(folSorted(c));
-    const open = openTasks(c.id).length, od = openTasks(c.id).filter(t => t.due && t.due < today).length;
+    const open = openTasks(c.id).length, od = openTasks(c.id).filter(t => isLate(t)).length;
     return `<article class="ccard" data-go="client" data-cid="${esc(c.id)}" tabindex="0" role="link" style="${hueStyle(c)}">
       <div class="cc-top"><span class="mono-av">${esc(monogram(c.name))}</span><div class="cc-name"><b>${esc(c.name)}</b><span>${esc(c.tag || '')}</span></div>${c.status === 'paused' ? '<span class="pill neutral">Paused</span>' : `<span class="pill ${p.cls}">${esc(p.label)}</span>`}</div>
       <div class="cc-kpis">
@@ -1476,7 +1487,7 @@ function dayPanel(ds){
 /* ----- Tasks ----- */
 function presetMatch(t){
   const p = ui.filt.preset;
-  if (p === 'overdue') return t.status !== 'done' && t.due && t.due < today;
+  if (p === 'overdue') return isLate(t);
   if (p === 'sent') return t.status === 'sent';
   if (p === 'open') return t.status !== 'done';
   if (p === 'today') return t.status !== 'done' && t.due === today;
@@ -1493,7 +1504,7 @@ function viewTasks(){
   return `<header class="top"><div><p class="eyebrow">To do → editing → with client → approved → done</p><h1>Tasks</h1></div>
     <div class="seg" role="group" aria-label="Task view"><button data-tv="list" aria-pressed="${!board}">List</button><button data-tv="board" aria-pressed="${board}">Board</button></div></header>
   ${(() => { const op = S.tasks.filter(t => t.status !== 'done');
-    const q = [['overdue','Overdue', op.filter(t => t.due && t.due < today).length, 'bad'], ['today','Today', op.filter(t => t.due === today).length, 'warn'], ['week','This week', op.filter(t => t.due && t.due >= today && daysTo(t.due) <= 7).length, ''], ['sent','With client', op.filter(t => t.status === 'sent').length, ''], ['unassigned','Unassigned', op.filter(t => !t.assignee).length, '']];
+    const q = [['overdue','Overdue', op.filter(t => isLate(t)).length, 'bad'], ['today','Today', op.filter(t => t.due === today).length, 'warn'], ['week','This week', op.filter(t => t.due && t.due >= today && daysTo(t.due) <= 7).length, ''], ['sent','With client', op.filter(t => t.status === 'sent').length, ''], ['unassigned','Unassigned', op.filter(t => !t.assignee).length, '']];
     return `<div class="quick">${q.map(([k,l,n,cl]) => `<button class="qchip ${cl} ${f.preset === k ? 'on' : ''}" data-act="${f.preset === k ? 'clearPreset' : 'quick'}" data-q="${k}" aria-pressed="${f.preset === k}"><b>${n}</b>${l}</button>`).join('')}</div>`; })()}
   <div class="sec toolbar">
     <div class="row" style="justify-content:space-between;gap:10px">
@@ -1520,7 +1531,7 @@ function viewTasks(){
 function taskGroups(list){
   const g = ui.groupBy, groups = [];
   if (g === 'due'){
-    const B = [['Overdue', t => t.status !== 'done' && t.due && t.due < today, 'bad'], ['Today', t => t.due === today, 'warn'], ['This week', t => t.due > today && daysTo(t.due) <= 7, ''], ['Later', t => t.due && daysTo(t.due) > 7, ''], ['No date', t => !t.due, ''], ['Done', t => t.status === 'done' && t.due && t.due < today, '']];
+    const B = [['Overdue', t => isLate(t), 'bad'], ['Today', t => t.due === today, 'warn'], ['This week', t => t.due > today && daysTo(t.due) <= 7, ''], ['Later', t => t.due && daysTo(t.due) > 7, ''], ['No date', t => !t.due, ''], ['Done', t => t.status === 'done' && isLate(t), '']];
     const used = new Set();
     for (const [l, fn, cl] of B){ const items = list.filter(t => !used.has(t.id) && fn(t)); items.forEach(t => used.add(t.id)); if (items.length) groups.push({l, items, cl}); }
   } else if (g === 'person'){
@@ -1529,7 +1540,7 @@ function taskGroups(list){
     for (const c of S.allClients){ const items = list.filter(t => t.client === c.id); if (items.length) groups.push({l:c.name, items, c}); }
     const orphan = list.filter(t => !C(t.client)); if (orphan.length) groups.push({l:'Other', items:orphan});
   }
-  return groups.map(gr => { const od = gr.items.filter(t => t.status !== 'done' && t.due && t.due < today).length;
+  return groups.map(gr => { const od = gr.items.filter(t => isLate(t)).length;
     return `<section class="sec tgroup" style="${gr.c ? hueStyle(gr.c) : ''}"><div class="tgh">${gr.c ? `<span class="mono-av sm">${esc(monogram(gr.c.name))}</span>` : gr.av ? `<span class="av">${initials(gr.av)}</span>` : `<span class="gdot ${gr.cl || ''}"></span>`}
       <b>${esc(gr.l)}</b><span class="muted">${gr.items.length}</span>${od && g !== 'due' ? `<span class="pill bad" style="font-size:11.5px">${od} overdue</span>` : ''}
       ${gr.c ? `<button class="lnk" style="margin-left:auto;font-size:12.5px" data-go="client" data-cid="${esc(gr.c.id)}">Open page →</button>` : ''}</div>
@@ -1539,7 +1550,7 @@ const initials = m => m ? esc(m.name.split(/\s+/).map(w => w[0]).join('').slice(
 function boardView(list){
   return `<div class="board">${Object.entries(STATUS).map(([k, l]) => { const col = list.filter(t => t.status === k);
     return `<div class="col" data-col="${k}"><div class="colh"><span class="sdot s-${k}"></span>${l}<span class="mono muted">${col.length}</span></div>
-      ${col.map(t => { const c = C(t.client), late = t.status !== 'done' && t.due && t.due < today, m = M(t.assignee), cm = (t.comments || []).length;
+      ${col.map(t => { const c = C(t.client), late = isLate(t), m = M(t.assignee), cm = (t.comments || []).length;
         return `<div class="card" draggable="true" data-tid="${esc(t.id)}">
           <div class="t">${esc(t.title)}</div>
           <div class="s"><span>${dot(c)} ${esc(c ? c.name : t.clientName || '')}</span><span class="k">${esc(SHORT[t.kind] || t.kind)}</span></div>
@@ -1583,7 +1594,7 @@ const tasksCol = () => db.collection('tasks');
 async function addTask(t){
   const c = C(t.client); let id = '';
   const ok = await write(async () => { const r = await tasksCol().add({title:String(t.title).slice(0, 300), client:t.client, clientName:c ? c.name : '', kind:KINDS[t.kind] ? t.kind : 'other',
-    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {}), ...(t.priority ? {priority:t.priority} : {}), ...(t.comments ? {comments:t.comments} : {})}); id = r && r.id || ''; });
+    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {}), ...(t.priority ? {priority:t.priority} : {}), ...(t.comments ? {comments:t.comments} : {}), ...(t.hard ? {hard:true} : {})}); id = r && r.id || ''; });
   if (ok && id && t.autoBrief) queueBrief(id);
   return ok ? (id || true) : false;
 }
@@ -1609,7 +1620,7 @@ const upd = (cid, data, ok) => write(() => db.collection('clients').doc(cid).upd
 function validItems(arr, fallbackClient){
   return (Array.isArray(arr) ? arr : []).map(i => ({...i, client: C(i && i.client) ? i.client : fallbackClient}))
     .filter(i => i && i.title && C(i.client)).map(i => ({client:i.client, title:String(i.title), kind:KINDS[i.kind] ? i.kind : 'other',
-      why:String(i.why || ''), need:String(i.need || ''), assignee:String(i.assignee || ''), priority:['high','medium','low'].includes(i.priority) ? i.priority : '', due:/^\d{4}-\d\d-\d\d$/.test(String(i.due || '')) && i.due >= today ? i.due : '', todo:typeof i.todo === 'string' && todoOf(i.client, i.todo) ? i.todo : ''}));
+      why:String(i.why || ''), need:String(i.need || ''), assignee:String(i.assignee || ''), mins:Math.min(180, Math.max(0, Number(i.mins) || 0)), priority:['high','medium','low'].includes(i.priority) ? i.priority : '', due:/^\d{4}-\d\d-\d\d$/.test(String(i.due || '')) && i.due >= today ? i.due : '', todo:typeof i.todo === 'string' && todoOf(i.client, i.todo) ? i.todo : ''}));
 }
 async function run(key, fn){
   ui.busy[key] = true; ui.t0[key] = Date.now(); delete ui.out[key]; render();
@@ -1629,16 +1640,16 @@ async function streamItems(prompt, key, onItem){
 }
 const progress = k => `<div class="genprog"><span class="spin" aria-hidden="true"></span><span>Writing… <span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span><button class="lnk" data-act="stopGen" data-k="${esc(k)}">Stop</button></div>`;
 setInterval(() => document.querySelectorAll('[data-el]').forEach(el => { const t = ui.t0[el.dataset.el]; if (t) el.textContent = Math.round((Date.now() - t) / 1000) + 's'; }), 1000);
-const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Each item: {"client": client id, "title": a short action of under 8 words, then ": " and the specifics (e.g. "Groom-season carousel: slide 1 fabric roll, slide 2 cutting… caption pushes fittings"), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or "", "todo": the to-do id when the item comes from ownerTodo, else "", "priority": "high"|"medium"|"low", "due": "YYYY-MM-DD" (today unless it can wait)}.`;
+const itemSpec = `Never use the words film, shoot or record in a title: we only edit what the client sends. Each item: {"client": client id, "title": a short action of under 8 words, then ": " and the specifics (e.g. "Groom-season carousel: slide 1 fabric roll, slide 2 cutting… caption pushes fittings"), "kind": one of ${Object.keys(KINDS).join('|')}, "why": one short reason, "need": what to ask the client to send (photos/clips) or "", "assignee": a team name or "", "todo": the to-do id when the item comes from ownerTodo, else "", "priority": "high"|"medium"|"low", "due": "YYYY-MM-DD" (today unless it can wait), "mins": estimated minutes as a number}.`;
 
 function planDay(){
-  ui.oldDone = {}; ui.oldConfirm = null; ui.allOld = false;
+  const cp = CAPS[ui.cap] || CAPS['2h'];
   run('day', async () => {
     const data = S.clients.filter(c => c.status !== 'paused').map(c => ({id:c.id, ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
       doNotSuggest:(c.noSuggest || []).slice(-30).map(x => x.t + (x.why ? ' (' + x.why + ')' : '')), ownerInstructions:activeNotes(c), alreadyOnTheList:openTasks(c.id).map(t => t.title).slice(0, 30), finishedRecently:recentDone(c.id), ownerTodo:todosOpen(c).map(x => ({id:x.id, text:x.text, addedDaysAgo:daysSince(x.at)})), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
     const team = S.team.map(m => `${m.name} (${m.role})`);
     ui.dayPlan = [];
-    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner's own to-do items (ownerTodo) come first. Assess each one's priority against deadlines, festive dates, client asks, how far behind the page is, and how long it has waited: \"high\" means it must happen today; \"medium\" within 3 days; \"low\" within 7 days. Turn every to-do into one task: keep its meaning, sharpen the wording, put its id in \"todo\", set \"priority\", and set \"due\" to today for high, or a sensible later date for the rest. List them highest priority first. Then add up to 10 more tasks finishable today (due today, priority by importance). NEVER suggest anything that is already in a page's alreadyOnTheList or finishedRecently, even reworded or split into smaller parts: those are done or already planned. If a page has nothing genuinely new that matters today, give it fewer tasks or none. Obey each page's ownerInstructions exactly (for example work the owner asked to hold until a date, or to do later), and never suggest anything in its doNotSuggest list, even reworded. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; if (blocked(v[0].client, v[0].title)) return false; ui.dayPlan.push(v[0]); });
+    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner has ${cp[0].toLowerCase()} for tasks today across all pages. Give ONLY as many tasks as fit in that time: no more than ${cp[1]} in total, each with an honest estimate in minutes (15 to 60) that adds up to about that time. Fewer, more important tasks are better than a long list: the team is three people and a long list causes stress. At most 2 tasks may be \"high\" priority. Choose by real urgency: client and festive deadlines first, then pages furthest behind target, then growth work. The owner's own to-do items (ownerTodo) are strong candidates, but include one only if it is truly worth doing today; for one you include, keep its meaning, sharpen the wording, put its id in \"todo\" and set \"priority\" (\"high\" must happen today, \"medium\" within 3 days, \"low\" within 7 days); the to-dos you leave out simply stay on the to-do list. Every task in this plan is due today. NEVER suggest anything that is already in a page's alreadyOnTheList or finishedRecently, even reworded or split into smaller parts: those are done or already planned. If a page has nothing genuinely new that matters today, give it fewer tasks or none. Obey each page's ownerInstructions exactly (for example work the owner asked to hold until a date, or to do later), and never suggest anything in its doNotSuggest list, even reworded. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; if (blocked(v[0].client, v[0].title)) return false; ui.dayPlan.push(v[0]); });
     if (!n) throw {code:'empty'};
   });
 }
@@ -2367,7 +2378,7 @@ async function ccAct(a, b){
 function campDebrief(x){
   const c = C(x.client);
   run('deb:' + x.id, async () => {
-    const r = await sample.json(`${preamble}\n\nDebrief this finished campaign for ${c.name}. Be honest and specific, based only on the data. Reply with only JSON: {"summary": "2 sentences", "worked": [3 points], "didnt": [2-3 points], "next": [3 things to do differently next time]}\n\nCampaign: ${JSON.stringify({name:x.name, occasion:x.occasion, offer:x.offer, goal:GOALS[x.goal], target:x.target, budget:x.budget, start:x.start, end:x.end, bigIdea:x.brief?.bigIdea, pieces:(x.items || []).length, produced:campReady(x) + '%', results:x.results, tasksLate:campTasks(x).filter(t => t.status !== 'done' && t.due && t.due < today).length})}\nInsights during the campaign: ${JSON.stringify(clientInsights(c.id).filter(i => (i.date || '') >= (x.start || '') && (i.date || '') <= (x.end || '9')).map(i => ({title:i.title, metrics:i.metrics, learnings:i.learnings})).slice(0, 8))}`, {cache:false});
+    const r = await sample.json(`${preamble}\n\nDebrief this finished campaign for ${c.name}. Be honest and specific, based only on the data. Reply with only JSON: {"summary": "2 sentences", "worked": [3 points], "didnt": [2-3 points], "next": [3 things to do differently next time]}\n\nCampaign: ${JSON.stringify({name:x.name, occasion:x.occasion, offer:x.offer, goal:GOALS[x.goal], target:x.target, budget:x.budget, start:x.start, end:x.end, bigIdea:x.brief?.bigIdea, pieces:(x.items || []).length, produced:campReady(x) + '%', results:x.results, tasksLate:campTasks(x).filter(t => isLate(t)).length})}\nInsights during the campaign: ${JSON.stringify(clientInsights(c.id).filter(i => (i.date || '') >= (x.start || '') && (i.date || '') <= (x.end || '9')).map(i => ({title:i.title, metrics:i.metrics, learnings:i.learnings})).slice(0, 8))}`, {cache:false});
     if (!r || !r.summary) throw {code:'invalid_json'};
     const deb = {summary:String(r.summary), worked:(r.worked || []).map(String), didnt:(r.didnt || []).map(String), next:(r.next || []).map(String), at:Date.now()};
     await write(() => db.collection('campaigns').doc(x.id).update({debrief:deb}));
@@ -2418,10 +2429,10 @@ function studioReview(mk){
     }
     const doneC = S.tasks.filter(t => t.client === c.id && t.status === 'done' && CONTENT.includes(t.kind) && t.doneMonth === mk);
     if (doneC.length >= 6 && c.id !== 'eroe'){ const car = doneC.filter(t => t.kind === 'carousel').length / doneC.length; if (car < .15) add('Delivery', 1, `${c.name}: only ${Math.round(car * 100)}% carousels`, 'Carousels get the highest engagement on Instagram and are easy to make from client photos. Aim for about a third.', {go:'client', cid:c.id, tab:'create', l:'Make carousel prompts'}, 'carousel', c.name); }
-    const ov = S.tasks.filter(t => t.client === c.id && t.status !== 'done' && t.due && t.due < today).length;
+    const ov = S.tasks.filter(t => t.client === c.id && isLate(t)).length;
     rows.push({c, n, d, pct:Math.round(pct), ov, li, ask:(c.asks || []).filter(x => x.status !== 'done').length, rep:repDoc(c, prevMonth(monthKey))?.status === 'sent'});
   }
-  const od = openTasks().filter(t => t.due && t.due < today), noReason = od.filter(t => !(t.comments || []).length);
+  const od = openTasks().filter(t => isLate(t)), noReason = od.filter(t => !(t.comments || []).length);
   const avgLate = od.length ? Math.round(od.reduce((a, t) => a - daysTo(t.due), 0) / od.length) : 0;
   area.Deadlines.push(od.length ? Math.max(0, 100 - od.length * 12 - avgLate) : 100);
   if (od.length) add('Deadlines', od.length > 4 ? 3 : 2, `${od.length} overdue task${od.length > 1 ? 's' : ''}, ${avgLate} days late on average`, noReason.length ? `${noReason.length} have no reason written. Either move the date or say what’s blocking.` : 'Every one has a reason logged. Now move the dates or clear them.', {preset:'overdue', l:'Open overdue'});
@@ -2593,7 +2604,7 @@ async function saveTaskEdit(t, f){
   const title = g('title'); if (!title) return;
   const cl = C(g('client')) || C(t.client), due = g('due');
   const u = {title:title.slice(0, 300), client:cl ? cl.id : t.client, clientName:cl ? cl.name : t.clientName || '', kind:KINDS[g('kind')] ? g('kind') : t.kind, due, assignee:g('who')};
-  if (due) u.month = due.slice(0, 7);
+  if (due) { u.month = due.slice(0, 7); u.hard = true; }
   if (!(await write(() => tasksCol().doc(t.id).update(u), 'Task updated'))) return;
   if (t.campaign && due !== (t.due || '')){
     const x = S.campaigns.find(q => q.id === t.campaign);
@@ -2634,7 +2645,7 @@ const todosLive = c => (c.todos || []).filter(x => todoTask(x)?.status !== 'done
 const todosOpen = c => todosLive(c).filter(x => !todoTask(x));
 const guessKind = (txt, c) => /\breel|video|edit\b/i.test(txt) ? 'reel' : /carousel/i.test(txt) ? 'carousel' : /\bstory|stories\b/i.test(txt) ? 'story' : /\bad\b|ads\b|boost/i.test(txt) ? 'ad' : /website|banner|landing/i.test(txt) ? 'website' : /google|gbp|review/i.test(txt) ? 'gbp' : /\bseo\b/i.test(txt) ? 'seo' : /\bpost\b/i.test(txt) ? (c?.id === 'eroe' ? 'ai' : 'post') : 'other';
 function todoItem(c, x, home){
-  const t = todoTask(x), late = t && t.due && t.due < today;
+  const t = todoTask(x), late = t && isLate(t);
   return `<div class="it" data-todo="${esc(x.id)}" data-tcid="${esc(c.id)}">
     ${t ? `<span class="tick" style="border-style:dashed;cursor:default" title="In tasks: finish it there and it leaves this list"></span>` : `<button class="tick" data-act="todoDone" title="Done: remove from the list" aria-label="Done"></button>`}
     <div><div class="t">${home ? `${dot(c)} <span class="muted" style="font-size:12.5px">${esc(c.name)} ·</span> ` : ''}${esc(x.text)}</div>
@@ -2665,7 +2676,7 @@ async function todoAdd(c, text){
   const x = {id:'td' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text:text.slice(0, 300), at:Date.now(), by:myMember || ''};
   return upd(c.id, {todos:[...(c.todos || []), x]}, 'Added to your to-do');
 }
-const todoSchedule = (c, x, due) => addTask({title:x.text, client:c.id, kind:guessKind(x.text, c), assignee:myMember || '', due, todo:x.id});
+const todoSchedule = (c, x, due) => addTask({title:x.text, client:c.id, kind:guessKind(x.text, c), assignee:myMember || '', due, todo:x.id, hard:due > today});
 const todoRemove = (c, ids) => upd(c.id, {todos:(c.todos || []).filter(x => !ids.includes(x.id))});
 // Owner only: drop to-dos whose task is done, wherever it was marked done.
 let sweeping = false;
@@ -2834,6 +2845,8 @@ document.addEventListener('click', async e => {
   if (a === 'sugSkip'){ const r = b.closest('[data-sug]'), key = r.dataset.sug, it = (key === 'day' ? ui.dayPlan : ui.ideas[key.split(':')[1]])[Number(r.dataset.n)]; if (it) it.hidden = true; render(); return; }
   if (a === 'sugReplace' || a === 'sugReplaceNo'){ const r = b.closest('[data-sug]'); ui.replaceConfirm[r.dataset.sug + ':' + r.dataset.n] = a === 'sugReplace'; render(); return; }
   if (a.startsWith('old')){ await oldAct(a, b); return; }
+  if (a === 'allDue'){ ui.allDue = true; render(); return; }
+  if (a === 'bkSnooze'){ try { localStorage.setItem('rsd-bk-snooze', String(Date.now() + 7 * 864e5)); } catch(e){} render(); return; }
   if (a === 'allTodo'){ ui.allTodo = true; render(); return; }
   if (a.startsWith('todo')){
     const row = b.closest('[data-todo]'), tc = row ? C(row.dataset.tcid) : null, x = row && tc ? todoOf(tc.id, row.dataset.todo) : null;
@@ -2965,6 +2978,7 @@ document.addEventListener('change', async e => {
   if (k === 'status') await write(() => tasksCol().doc(tid).update({status:el.value, doneMonth: el.value === 'done' ? monthKey : '', doneAt: el.value === 'done' ? Date.now() : 0, statusAt:{[el.value]:Date.now()}}));
   else if (k === 'todoDue'){ const row = el.closest('[data-todo]'), tc = C(row.dataset.tcid), x = todoOf(tc?.id, row.dataset.todo); if (x && el.value) await todoSchedule(tc, x, el.value) && toast('Scheduled for ' + fmt(el.value)); }
   else if (k === 'tdhClient'){ ui.keep['tdh-c'] = el.value; }
+  else if (k === 'cap'){ ui.cap = el.value; try { localStorage.setItem('rsd-cap', ui.cap); } catch(_){} }
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
   else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
   else if (k === 'repMonth'){ ui.rMonth = el.value; render(); }
@@ -3018,7 +3032,7 @@ document.addEventListener('submit', async e => {
   if (k === 'campRes'){ const x = S.campaigns.find(q => q.id === ui.campId); if (!x) return; const r = {}; for (const [key] of RES){ const val = v('cr-' + key); if (val !== '') r[key] = val; } r.notes = v('cr-notes');
     await write(() => db.collection('campaigns').doc(x.id).update({results:r}), 'Results saved'); return; }
   if (k === 'dayTask'){ const title = v('dt-title'); if (!title || !ui.calDay) return; ['t-client','t-kind','t-who'].forEach((id, n) => ui.keep[id] = v(['dt-client','dt-kind','dt-who'][n]));
-    if (await addTask({title, client:v('dt-client'), kind:v('dt-kind'), assignee:v('dt-who'), due:ui.calDay})){ ui.keep['dt-title'] = ''; toast('Task added'); render(); } return; }
+    if (await addTask({title, client:v('dt-client'), kind:v('dt-kind'), assignee:v('dt-who'), due:ui.calDay, hard:ui.calDay > today})){ ui.keep['dt-title'] = ''; toast('Task added'); render(); } return; }
   if (k === 'repStats'){ const mk = ui.rMonth || monthKey, stats = {}; for (const a of AN){ const x = v('an-' + a.k); if (x !== '' && Number.isFinite(num(x))) stats[a.k] = num(x); } await saveRep(c, mk, {stats}, 'Numbers saved'); return; }
   if (k === 'repNote'){ const mk = ui.rMonth || monthKey; if (await saveRep(c, mk, {note:v('rep-note')}, 'Note saved')) delete ui.keep['rep-note-' + c.id + '-' + mk]; return; }
   if (k === 'comment'){
@@ -3033,7 +3047,7 @@ document.addEventListener('submit', async e => {
   if (k === 'next'){ const val = v('next-' + c.id); if (await upd(c.id, {next:val}, 'Saved')) delete ui.keep['next-' + c.id]; }
   else if (k === 'quickTask'){ const title = v('qt-' + c.id); if (!title) return; if (await addTask({title, client:c.id, kind:v('qk-' + c.id)})){ ui.keep['qt-' + c.id] = ''; toast('Task added'); render(); } }
   else if (k === 'task'){ const title = v('t-title'); if (!title) return; ['t-client','t-kind','t-who'].forEach(id => ui.keep[id] = v(id));
-    if (await addTask({title, client:v('t-client'), kind:v('t-kind'), assignee:v('t-who'), due:v('t-due')})){ ui.keep['t-title'] = ''; toast('Task added'); render(); } }
+    if (await addTask({title, client:v('t-client'), kind:v('t-kind'), assignee:v('t-who'), due:v('t-due'), hard:!!v('t-due')})){ ui.keep['t-title'] = ''; toast('Task added'); render(); } }
   else if (k === 'plan'){ const ok = await savePlanVersion(c, {target:{count:Math.max(0, Number(v('p-count')) || 0)}, plan:{goal:v('p-goal'), audience:v('p-aud'), focus:v('p-focus'), pillars:v('p-pil').split(',').map(s => s.trim()).filter(Boolean)}}, 'Edited by hand'); if (ok){ ui.editing = null; render(); } }
   else if (k === 'insight') readInsight(c);
   else if (k === 'chat'){ const t = v('chat-' + c.id); if (t && sample && !ui.busy['chat:' + c.id]) chat(c, t); }
@@ -3074,9 +3088,11 @@ function listen(name, sort){
     if (name === 'clients'){ S.allClients = S.clients; S.clients = S.allClients.filter(c => c.status !== 'archived'); }
     loaded[name] = true; schedule();
     if (name === 'tasks' || name === 'clients') todoSweep();
+    if (name === 'tasks') rollSoft();
   }, () => { loaded[name] = true; schedule(); });
 }
 async function boot(){
+  try { const cp = localStorage.getItem('rsd-cap'); if (CAPS[cp]) ui.cap = cp; } catch(e){}
   try { const gb = localStorage.getItem('rsd-gb'); if (['client','due','person'].includes(gb)) ui.groupBy = gb; } catch(e){}
   try { const n = JSON.parse(localStorage.getItem('rsd-nav') || 'null'); if (n && n.view){ ui.view = n.view; ui.cid = n.cid; ui.ctab = n.ctab || 'overview'; } } catch(e){}
   try { userNs = await claude.use('user'); } catch(e){}
