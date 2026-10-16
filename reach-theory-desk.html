@@ -623,6 +623,8 @@ button.chip{padding:3px 9px}
 .repwrap{border-radius:6px}
 .rep{box-shadow:none;border:1px solid var(--line)}
 .rep-tiles div,.rep-an > div,.rep-chart{border-radius:4px}
+.fpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0 2px}
+button.chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .tabs{display:none}
 .phone-only{display:none}
 .phone-only .look{border-top:0;padding-top:0}
@@ -755,7 +757,7 @@ const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, {day:'n
 let mcp = null, db = null, sample = null, assets = null, userNs = null, downloads = null;
 let canImages = false, maxImages = 0, canTools = false;
 let role = 'admin', myUid = null, myMember = null;
-const S = {invoices:[], studio:{}, clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[], backup:null, pace:null, customEvents:[], loadErr:{}};
+const S = {focus:null, invoices:[], studio:{}, clients:[], allClients:[], tasks:[], team:[], insights:[], prompts:[], reports:[], campaigns:[], backup:null, pace:null, customEvents:[], loadErr:{}};
 const loaded = {clients:false, tasks:false, team:false, insights:false, prompts:false, reports:false, campaigns:false};
 const ui = {view:'focus', cid:null, ctab:'overview', keep:{}, busy:{}, out:{}, chats:{}, ideas:{}, gen:{}, dayPlan:null,
   pending:[], askPend:{}, impLive:{}, expand:{}, tpOpen:{}, tpLive:{}, briefOpen:{}, moreOpen:{}, moreMode:{}, alts:{}, postOpen:{}, packText:{}, replyParse:{}, oldDone:{}, oldConfirm:null, replaceConfirm:{}, groupBy:'client', addOpen:false, ctl:{}, t0:{}, campNew:false, campDraft:null, campLive:{}, campOpen:null, campId:null, editing:null, openTask:null, taskView:'list', calMode:'grid', calOff:0, calDay:null, cmd:{open:false, q:'', sel:0}, addClient:false, review:{}, hfAsk:{}, rMonth:null, filt:{client:'', who:'', done:false}};
@@ -848,7 +850,7 @@ async function altUse(host, n){
 /* ----- More menu: edit, do now or later, don't suggest again ----- */
 const WHEN = {now:'Do now', later:'Do later', hold:'Hold off', note:'Just a note'};
 const plusDays = n => isoAt(Date.now() + n * 864e5);
-const activeNotes = c => (c.planNotes || []).filter(x => x.when !== 'hold' || !x.until || x.until >= today).slice(-20).map(x => `${x.t}: ${WHEN[x.when] || x.when}${x.until ? ' until ' + x.until : ''}${x.note ? ' (' + x.note + ')' : ''}`);
+const activeNotes = c => [...(partnerOf(c.id) ? [`${kindsText(partnerOf(c.id).kinds)} for ${c.name} are handled by ${M(partnerOf(c.id).by)?.name || 'someone else'}. Never suggest, plan or create ${kindsText(partnerOf(c.id).kinds)} for this page.`] : []), ...(c.planNotes || []).filter(x => x.when !== 'hold' || !x.until || x.until >= today).slice(-20).map(x => `${x.t}: ${WHEN[x.when] || x.when}${x.until ? ' until ' + x.until : ''}${x.note ? ' (' + x.note + ')' : ''}`)];
 const blocked = (cid, title) => { const c = C(cid); return !!(c && ((c.noSuggest || []).some(x => similar(x.t, title)) || (c.planNotes || []).some(x => x.when === 'hold' && x.until && x.until >= today && similar(x.t, title)))); };
 function moreMenu(id, isSug){
   const mode = ui.moreMode[id] || '';
@@ -951,8 +953,13 @@ const dupOf = (cid, title) => S.tasks.find(t => t.client === cid && (t.status !=
 const recentDone = cid => S.tasks.filter(t => t.client === cid && t.status === 'done' && t.doneAt && Date.now() - t.doneAt < 21 * 864e5).slice(-15).map(t => t.title);
 /* ----- Calm mode: only real deadlines turn red; other dates roll forward ----- */
 const hardTask = t => !!(t.campaign || t.hard);
-const isLate = t => t.status !== 'done' && !!t.due && t.due < today && hardTask(t);
-const needsDecision = t => t.status !== 'done' && (isLate(t) || (t.rolled || 0) >= 3);
+/* ----- Work handled by someone else (set per page): kept out of every reminder, still counted when they log it ----- */
+const partnerOf = cid => { const p = C(cid)?.partner; return p && p.by && Array.isArray(p.kinds) && p.kinds.length ? p : null; };
+const handledKind = (cid, k) => !!partnerOf(cid)?.kinds.includes(k);
+const isHandled = t => handledKind(t.client, t.kind) && !(asg(t) && asg(t) === meId());
+const kindsText = ks => ks.map(k => (SHORT[k] || k).toLowerCase() + 's').join(' and ');
+const isLate = t => t.status !== 'done' && !!t.due && t.due < today && hardTask(t) && !isHandled(t);
+const needsDecision = t => t.status !== 'done' && !isHandled(t) && (isLate(t) || (t.rolled || 0) >= 3);
 const clampN = (n, a, b) => Math.max(a, Math.min(b, n));
 // How many tasks to plan: the time you chose, your ratings of recent plans, and what the team really finishes.
 function paceInfo(base){
@@ -976,10 +983,10 @@ async function rollSoft(){
   let last = ''; try { last = localStorage.getItem('rsd-roll') || ''; } catch(e){}
   if (last === today) return;
   try { localStorage.setItem('rsd-roll', today); } catch(e){}
-  for (const t of S.tasks.filter(q => q.status !== 'done' && q.due && q.due < today && !hardTask(q)))
+  for (const t of S.tasks.filter(q => q.status !== 'done' && q.due && q.due < today && !hardTask(q) && !isHandled(q)))
     await write(() => tasksCol().doc(t.id).update({due:today, rolled:(t.rolled || 0) + 1, origDue:t.origDue || t.due}));
 }
-const openTasks = cid => S.tasks.filter(t => t.status !== 'done' && (cid ? t.client === cid : liveTask(t)));
+const openTasks = cid => S.tasks.filter(t => t.status !== 'done' && !isHandled(t) && (cid ? t.client === cid : liveTask(t)));
 const clientInsights = cid => S.insights.filter(i => i.client === cid).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
 const eventsFor = cid => EVENTS.filter(e => e.who.includes(cid) && daysTo(e.d) >= -1);
 
@@ -1521,16 +1528,31 @@ function overdueAlert(){
 }
 
 /* ----- Focus: the three things for today ----- */
+const focusSet = () => (S.focus && S.focus.d === today && Array.isArray(S.focus.clients)) ? S.focus.clients.filter(id => C(id)) : [];
+const setFocus = ids => write(() => db.doc('meta/focus').set({d:today, clients:ids, by:meId()}));
+function partnerRow(c, cname){
+  const p = partnerOf(c.id); if (!p) return '';
+  const who = M(p.by)?.name || 'Partner';
+  const cnt = k => S.tasks.filter(t => t.client === c.id && t.status === 'done' && t.doneMonth === monthKey && t.kind === k).length;
+  const last = S.tasks.filter(t => t.client === c.id && t.status === 'done' && t.doneAt && p.kinds.includes(t.kind)).sort((a, b) => b.doneAt - a.doneAt)[0];
+  return `<div class="it"><div><div class="t">${dot(c)} ${esc(c.name)}</div><div class="s"><span>${esc(who)} handles ${esc(kindsText(p.kinds))}</span><span>${p.kinds.map(k => `${cnt(k)} ${esc((SHORT[k] || k).toLowerCase())}${cnt(k) === 1 ? '' : 's'}`).join(', ')} this month</span><span>${last ? 'Last posted ' + (daysSince(last.doneAt) === 0 ? 'today' : daysSince(last.doneAt) + ' days ago') : 'None logged yet'}</span></div></div>
+    <div class="c">${p.kinds.map(k => `<button class="b" data-act="partnerPosted" data-cid="${esc(c.id)}" data-cname="${esc(c.name)}" data-kind="${esc(k)}" data-by="${esc(p.by)}">${esc(SHORT[k] || k)} posted today</button>`).join('')}</div></div>`;
+}
+const partnerPanel = () => { const rows = S.clients.filter(c => partnerOf(c.id)).map(c => partnerRow(c)).join(''); return rows ? `<div class="sec"><div class="lab">Handled by your partner</div><div class="items">${rows}</div><p class="muted" style="font-size:12px;margin:8px 0 0">These stay out of your reminders. Tap when a post goes live so the monthly count stays right.</p></div>` : ''; };
 function viewFocus(){
-  const all = openTasks().filter(t => t.due && t.due <= today).sort((a, b) => (isLate(b) - isLate(a)) || ((b.priority === 'high') - (a.priority === 'high')) || a.due.localeCompare(b.due));
+  const fs = focusSet();
+  const all = openTasks().filter(t => t.due && t.due <= today && (!fs.length || fs.includes(t.client))).sort((a, b) => (isLate(b) - isLate(a)) || ((b.priority === 'high') - (a.priority === 'high')) || a.due.localeCompare(b.due));
   const top = all.slice(0, 3), rest = all.slice(3);
   const doneToday = S.tasks.filter(t => t.status === 'done' && t.doneAt && isoAt(t.doneAt) === today).length;
   return `<header class="top"><div><p class="eyebrow">${esc(now.toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'long'}))}${doneToday ? ' · ' + doneToday + ' done today' : ''}</p><h1>Focus</h1></div></header>
+  <div class="fpick" role="group" aria-label="Which business to focus on today"><span class="muted">Today:</span>
+    <button class="chip${fs.length ? '' : ' on'}" data-act="focusAll" aria-pressed="${!fs.length}">All businesses</button>${S.clients.map(c => `<button class="chip${fs.includes(c.id) ? ' on' : ''}" data-act="focusPick" data-cid="${esc(c.id)}" aria-pressed="${fs.includes(c.id)}">${esc(c.name)}</button>`).join('')}</div>
   ${top.length ? top.map(t => { const c = C(t.client); return `<div class="focus" data-tid="${esc(t.id)}" style="${hueStyle(c)}"><div class="s" style="display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)">${dot(c)} ${esc(c ? c.name : '')}${t.brief?.mins ? ` · about ${esc(t.brief.mins)} min` : ''}</div>
       <h2>${esc(splitTitle(t.title)[0])}</h2>${splitTitle(t.title)[1] ? `<p class="muted" style="margin:-4px 0 12px;font-size:13.5px">${esc(splitTitle(t.title)[1])}</p>` : ''}
       <div class="row" style="gap:8px"><button class="b pri" data-act="focusDone">Done</button><button class="b" data-act="openBrief">${ui.briefOpen[t.id] ? 'Hide steps' : 'See the steps'}</button></div>
-      ${ui.briefOpen[t.id] ? briefPanel(t) : ''}</div>`; }).join('') : `<p class="empty">${loaded.tasks ? 'Nothing is planned for today. Press Plan my day on Home when you are ready.' : LOADING}</p>`}
-  ${rest.length ? `<div class="sec"><div class="lab">Next up · ${rest.length}</div><div class="items">${rest.slice(0, 6).map(t => `<div class="it"><div class="t">${dot(C(t.client))} ${esc(splitTitle(t.title)[0])}</div></div>`).join('')}</div></div>` : ''}`;
+      ${ui.briefOpen[t.id] ? briefPanel(t) : ''}</div>`; }).join('') : `<p class="empty">${loaded.tasks ? (fs.length ? 'Nothing is due today for ' + esc(fs.map(id => C(id)?.name).join(' and ')) + '. Choose All businesses to see the rest.' : 'Nothing is planned for today. Press Plan my day on Home when you are ready.') : LOADING}</p>`}
+  ${rest.length ? `<div class="sec"><div class="lab">Next up · ${rest.length}</div><div class="items">${rest.slice(0, 6).map(t => `<div class="it"><div class="t">${dot(C(t.client))} ${esc(splitTitle(t.title)[0])}</div></div>`).join('')}</div></div>` : ''}
+  ${partnerPanel()}`;
 }
 
 /* ----- Backup and restore ----- */
@@ -1674,6 +1696,11 @@ const monogram = name => name.replace(/^the\s+/i, '').split(/\s+/).filter(Boolea
 const shortBudget = b => { if (!b || !/\d/.test(b) || /^₹?\s*0\b/.test(b)) return '—'; const m = String(b).match(/[₹$]?\s?[\d,]+(?:\s*[–-]\s*[\d,]+)?/); return m ? m[0].replace(/\s/g, '').replace(/,000/g, 'k') : '—'; };
 const fmtN = n => Number(n || 0).toLocaleString('en-IN');
 
+function partnerSection(c){
+  const p = partnerOf(c.id); if (!p) return '';
+  const hid = S.tasks.filter(t => t.client === c.id && t.status !== 'done' && isHandled(t)).length;
+  return `<div class="sec"><div class="lab">Handled by ${esc(M(p.by)?.name || 'your partner')}<span class="acts"><button class="lnk" data-ctab="settings">Change</button></span></div><div class="items">${partnerRow(c)}</div>${hid ? `<p class="muted" style="font-size:12px;margin:8px 0 0">${hid} open ${esc(kindsText(p.kinds))} task${hid === 1 ? ' is' : 's are'} hidden from your lists.</p>` : ''}</div>`;
+}
 function tabOverview(c){
   const pl = c.plan || {}, r = c.research || {}, tasks = openTasks(c.id).sort((a,b) => (a.due||'9').localeCompare(b.due||'9'));
   const ev = eventsFor(c.id).slice(0, 3);
@@ -1681,7 +1708,7 @@ function tabOverview(c){
     <form class="row" data-form="next"><label class="vh" for="next-${esc(c.id)}">Next move</label>
     <input class="grow" type="text" id="next-${esc(c.id)}" data-keep="next-${esc(c.id)}" value="${esc(keep('next-'+c.id, c.next || ''))}" placeholder="The one thing that moves this page forward">
     <button class="b" type="submit">Save</button></form></div>
-
+  ${partnerSection(c)}
   ${onboardSection(c)}
   ${approvalSection(c)}
   ${todoSection(c)}
@@ -2210,7 +2237,7 @@ function calGrid(){
   for (let i = 0; i < lead; i++) cells.push('<div class="cell off"></div>');
   for (let d = 1; d <= days; d++){
     const ds = `${y}-${pad(m+1)}-${pad(d)}`;
-    const evs = EVENTS.filter(e => e.d === ds), ts = S.tasks.filter(t => t.due === ds).sort((a,b) => (a.status === 'done') - (b.status === 'done'));
+    const evs = EVENTS.filter(e => e.d === ds), ts = S.tasks.filter(t => t.due === ds && !isHandled(t)).sort((a,b) => (a.status === 'done') - (b.status === 'done'));
     const late = ts.filter(isLate).length;
     const chips = [...evs.map(e => `<span class="gchip ev">${esc(e.name)}</span>`), ...ts.map(t => `<span class="gchip ${t.status === 'done' ? 'done' : ''}" style="${hueStyle(C(t.client))}">${esc(t.title)}</span>`)];
     cells.push(`<button class="cell ${ds === today ? 'now' : ''} ${ds < today ? 'pastd' : ''} ${ds === sel ? 'sel' : ''}" data-day="${ds}" aria-label="${esc(fmt(ds))}: ${ts.length} task${ts.length === 1 ? '' : 's'}${evs.length ? ', ' + evs.map(e => e.name).join(', ') : ''}">
@@ -2227,7 +2254,7 @@ function calGrid(){
       <div class="c"><label class="vh" for="sd-${esc(t.id)}">Due date</label><input type="date" id="sd-${esc(t.id)}" data-change="schedule" value="${esc(sel || '')}"></div></div>`; }).join('')}</div>` : '<p class="empty">Every open task has a date.</p>'}</div>`;
 }
 function dayPanel(ds){
-  const ts = S.tasks.filter(t => t.due === ds).sort((a,b) => (a.status === 'done') - (b.status === 'done')), evs = EVENTS.filter(e => e.d === ds);
+  const ts = S.tasks.filter(t => t.due === ds && !isHandled(t)).sort((a,b) => (a.status === 'done') - (b.status === 'done')), evs = EVENTS.filter(e => e.d === ds);
   const dt = daysTo(ds);
   return `<div class="sec daypanel" id="daypanel"><div class="lab">${esc(new Date(ds + 'T00:00:00').toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'long'}))}
       <span class="acts"><span class="muted">${dt === 0 ? 'Today' : dt > 0 ? 'In ' + dt + ' day' + (dt === 1 ? '' : 's') : -dt + ' day' + (dt === -1 ? '' : 's') + ' ago'}</span><button class="x" data-act="closeDay" aria-label="Close day">×</button></span></div>
@@ -2257,7 +2284,7 @@ function presetMatch(t){
 const PRESETS = {overdue:'Overdue', review:'Ready for review', waiting:'Waiting on client', sent:'With client', open:'Open', today:'Due today', week:'This week', unassigned:'Unassigned'};
 function viewTasks(){
   const f = ui.filt, board = ui.taskView === 'board';
-  const list = S.tasks.filter(t => presetMatch(t) && (board || f.done || f.preset || t.status !== 'done') && (f.client ? t.client === f.client : liveTask(t)) && (!f.who || (f.who === 'none' ? !asg(t) : t.assignee === f.who)))
+  const list = S.tasks.filter(t => !isHandled(t) && presetMatch(t) && (board || f.done || f.preset || t.status !== 'done') && (f.client ? t.client === f.client : liveTask(t)) && (!f.who || (f.who === 'none' ? !asg(t) : t.assignee === f.who)))
     .filter(t => !board || t.status !== 'done' || t.doneMonth === monthKey)
     .sort((a,b) => (a.due || '9999').localeCompare(b.due || '9999'));
   return `<header class="top"><div><p class="eyebrow">To do → editing → with client → approved → done</p><h1>Tasks</h1></div>
@@ -2335,17 +2362,21 @@ function teamSection(){
 }
 
 /* ----- Editor (Contributor) view ----- */
-function sideEditor(){ return `<div class="mark">reach theory<span>my tasks</span></div>${lookPicker()}`; }
+function sideEditor(){ return `<div class="mark">Reach Theory<span>My tasks</span></div>${lookPicker()}`; }
 function viewEditor(){
   if (!myUid) return `<h1>My tasks</h1><p class="sub">Sign in to Claude to see your tasks.</p>`;
   if (!myMember){
-    const eds = S.team.filter(m => m.role === 'editor');
+    const eds = S.team.filter(m => m.role !== 'owner');
     return `<h1>Who are you?</h1><p class="sub">Pick your name once. This page will show only the tasks assigned to you.</p>
       <div class="sec"><div class="row">${eds.map(m => `<button class="b" data-act="claim" data-id="${esc(m.id)}">${esc(m.name)}</button>`).join('') || `<p class="empty">${loaded.team ? 'Ask the owner to add you to the team.' : LOADING}</p>`}</div></div>`;
   }
   const mine = S.tasks.filter(t => t.assignee === myMember).sort((a,b) => (a.status === 'done') - (b.status === 'done') || (a.due || '9').localeCompare(b.due || '9'));
   const open = mine.filter(t => t.status !== 'done');
-  return `<h1>Hi ${esc(M(meId())?.name || '')}</h1><p class="sub">${open.length} open task${open.length === 1 ? '' : 's'}. Move each one along as you work: editing → with client → done.</p>
+  const pw = (M(myMember)?.partnerWork || []).filter(w => w && w.kinds && w.kinds.length);
+  const partnerBox = pw.length ? `<div class="sec"><div class="lab">Mark a post as live</div><div class="items">${pw.map(w => { const last = S.tasks.filter(t => t.client === w.cid && t.status === 'done' && t.doneAt && w.kinds.includes(t.kind)).sort((a, b) => b.doneAt - a.doneAt)[0];
+      return `<div class="it"><div><div class="t">${esc(w.name)}</div><div class="s"><span>${last ? 'Last posted ' + (daysSince(last.doneAt) === 0 ? 'today' : daysSince(last.doneAt) + ' days ago') : 'None logged yet'}</span></div></div>
+        <div class="c">${w.kinds.map(k => `<button class="b" data-act="partnerPosted" data-cid="${esc(w.cid)}" data-cname="${esc(w.name)}" data-kind="${esc(k)}" data-by="${esc(myMember)}">${esc(SHORT[k] || k)} posted today</button>`).join('')}</div></div>`; }).join('')}</div></div>` : '';
+  return `<h1>Hi ${esc(M(meId())?.name || '')}</h1>${partnerBox}<p class="sub">${open.length} open task${open.length === 1 ? '' : 's'}. Move each one along as you work: editing → with client → done.</p>
     <div class="sec"><div class="lab">Open</div><div class="items">${open.map(t => taskRow(t, {editor:true})).join('') || '<p class="empty">Nothing assigned right now.</p>'}</div></div>
     ${mine.length > open.length ? `<div class="sec"><div class="lab">Done</div><div class="items">${mine.filter(t => t.status === 'done').slice(0, 20).map(t => taskRow(t, {editor:true})).join('')}</div></div>` : ''}`;
 }
@@ -2390,7 +2421,8 @@ function validItems(arr, fallbackClient){
     .filter(i => i && i.title && C(i.client)).map(i => ({client:i.client, title:String(i.title), kind:KINDS[i.kind] ? i.kind : 'other',
       why:String(i.why || ''), need:String(i.need || ''), assignee:String(i.assignee || ''), mins:Math.min(180, Math.max(0, Number(i.mins) || 0)), priority:['high','medium','low'].includes(i.priority) ? i.priority : '', due:/^\d{4}-\d\d-\d\d$/.test(String(i.due || '')) && i.due >= today ? i.due : '', todo:typeof i.todo === 'string' && todoOf(i.client, i.todo) ? i.todo : '',
       existing:(() => { const t = typeof i.taskId === 'string' && i.taskId ? S.tasks.find(q => q.id === i.taskId && q.status !== 'done') : null; return t ? t.id : ''; })()}))
-    .map(i => { if (!i.existing) return i; const t = S.tasks.find(q => q.id === i.existing); return {...i, client:t.client, title:t.title, kind:t.kind}; });
+    .map(i => { if (!i.existing) return i; const t = S.tasks.find(q => q.id === i.existing); return {...i, client:t.client, title:t.title, kind:t.kind}; })
+    .filter(i => i.existing || !handledKind(i.client, i.kind));
 }
 async function run(key, fn){
   ui.busy[key] = true; ui.t0[key] = Date.now(); delete ui.out[key]; render();
@@ -2636,6 +2668,23 @@ function tabFollowers(c){
 }
 
 /* ----- Settings: details, retainer, brand, strategy history ----- */
+function partnerSettings(c){
+  const p = c.partner || {}, kinds = Array.isArray(p.kinds) ? p.kinds : [], people = S.team.filter(m => m.id !== meId());
+  const hid = S.tasks.filter(t => t.client === c.id && t.status !== 'done' && isHandled(t)).length;
+  return `<div class="sec"><div class="lab">Handled by someone else<span class="acts muted">${partnerOf(c.id) ? 'On' : 'Off'}</span></div>
+    <form class="form" data-form="partner">
+      <label>Who handles it<select id="pt-by"><option value="">Nobody (show everything)</option>${people.map(m => `<option value="${esc(m.id)}"${p.by === m.id ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>
+      <div><span class="muted" style="font-size:12px">Tick the work ${esc(c.name)} handles without you. It leaves Focus, task lists, the calendar, plans and the morning brief, and is never suggested. Their posts still count toward the monthly target once logged.</span>
+        <div class="row" style="margin-top:8px;gap:6px 16px">${Object.keys(KINDS).map(k => `<label class="check" style="padding:2px 0"><input type="checkbox" name="pt-k" value="${esc(k)}"${kinds.includes(k) ? ' checked' : ''}><span>${esc(SHORT[k] || k)}</span></label>`).join('')}</div></div>
+      <div class="row"><button class="b pri" type="submit">Save</button>${hid ? `<span class="muted" style="font-size:12px">${hid} open task${hid === 1 ? ' is' : 's are'} hidden by this</span>` : ''}</div></form></div>`;
+}
+async function syncPartnerTeam(cid, next){
+  const of = c => c.id === cid ? next : c.partner, ok = c => { const q = of(c); return q && q.by && Array.isArray(q.kinds) && q.kinds.length ? q : null; };
+  for (const m of S.team){
+    const list = S.clients.filter(c => ok(c)?.by === m.id).map(c => ({cid:c.id, name:c.name, kinds:ok(c).kinds}));
+    if (JSON.stringify(list) !== JSON.stringify(m.partnerWork || [])) await write(() => db.collection('team').doc(m.id).update({partnerWork:list}));
+  }
+}
 function tabSettings(c){
   const h = (c.history || []).slice().reverse();
   const inp = (id, label, val, ph = '', type = 'text') => `<label>${label}<input type="${type}" id="${id}" value="${esc(val ?? '')}" placeholder="${esc(ph)}"></label>`;
@@ -2651,6 +2700,7 @@ function tabSettings(c){
       <label class="check" style="align-self:end"><input type="checkbox" id="d-ai" ${usesAI(c) ? 'checked' : ''}><span>Visuals are AI-generated, not client photos</span></label>
     </div><div class="row"><button class="b pri" type="submit">Save details</button>
       ${c.fee ? `<span class="muted" style="font-size:12px">${c.paidMonth === monthKey ? `Paid for ${esc(monthName)}` : `Not marked paid for ${esc(monthName)}`}</span>${c.paidMonth === monthKey ? '' : `<button class="lnk" type="button" data-act="markPaid" data-cid="${esc(c.id)}">Mark paid</button>`}` : ''}</div></form></div>
+  ${partnerSettings(c)}
   ${tabBrand(c)}
   <div class="sec"><div class="lab">Strategy timeline<span class="acts muted">${h.length} earlier version${h.length === 1 ? '' : 's'}</span></div>
     <div class="tl">
@@ -3934,6 +3984,13 @@ document.addEventListener('click', async e => {
   if (a === 'sugReplace' || a === 'sugReplaceNo'){ const r = b.closest('[data-sug]'); ui.replaceConfirm[r.dataset.sug + ':' + r.dataset.n] = a === 'sugReplace'; render(); return; }
   if (a.startsWith('old')){ await oldAct(a, b); return; }
   if (a === 'rate'){ const l = S.pace?.last; if (!l) return; await write(() => db.doc('meta/pace').set({ratings:[...(S.pace.ratings || []), {d:l.d, r:b.dataset.r, n:l.n}].slice(-14), last:l}), b.dataset.r === 'skip' ? '' : 'Thanks. The next plan will adjust.'); return; }
+  if (a === 'focusAll'){ await setFocus([]); return; }
+  if (a === 'focusPick'){ const id = b.dataset.cid, cur = focusSet(); await setFocus(cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]); return; }
+  if (a === 'partnerPosted'){
+    const cid = b.dataset.cid, kind = b.dataset.kind, by = b.dataset.by, name = b.dataset.cname || C(cid)?.name || '', who = M(by)?.name || '', now0 = Date.now(); let nid = '';
+    const ok = await write(async () => { const r = await tasksCol().add({title:`${SHORT[kind] || kind} posted${who ? ' by ' + who : ''}`, client:cid, clientName:name, kind, status:'done', assignee:by || '', due:today, doneMonth:monthKey, doneAt:now0, createdAt:now0, logged:true, loggedBy:meId() || by || '', partnerPosted:true}); nid = r && r.id || ''; });
+    if (ok) toast(`${name}: ${(SHORT[kind] || kind).toLowerCase()} logged for today.`, nid ? {label:'Undo', run:() => write(() => tasksCol().doc(nid).delete(), 'Removed')} : undefined);
+    return; }
   if (a === 'focusDone'){ const id = b.closest('[data-tid]').dataset.tid; await write(() => tasksCol().doc(id).update({status:'done', doneMonth:monthKey, doneAt:Date.now(), statusAt:{done:Date.now()}}), 'Done. Nice.'); return; }
   if (a === 'allDue'){ ui.allDue = true; render(); return; }
   if (a === 'bkSnooze'){ try { localStorage.setItem('rsd-bk-snooze', String(Date.now() + 7 * 864e5)); } catch(e){} render(); return; }
@@ -4216,6 +4273,8 @@ document.addEventListener('submit', async e => {
     const events = [...(S.customEvents || []), ev].sort((a, b) => a.d.localeCompare(b.d)).slice(-200);
     if (await write(() => db.doc('meta/calendar').set({events}), 'Moment added')){ for (const id of ['mo-d','mo-n','mo-p']) delete ui.keep[id]; render(); }
     return; }
+  if (k === 'partner'){ if (!c) return; const by = v('pt-by'), ks = [...f.querySelectorAll('input[name="pt-k"]:checked')].map(x => x.value), next = by && ks.length ? {by, kinds:ks} : null;
+    if (await upd(c.id, {partner:next}, next ? `Saved. ${kindsText(ks)} for ${c.name} are now handled by ${M(by)?.name || 'them'}.` : 'Saved. Everything shows again.')) await syncPartnerTeam(c.id, next); return; }
   if (k === 'todoHome'){ const tc = C(v('tdh-c')), t = v('tdh-t'); if (tc && t && await todoAdd(tc, t)){ ui.keep['tdh-t'] = ''; ui.keep['tdh-c'] = tc.id; render(); } return; }
   if (k === 'campChat'){ const x = S.campaigns.find(q => q.id === ui.campId), t = v('cchat-' + ui.campId); if (x && t && sample && !ui.busy['cchat:' + x.id]) campChat(x, t); return; }
   if (k === 'invoice'){ readInvForm(); render(); return; }
@@ -4384,6 +4443,7 @@ async function boot(){
   listen('invoices');
   db.doc('meta/studio').onSnapshot(sn => { S.studio = sn.exists ? sn.data() : {}; schedule(); }, () => {});
   db.doc('meta/backup').onSnapshot(sn => { S.backup = sn.exists ? sn.data() : null; schedule(); }, () => {});
+  db.doc('meta/focus').onSnapshot(sn => { S.focus = sn.exists ? sn.data() : null; schedule(); }, () => {});
   db.doc('meta/pace').onSnapshot(sn => { S.pace = sn.exists ? sn.data() : null; schedule(); }, () => {});
   db.doc('meta/pipeline').onSnapshot(sn => { S.pipeline = sn.exists ? (sn.data().items || []) : []; schedule(); }, () => {});
   db.doc('meta/routines').onSnapshot(sn => { S.routines = sn.exists ? (sn.data().items || []) : []; S.routinesLoaded = true; schedule(); runRoutines(); }, () => {});

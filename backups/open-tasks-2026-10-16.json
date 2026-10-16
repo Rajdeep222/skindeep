@@ -1,0 +1,1808 @@
+{
+ "savedAt": "2026-10-16",
+ "note": "Open tasks removed from the desk on request; restore by writing each back to the tasks collection with the same id.",
+ "tasks": [
+  {
+   "id": "0trp2870o0v2l421y5lu",
+   "assignee": "me",
+   "brief": {
+    "at": 1790887616325,
+    "avoid": [
+     "Don't put a generic 'DM for collaborations' line back in - it was already the problem.",
+     "Don't use stock icons from Canva's default colour set - recolour everything to bronze on black.",
+     "Don't add client logos without checking they've been used publicly before or get a quick yes first."
+    ],
+    "check": [
+     "Bio fits in 150 characters and has no typos in Punjabi or English.",
+     "WhatsApp link tested and opens a chat correctly.",
+     "All 4 highlight covers use only black, cream and bronze - no other colours.",
+     "No client data shown in the Results highlight beyond what's already public or approved.",
+     "Highlight labels are short, one word each, same font style as grid posts.",
+     "Profile checked on both iOS and Android view before marking task done."
+    ],
+    "how": [
+     "Bio character limit is 150 - count it in a notes app before pasting.",
+     "Highlight covers: 161x161px PNG, black background #000000, bronze line icon #B08D57, no text on the icon itself, label typed separately under the highlight.",
+     "Use the same tall condensed serif font already used on grid posts for any highlight story headline text.",
+     "Client logos for the Clients highlight: pull from past delivered posts or ask client for a clean logo file if not already saved locally.",
+     "WhatsApp link format: https://wa.me/91XXXXXXXXXX with no spaces, test it opens WhatsApp chat before publishing.",
+     "Keep highlight order fixed left to right: Results first since that's what new visitors look for based on the September insight."
+    ],
+    "mins": 110,
+    "need": [
+     "Studio WhatsApp number to build the click-to-chat link - confirm with Owner if not already saved.",
+     "Client logos or name permission for the Clients highlight - message to send client if logo not on file: 'Hi, can you share your business logo (PNG, no background) so we can feature you on our Clients highlight?'",
+     "Owner or Panda sign-off on the final bio wording before publishing."
+    ],
+    "outcome": "A finished bio with one clear line on who we help, where we are, and one offer with a DM keyword, plus four highlight covers in the black-cream-bronze style, each with at least 2 stories saved inside, live on the profile within the hour.",
+    "post": {
+     "after": "",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": true,
+      "mins": 10,
+      "t": "Write final bio copy: line 1 'We help Khanna & Punjab businesses get seen on Instagram', line 2 'Case studies, ads, content', line 3 'Free audit - DM AUDIT'. Keep under 150 characters.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": true,
+      "mins": 10,
+      "t": "Add Linktree or direct WhatsApp click-to-chat link (wa.me/<studio number>) in the website field since there's no separate link page yet.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": true,
+      "mins": 25,
+      "t": "Design 4 highlight cover icons in Canva: black background, one thin bronze-line icon each (bar chart for Results, people for Clients, checklist for Services, phone for Contact), 161x161px square, same tall serif font style as grid posts for any label text.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Create 'Results' highlight: add the existing September account overview screenshot (crop out anything client-confidential) plus a placeholder story saying 'New case study dropping this week' with a bronze arrow pointing down.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": true,
+      "mins": 15,
+      "t": "Create 'Clients' highlight: pull 2-3 logos or name cards of clients we've worked with (RK Jewellers, DJ YPS, Om Sons, Master Wheels) on black-bronze cards, one per story, text 'Proudly working with'.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": true,
+      "mins": 15,
+      "t": "Create 'Services' highlight: 3 stories, one line each in Punjabi-English mix - 'Case studies that prove it works', 'Reels edited from your clips', 'Instagram ads that bring enquiries'.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": true,
+      "mins": 10,
+      "t": "Create 'Contact' highlight: 1 story with WhatsApp number, Khanna location pin, and text 'DM AUDIT for a free Instagram check'.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": true,
+      "mins": 10,
+      "t": "Upload all 4 highlights to profile in order: Results, Clients, Services, Contact. Preview on mobile to check cover icons look crisp and not pixelated.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Send screenshot of final bio and highlight row to Owner and Panda for a quick sign-off before calling it done.",
+      "who": "Rajdeep"
+     }
+    ],
+    "what": "Fix the Reach Theory Instagram bio and add four highlight covers (Results, Clients, Services, Contact) so a first-time visitor instantly knows who we help, where we are, and how to start. Right now the bio just says 'DM for collaborations' with no link and no highlights, and September data showed only 145 views across 7 posts with zero shown proof - this is losing every cold visitor from the case study and statement posts we're about to publish. This is overdue (due 1 Oct, today 2 Oct) and needs to ship before the first case study carousel goes live, since that carousel will send new visitors to the profile. For Rajdeep to do end to end today."
+   },
+   "client": "reachstory",
+   "clientName": "Reach Theory",
+   "createdAt": 1790844985286,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "other",
+   "origDue": "2026-10-01",
+   "priority": "high",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Fix bio and add highlights"
+  },
+  {
+   "id": "10q2rplyd07rqs8gb5om",
+   "assignee": "me",
+   "brief": {
+    "at": 1791023169938,
+    "avoid": [
+     "Don't pick Individual seller plan — it limits bulk listing tools Eroe will need later",
+     "Don't leave GTIN/barcode fields blank without applying for the exemption first, or listings will get rejected",
+     "Don't copy wholesale pricing language into the public listing — keep MOQ and price-tier talk off Amazon's product page"
+    ],
+    "check": [
+     "Business name, address and tax ID match exactly what's on Eroe's other official documents (website footer, Google Business Profile)",
+     "All 3 listings show GSM/oz, fabric, fit and size chart as readable text, not only in the image",
+     "Main product image is on pure white background and at least 1000x1000px, per Amazon's rules",
+     "No discount or retail-style promo language anywhere in the listing (matches brand's 'never' rule)",
+     "Screenshot of successful submission saved and shared with Owner and Panda before marking task done"
+    ],
+    "how": [
+     "Use Professional plan ($39.99/month) since Eroe sells in bulk, not Individual plan",
+     "Product titles should read like: 'Eroe Heavyweight Cotton Blank T-Shirt, 6.5oz, Boxy Fit, Wholesale Blanks' — keyword-first, spec-second",
+     "Each listing needs minimum 5 bullet points: fabric, GSM/oz weight, fit, available colours, available sizes",
+     "Use the existing AI product images (flat lay and model-style) already approved for Instagram, cropped to Amazon's white-background main image requirement (1000x1000px minimum)",
+     "If Eroe has no UPC/barcodes, apply for Amazon's GTIN exemption under 'Brand Registry' before listing — this can take 1-2 days, so start it first",
+     "Category: Clothing, Shoes & Jewelry > Novelty & More > Clothing > Shirts or Fitness Apparel, pick the closest fit Amazon allows for blanks",
+     "Do not write 'wholesale only' language that violates Amazon's individual-buyer policy — list as regular retail-visible products, keep bulk/wholesale conversations for the website and DM"
+    ],
+    "mins": 125,
+    "need": [
+     "Eroe's EIN or business tax ID, business address and a bank account for payouts — ask the client: 'Can you send your EIN, registered business address and a bank account/routing number for the Amazon seller payout setup?'",
+     "Confirm if Eroe already has UPC/GTIN barcodes for products, or if we should apply for exemption — ask the client: 'Do you have UPC barcodes for your products, or should we apply for Amazon's no-barcode exemption?'",
+     "Final spec text (GSM, fabric, fit) for the 3 priority styles from the SEO spec task, due 2026-10-05, should be ready before this task's listing step"
+    ],
+    "outcome": "An Amazon Seller Central account is live under Eroe Clothing's business name, with at least 3 top-selling blank styles (heavyweight tee, oversize tee, hoodie) submitted as draft or active listings with GSM, fabric, fit, size and colour info filled in, ready for Amazon's review.",
+    "post": {
+     "after": "",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Confirm Eroe's legal business name, EIN/tax ID, business address and bank account details are on hand",
+      "who": "Client"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Go to sellercentral.amazon.com and start a Professional Seller account (not Individual, since this is wholesale volume)",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Enter business details: legal name, address, phone, and complete identity verification step",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Add bank account and tax interview (W-9 for US business) for payouts",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Set store name as 'Eroe Clothing' and add business logo and brand description",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Pull existing spec text (GSM, fabric, fit, sizes, colours) from the SEO spec sheet task for the 3 priority styles",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "Create product listings for heavyweight tee, oversize tee and hoodie with title, bullet specs, and uploaded AI product images",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Set category as Clothing > Shirts/Hoodies, add UPC or request GTIN exemption if Eroe has no barcodes yet",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Submit account and listings for Amazon review and screenshot the confirmation screen",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Send confirmation screenshot and expected review timeline to Owner and Panda",
+      "who": "Rajdeep"
+     }
+    ],
+    "what": "This task is to create and submit Eroe Clothing's Amazon seller account so the business can list its blank apparel as a wholesale/bulk supplier on Amazon, widening the sales channel beyond the website and Instagram. It matters now because Q4 is the busiest buying window for merch and blanks, and this is a fixed deadline item in the growth plan alongside the wholesale page fixes and directory listings. This is for Rajdeep to complete using Eroe's business documents and product specs we already have from the spec-sheet work."
+   },
+   "client": "eroe",
+   "clientName": "Eroe Clothing",
+   "createdAt": 1791023116435,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "website",
+   "origDue": "2026-10-06",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Submit Amazon seller listing"
+  },
+  {
+   "id": "2x3i2z5tiv51ojwxl947",
+   "assignee": "panda",
+   "brief": {
+    "at": 1791023155690,
+    "avoid": [
+     "Don't write or imply any discount or offer text in the Book highlight before 11 Oct",
+     "Don't use shaky, dark, low-quality clips just to fill the highlight - better to use 4 strong ones than 8 weak ones"
+    ],
+    "check": [
+     "All 5 highlight covers look consistent in style and color, not mismatched",
+     "No blurry, low-light, or shaky clips used in Weddings or Parties highlights",
+     "Book highlight link opens a working WhatsApp chat on test tap",
+     "No pricing or offer language anywhere, since Shradh runs until 10 Oct",
+     "Highlight order shows Book near profile photo for visibility",
+     "Review graphics do not use fake or unverifiable claims"
+    ],
+    "how": [
+     "Highlight covers: 1080x1920px, circular crop, dark navy/black base with pink-purple stage light glow, bold white icon, matches existing reel look",
+     "Weddings highlight: best crowd and mandap-stage moments only, no low-light blurry clips",
+     "Parties highlight: birthday, sangeet, DJ night clips with good energy",
+     "Setups highlight: static photos of sound, lights, LED wall, dhol combos, clean well-lit shots only",
+     "Reviews highlight: turn text reviews into simple graphics using Canva - dark background, white text, star rating, client name initials only",
+     "Book highlight: 1-2 Stories, text overlay 'Apni date WhatsApp te bhejo' with tappable WhatsApp link sticker, no hard selling language since this is before 11 Oct",
+     "Use Instagram's native Highlight cover upload, not a sticker pack, so the icon stays crisp"
+    ],
+    "mins": 110,
+    "need": [
+     "Client's WhatsApp number confirmed for the click-to-chat link sticker - ask: 'Bhaji, kehde number te WhatsApp link lagana hai highlight vich?'",
+     "Any review screenshots or testimonials from past clients - ask: 'Koi purane event da review ya message screenshot bhej do'",
+     "Confirm the business WhatsApp catalog or number is active so the Book link actually opens a chat, not a dead link"
+    ],
+    "outcome": "The profile shows 5 Highlight bubbles in this order: Weddings, Parties, Setups, Reviews, Book, each with 4-8 Stories using existing event clips and photos the client has already sent, and a clean custom cover icon matching the dark stage-light look.",
+    "post": {
+     "after": "Once live, Panda checks after 3 days whether profile visits convert into WhatsApp messages or bio taps, and reports the number back so we know if the fix worked before wedding season ads start.",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Pull 15-20 best photos and short clips from the client's event folder already sent on WhatsApp (weddings, parties, setup shots, any review screenshots)",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Sort them into 5 folders: Weddings, Parties, Setups, Reviews, Book",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Ask the client for 2-3 review screenshots if none exist yet - message: 'Bhaji, koi purane client da review screenshot bhej do, highlight vich launa hai'",
+      "who": "Client"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "Editor designs 5 highlight cover icons, 1080x1920 canvas cropped to circle, dark background with stage-light pink/purple glow and a simple white icon (speaker, disco ball, mic, star, WhatsApp icon)",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 25,
+      "t": "Post each set of photos/clips as Stories first (5-8 Stories per category), then add them to Highlights so they stay live permanently",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "For the Book highlight, add one Story with on-screen text 'Date book karni hai? WhatsApp karo' with the WhatsApp click-to-chat link sticker",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Rename each Highlight and set the custom cover from the Editor's icons",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Reorder Highlights so Book sits leftmost next to profile photo, since that's the action we want first",
+      "who": "Panda"
+     }
+    ],
+    "what": "Panda needs to add Highlight categories to the @djypskhanna Instagram profile so the 19,746 people who visited the profile in September have a clear way to see proof and book, instead of landing on a bio with no path forward. Right now 19,746 profile visits led to only 19 link taps, which means visitors are interested but confused. This fixes that gap before wedding season bookings start ramping up from 20 Nov. This is for anyone landing on the profile from a viral reel, a shared story, or a Google search."
+   },
+   "client": "djyps",
+   "clientName": "DJ YPS",
+   "createdAt": 1791023111579,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "other",
+   "origDue": "2026-10-05",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Add booking highlights to profile"
+  },
+  {
+   "id": "334d3gelzcdeb1c9kk5l",
+   "assignee": "panda",
+   "brief": {
+    "at": 1790956744639,
+    "avoid": [
+     "Don't stuff keywords like 'best alloy wheels Khanna cheap' into the business name field, Google can suspend the listing.",
+     "Don't skip verification, an unverified listing won't show in local search results.",
+     "Don't leave the website field blank, link to the Instagram page instead.",
+     "Don't use fake or stock car photos, this breaks brand rule and can get the listing flagged."
+    ],
+    "check": [
+     "Business name matches signage exactly, no extra keywords stuffed in (Google penalises this).",
+     "Address pin is accurate on the map, not just the area.",
+     "Phone number listed is the WhatsApp number that is actively monitored.",
+     "All photos are real, sharp, and show the shop and cars, no stock images.",
+     "Category and services match what the shop actually offers.",
+     "Hours are correct and match what's on Instagram bio."
+    ],
+    "how": [
+     "Category: Tire shop (primary) plus Auto parts store, Car accessories store, Wheel alignment service.",
+     "Description in Punjabi-English mix, short lines, e.g. 'Master Wheels Khanna – alloy wheels, tyres, car upgrades. Apna car model WhatsApp te bhejo, price turant milu.'",
+     "Photos: minimum 1080x1080px, no blurry shots, no stock cars — only real shop and real cars as per brand rule.",
+     "Hours: match actual shop hours exactly, include if closed on any weekday.",
+     "Set service area radius to about 15-20km around Khanna to match the ad plan.",
+     "Add the WhatsApp number as the primary phone number wherever GBP allows it.",
+     "Pin the welcome GBP post so it is the first thing people see.",
+     "Enable messaging on GBP if available in India for this account type."
+    ],
+    "mins": 95,
+    "need": [
+     "Shop exact address with pincode, from client — message: 'Shop da pura address, nearest landmark te phone number bhejo GBP set karan layi.'",
+     "Opening and closing hours for all 7 days, from client.",
+     "10-15 real photos: shopfront, workshop, before/after wheels, finished cars — message: 'Shop, workshop te kuch before/after wheel photos bhejo, Google profile layi.'",
+     "WhatsApp number to list as the main contact number.",
+     "Confirmation of starting prices for alloy fitting, balancing, and tyre replacement for the services section."
+    ],
+    "outcome": "A verified, fully filled Google Business Profile live on Google Search and Maps with correct category, hours, phone, address pin, services list, at least 10 photos, and a WhatsApp-style call-to-action, ready to start collecting reviews.",
+    "post": {
+     "after": "Once verified and live, send the client the GBP link to share with customers for reviews. Set a recurring task to add 2-3 new photos every month and respond to any reviews within 24 hours.",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Ask client for exact shop address, landmark, phone number, and opening hours (including Sunday).",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Check if a GBP already exists for Master Wheels by searching the name on Google Maps; claim it if found, else create new.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Verify ownership via Google (phone call or postcard code, whichever Google offers).",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Set primary category to 'Tire shop' and add secondary categories: 'Auto parts store', 'Car accessories store', 'Wheel alignment service'.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Write business description (750 characters) covering alloy wheels, tyres, car accessories, Khanna service area, and WhatsApp enquiry line.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 0,
+      "t": "Ask client to send 10-15 photos: shopfront, workshop, before/after wheel shots, finished cars, staff at work.",
+      "who": "Client"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Upload photos to GBP: shopfront first, then workshop, then before/after, then logo as profile picture.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Add services list manually: alloy wheel fitting, wheel balancing, tyre replacement, car accessory upgrades, with starting price ranges if client confirms.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Add website field pointing to Instagram @masterwheels.khanna since there is no website, and add WhatsApp number in the 'phone' and in a GBP post.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Create first GBP post: welcome post with WhatsApp CTA and one before/after photo.",
+      "who": "Panda"
+     }
+    ],
+    "what": "Set up and fully optimise the Google Business Profile for Master Wheels Khanna so the shop shows up when people search 'alloy wheels near me' or 'tyre shop Khanna' on Google and Maps. This matters right now because the September data shows 3,656 profile visits on Instagram but only 25 address taps, meaning people are curious but can't easily find or call the shop. This is for Panda to complete directly, since it needs the client's real shop details and photos, not editing work."
+   },
+   "client": "masterwheels",
+   "clientName": "Master Wheels Khanna",
+   "createdAt": 1790956693028,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "gbp",
+   "origDue": "2026-10-04",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Set up Google Business Profile"
+  },
+  {
+   "id": "34lsydkarzlksorngm2v",
+   "assignee": "panda",
+   "brief": {
+    "at": 1791023108572,
+    "avoid": [
+     "Do not add any festive offer, discount or 'book now and save' language before 11 Oct, Shradh is still on",
+     "Do not open with logo, static text or slow build, the hook must be the crowd peak in the first 3 seconds",
+     "Do not use any music except the client's own DJ track"
+    ],
+    "check": [
+     "First 3 seconds is genuinely the single best crowd peak, not just the first clip in the folder",
+     "No clip longer than 4 seconds, average cut pace matches high energy party tone",
+     "Total length between 30 and 60 seconds",
+     "No sale, discount or offer language anywhere since Shradh runs until 10 Oct, only energy plus standard WhatsApp line",
+     "Cover frame set manually to the crowd hook, not a random default frame",
+     "Exported at exactly 1080x1920, checked on phone before sending for approval"
+    ],
+    "how": [
+     "Length: 30 to 60 seconds total, hard cap 60",
+     "First 3 seconds: best single crowd peak moment, no logo, no fade-in, no text yet",
+     "Text on screen: Punjabi Roman script line like 'Ae ohi crowd hai jo tusi chahunde ho apne vyah te' appearing over the hook shot",
+     "Subtitles: not needed, this is a music-led reel, keep text minimal and only for the hook and closer",
+     "Music: client's own DJ track, high energy, bhangra or party beat, no outside artist track without rights",
+     "Cover frame: freeze on the crowd peak hook shot, bright stage light visible",
+     "On-screen closer: 'Apni date WhatsApp te bhejo' with number, held 3+ seconds before end card",
+     "Export: 9:16, 1080x1920, no black bars, no watermark from source clips"
+    ],
+    "mins": 100,
+    "need": [
+     "Clips the client already sent from the recent event, confirm with client: 'Bhaji, is event de saare clips bhej do jo tuhade kol han, best crowd moments chahide'",
+     "Confirm the DJ track being used has no rights issue, ask client: 'Ih gaana use kar sakde haan reel vich?'",
+     "WhatsApp number to display on screen, confirm current number with Owner"
+    ],
+    "outcome": "A 30 to 60 second vertical reel showing peak crowd energy from the event, Punjabi on-screen caption, synced to the DJ's own track, ending on the standard WhatsApp booking line, exported 9:16 1080x1920 and ready to post.",
+    "post": {
+     "after": "Reply to every comment within a few hours, DM anyone who comments asking about dates or price, and note Views, Shares and Follows after 48 hours against the 28 Sep and 30 Sep reels to see if the hook change improved follows",
+     "caption": "Short Punjabi line only, example: 'Es weekend di energy dekho. Apni date WhatsApp te bhejo.' Keep tags: #DJYPS #DJKhanna #PunjabiWedding #WeddingDJ #Khanna #Bhangra",
+     "when": "Post Saturday 3 Oct or Sunday 4 Oct between 7pm and 9pm, when past crowd reels got most Reels-tab pickup"
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Press Make prompt on this task to generate the exact edit brief (shot order, cut points, text timing) before opening the editor",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Go through all clips the client sent from the recent event and tag the 3 to 5 best crowd peak moments (hands up, dhol drop, dance circle, lights hitting crowd)",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Cut the single strongest 2 to 3 second crowd peak and place it as the opening hook, before any logo or intro",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 25,
+      "t": "Build the rest of the sequence: 5 to 7 short clips, each 2 to 4 seconds, building energy, no static shot longer than 3 seconds",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Add Punjabi on-screen caption over the opening crowd shot (same style as the 28 Sep reel that got 5.6% like rate)",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Sync cuts to the DJ's own track beat drops, trim total length to 30 to 60 seconds",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Add closing on-screen line: send your date on WhatsApp, with the WhatsApp number visible for 3 seconds minimum",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Export 9:16 1080x1920, pick cover frame from the crowd peak hook, review once full-screen on phone before sending to owner for approval",
+      "who": "Panda"
+     }
+    ],
+    "what": "Edit a high-energy crowd-moment reel for DJ YPS using clips the client has already sent from a recent event. This is the core content format that drives nearly all of DJ YPS's reach right now: one crowd reel hit 1.4M views in September while most others hit under 150K, so repeating this exact shape is the fastest way to keep reach up during wedding-season lead-in. It is for Panda to edit and post this week, before Shradh ends on 10 Oct, so it must stay in trust/energy territory with no hard offer language."
+   },
+   "client": "djyps",
+   "clientName": "DJ YPS",
+   "createdAt": 1791023081507,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "reel",
+   "origDue": "2026-10-03",
+   "priority": "high",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Edit crowd-moment reel from recent event"
+  },
+  {
+   "id": "3dei42y51vb3k7ftv1o4",
+   "assignee": "me",
+   "client": "reachstory",
+   "clientName": "Reach Theory",
+   "createdAt": 1790956708668,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "carousel",
+   "origDue": "2026-10-04",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Draft RK Jewellers case study carousel"
+  },
+  {
+   "id": "7he1cz6rqj3akaandtuc",
+   "assignee": "me",
+   "brief": {
+    "at": 1790956816912,
+    "avoid": [
+     "Don't write generic filler like 'premium quality fabric' without a number attached",
+     "Don't duplicate the same spec sentence across all 4 products word-for-word; vary structure so Google doesn't flag duplicate content",
+     "Don't publish before Panda approves, since this is permanent website text, not a post that can be deleted"
+    ],
+    "check": [
+     "Every spec (GSM, fabric %, colours, sizes) matches exactly what the client sent, no guessed numbers",
+     "First sentence of each block contains the target search phrase naturally, not stuffed",
+     "No discount or retail language, no fake customer claims, matches brand 'never' rules",
+     "Text renders as selectable/crawlable text on the live page, not baked into an image",
+     "CTA line present on every product block, pointing to wholesale page or DM",
+     "No mention of Shradh-sensitive hard-sell language since this goes live before 11 Oct"
+    ],
+    "how": [
+     "Format: plain text blocks per product page, not an image overlay, so Google can crawl it",
+     "Length: 120-180 words per product, first sentence must include the exact search term (e.g. 'wholesale heavyweight blank hoodie')",
+     "Structure: Fabric -> Weight (GSM/oz) -> Fit -> Colours -> Sizes -> one-line CTA to wholesale page or DM for price tiers",
+     "Tone: clean, confident, spec-driven, written to printers and brand owners, no retail language, no discounts",
+     "Keywords to weave in naturally: wholesale blank t-shirts, heavyweight blanks, oversized blanks, blank hoodies wholesale, blanks for screen printing",
+     "CTA wording example: 'Ask about wholesale price tiers or DM us for a sample pack.'",
+     "Never invent GSM, fabric % or colours; use only numbers the client confirms"
+    ],
+    "mins": 130,
+    "need": [
+     "Exact specs per product from client: fabric composition, GSM/oz weight, fit name, full colour list, size range. WhatsApp message to client: 'Can you send us the exact fabric %, weight in GSM/oz, fit, available colours and sizes for the Boldstack Oversize Tee, Cotton Brushed Zipper Hoodie, and your 2 next best sellers? We're writing SEO spec text for your product pages this week.'",
+     "Confirmation from client on which 2 products (besides the hoodie and tee) are the current best sellers or priority for Q4",
+     "Panda's sign-off before text goes live on the website"
+    ],
+    "outcome": "Each of the 3-4 product pages has a clean spec block (120-180 words) with fabric, weight in GSM/oz, fit, colours, sizes and a CTA to the wholesale page, written as real text (not just an image), ready to paste into the website CMS.",
+    "post": {
+     "after": "",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "List the top 3-4 products to prioritise, using the ones already posted plus any the client flags as best sellers",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Message client on WhatsApp asking for exact specs per product: fabric %, GSM/oz, fit type, available colours, size range, country of fabric origin if known",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "While waiting, draft a reusable spec-text template with required fields in order: Product name, Fabric, Weight, Fit, Colours, Sizes, CTA line",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Write spec text for Boldstack Oversize Tee using confirmed numbers, 120-150 words, keyword-first sentence up top (e.g. 'heavyweight oversized blank tee')",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Write spec text for Cotton Brushed Zipper Hoodie, same structure, include GSM and brushed-fleece detail",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "Write spec text for 2 more top products (confirm which with client reply)",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Add a one-line compare note where relevant, e.g. '14oz heavyweight, comparable to market max-heavyweight tees' without naming competitors directly on-page",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Send all 4 drafts to Panda for approval before pasting into the website",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Paste approved text into website CMS product pages and check it renders as text, not image",
+      "who": "Owner"
+     }
+    ],
+    "what": "Write SEO spec text for the top 3-4 Eroe product pages (Boldstack Oversize Tee, Cotton Brushed Zipper Hoodie, and 1-2 more) so Google can index exact specs: fabric, GSM/oz weight, fit, colours and sizes. This is the single biggest 'fix first' item from research because buyers search exact terms like 'heavyweight blanks wholesale' and Eroe's pages currently don't have that text for Google to read. It is for screen printers and brand owners searching for a US blanks supplier, and it feeds directly into the wholesale page fix due the same week. Rajdeep owns the writing; Panda approves before it goes on the site."
+   },
+   "client": "eroe",
+   "clientName": "Eroe Clothing",
+   "createdAt": 1790956737116,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "seo",
+   "origDue": "2026-10-05",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Write SEO spec text for top products"
+  },
+  {
+   "id": "f04vxqvfqaum4p3x520m",
+   "assignee": "me",
+   "brief": {
+    "at": 1791023191090,
+    "avoid": [
+     "Do not use a generic AI-generated person or stock tailoring photo as the main image: the main photo must be real and from the client.",
+     "Do not add any offer, discount or urgency language before 11 Oct.",
+     "Do not make it a carousel: the task is a single photo or graphic post."
+    ],
+    "check": [
+     "No price, discount or offer language anywhere, since Shradh runs till 10 Oct.",
+     "Real Om Sons photo is clearly visible and not hidden behind the AI texture.",
+     "Text is readable on a small phone screen, not cramped.",
+     "Khanna is mentioned somewhere in the caption or graphic.",
+     "Ends with a clear DM or WhatsApp booking line as per brand rule.",
+     "Caption is in Punjabi Roman script with short English, matching Om Sons tone."
+    ],
+    "how": [
+     "Format: single square (1080x1080) or portrait (1080x1350) image, not a carousel.",
+     "Background: real Om Sons photo of fabric or a fitting moment, darkened slightly so text is readable.",
+     "AI-generated texture panel sits behind the step list only, never replaces the real photo.",
+     "Heading: clean serif font, e.g. 'Saade kol order kive hunda hai?' in gold on dark maroon.",
+     "Step text: short lines, large enough to read on a phone thumbnail, numbered 1 to 4.",
+     "Bottom line: 'DM ya WhatsApp kro fitting book karan layi' with the Khanna tag.",
+     "Tags to use: #OmSonsKhanna #Khanna #PunjabiGroom #BespokeTailor.",
+     "No prices, no discount words, no mention of any festival offer since this posts before Shradh ends on 10 Oct."
+    ],
+    "mins": 100,
+    "need": [
+     "One clear fabric or fitting-room photo from the client's existing photo set: if not already on hand, ask the client 'Saab ji, saanu ik vadiya photo bhejo jithe fabric ya fitting room dikhe, process explainer post layi' (send a good photo showing fabric or the fitting room for the process post).",
+     "Confirmation from the client on the real delivery timeline in days, to put in step 4 so it is accurate, not a guess."
+    ],
+    "outcome": "A single square or portrait graphic, pinned at the top of the grid, using a real Om Sons photo as the backdrop with four clear numbered steps overlaid in Punjabi Roman script, ending with a WhatsApp booking line.",
+    "post": {
+     "after": "Pin the post to the top of the grid immediately after posting. Reply to every comment within a few hours. Check after 48 hours if it got any DM shares or saves, since those are the strongest signal for reach right now.",
+     "caption": "Fabric toh lai ke final fitting tak - Om Sons da process simple hai. Saade kol order kive hunda hai, hun tuhanu pata lag jayega. Khanna de har groom layi, DM ya WhatsApp kro.",
+     "when": "Post and pin on 5 Oct, morning around 10-11am when Khanna shop traffic and phone checks are highest before lunch."
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Pick one real finished order from the client's photos that has at least one strong fabric or fitting-room shot to use as the background image.",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Press Make prompt on this task, pick the AI tool (Canva AI or Midjourney), and generate a dark maroon-and-gold textured background graphic to sit behind the text panel, matching Om Sons' look.",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 35,
+      "t": "In Canva, build a 1080x1350 portrait post: real client photo as the main visual, AI texture as an accent panel behind the step list, clean serif heading at top.",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Write the four steps as short on-screen text in Punjabi Roman: 1. Mulakat te measurement, 2. Pehla trial, 3. Final fitting, 4. Delivery (timeline, e.g. 10-15 din).",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Write the caption in Punjabi Roman with short English, explaining the process and inviting DMs, no offer or price mentioned since Shradh is on till 10 Oct.",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Panda checks brand look (dark background, gold-maroon accents, serif heading), tone (confident, craftsman pride) and that no price or discount language is used.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Owner approves final graphic and caption.",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Post the graphic, then pin it to the top of the Instagram grid.",
+      "who": "Editor"
+     }
+    ],
+    "what": "Make one pinned graphic that explains Om Sons' booking process in four simple steps: visit and measure, first trial, final fitting, delivery. This is the first thing new visitors see on the profile, and September data shows 241 followers but no clear reason yet for a visitor to book a fitting. It is for men in Khanna aged 22-40 researching where to get wedding outfits stitched, who land on the profile from reels or Google and need to understand how the process works before they message."
+   },
+   "client": "omsons",
+   "clientName": "Om Sons",
+   "createdAt": 1791023159108,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "post",
+   "origDue": "2026-10-05",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Pin process explainer post"
+  },
+  {
+   "id": "fupoxqxnbgmcyffz9y8p",
+   "assignee": "me",
+   "brief": {
+    "at": 1790885362482,
+    "avoid": [
+     "Do not put any Dhanteras offer, discount or 'book now' urgency on the banner before 11 Oct, it is still Shradh period",
+     "Do not use a cluttered collage image for the banner, keep it minimal as per brand rules",
+     "Do not forget to test the WhatsApp link on an actual phone, broken links lose enquiries silently"
+    ],
+    "check": [
+     "WhatsApp button opens chat correctly on both Android and iPhone",
+     "Pre-filled message has no spelling errors in Punjabi",
+     "Banner has no price, no 'offer', no urgency word, matches Shradh-period rule",
+     "Banner looks sharp on mobile, not cut off or blurry",
+     "Page loads in under 3 seconds after changes",
+     "Owner has approved final wording before it goes live"
+    ],
+    "how": [
+     "WhatsApp button: use a standard floating icon plugin, bottom-right corner, green WhatsApp icon, visible on scroll",
+     "Pre-filled message: 'Sat sri akal RK Jewellers, mainu gold jewellery baare jaankari chahidi hai'",
+     "Banner text (no offer, trust/teaser only): 'RK Jewellers – Saal 1997 toh tuhade pariwar da vishvasu gehna ghar. Tyohaar nede hain.' No mention of Dhanteras discount or 'offer' words since Shradh is on till 10 Oct",
+     "Banner design: plain gold/cream background, product close-up if client has one, minimal text, no clutter, matches Instagram look",
+     "File size under 200kb for banner image so site stays fast",
+     "Button links to wa.me/<number>?text=<encoded message>",
+     "Keep this banner live until 10 Oct night, then swap to the real Dhanteras banner with offer on 11 Oct morning as a separate task"
+    ],
+    "mins": 0,
+    "need": [
+     "WhatsApp business number confirmation from Owner: 'Which number should the website WhatsApp button use, the one we use for ads?'",
+     "One clean product photo (ring or coin on plain background) from client if available for the banner: 'Bhej do ek saaf product photo (ring ya coin) plain background te, banner vaaste'",
+     "Access to website backend/CMS login from Owner if Rajdeep doesn't have it already"
+    ],
+    "outcome": "Home page has a fixed WhatsApp button (bottom-right, all pages) that opens a chat with a ready message, and a clean festive banner at the top with the RK look (warm neutrals and gold) that says the festive season is near, with no prices, no discounts and no urgency language, ready to swap for the real Dhanteras banner after 11 Oct.",
+    "post": {
+     "after": "Note the WhatsApp number and link in the campaign tracker so the same link can be reused in Meta ads from 16 Oct; check WhatsApp daily for any enquiries coming through the new button",
+     "caption": "",
+     "when": "Publish by end of day 3 Oct as scheduled; swap banner to Dhanteras offer version on 11 Oct morning after Shradh ends"
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Confirm the WhatsApp business number to link (use the same number as Meta ads) and the pre-filled greeting text",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 40,
+      "t": "Add a floating WhatsApp button plugin or embed code to the site footer/header so it shows on every page",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Set the button's pre-filled message in Punjabi (Roman script)",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 45,
+      "t": "Design the banner graphic: warm gold background, minimal text, no offer, size 1600x500px for desktop and 800x600px for mobile",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "Add banner to home page top section, check it looks right on mobile and desktop",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Test the WhatsApp button on mobile and desktop, send a test message to confirm it lands in the shop's WhatsApp",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Check page load speed after adding banner image, compress if slow",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Get Owner's sign-off on banner wording and look before publishing",
+      "who": "Owner"
+     }
+    ],
+    "what": "Add a permanent WhatsApp click-to-chat button and a festive banner to the RK Jewellers website home page, ahead of the Dhanteras and Karwa Chauth campaigns. This is small but important because the ad budget from 16 Oct will send traffic straight to the site, and right now there is no easy way for a visitor to message the shop or feel the festive season is coming. It is for Rajdeep to build this week, with the banner going live without any offer text since Shradh runs until 10 Oct."
+   },
+   "client": "rkjewellers",
+   "clientName": "RK Jewellers",
+   "comments": [
+    {
+     "at": 1790848303685,
+     "text": "after shraads",
+     "who": "me"
+    }
+   ],
+   "createdAt": 1790845000518,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "hard": false,
+   "kind": "website",
+   "origDue": "2026-10-11",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Add WhatsApp button and festive banner to site"
+  },
+  {
+   "id": "ibgzztq1kn59zj4ajlyy",
+   "assignee": "me",
+   "brief": {
+    "at": 1790956793301,
+    "avoid": [
+     "Don't publish exact pricing if the client hasn't confirmed they want it public — default to 'DM for pricing' until confirmed",
+     "Don't leave the enquiry form untested — a silent failed form loses every lead",
+     "Don't add retail-style discount language like 'Sale' or '% off', this is a wholesale B2B page"
+    ],
+    "check": [
+     "MOQ, price tiers and turnaround all visible without scrolling past the fold on desktop",
+     "Enquiry form tested with a real submission and confirmed received",
+     "Page loads correctly on mobile with no overflow or broken table",
+     "No discount or retail-style language anywhere per brand 'never' rule",
+     "Title tag and meta description added for SEO",
+     "Internal links from homepage/product pages point to this page"
+    ],
+    "how": [
+     "Price tier table: 3 rows minimum (e.g. 50-99 units, 100-299 units, 300+ units), each with per-unit price range or 'DM for pricing' if client won't publish exact numbers",
+     "MOQ stated in one bold sentence near the top, e.g. 'Minimum order: 50 units per style'",
+     "4-step process block: 1) Pick your blank, 2) Confirm quantity and tier, 3) Approve sample or go straight to bulk, 4) Production and ship in X business days",
+     "Sample pack CTA as its own small section with a price or 'Contact us for sample pack pricing'",
+     "Enquiry form fields: Name, Company, Email, Phone, Product, Quantity, Message — route to client's existing order email",
+     "Compare-to-competitor line only as text, no logos: 'Heavier weights than standard retail blanks, built for print shops comparing to 14oz fleece or Max Heavyweight tees'",
+     "Mobile check: table must not overflow on phone screens, use a scrollable table or stacked cards",
+     "Keep tone per brand voice: clean, confident, spec-driven, no discount or retail language"
+    ],
+    "mins": 160,
+    "need": [
+     "MOQ number and whether it's per style or per order — ask client: 'What is your minimum order quantity, and is it per style or total per order?'",
+     "Exact price tiers or confirmation they want to hide pricing and say 'DM for pricing' — ask client: 'Can you share your price tiers so we can publish them, or should we keep it as contact-for-pricing?'",
+     "Turnaround time in business days — ask client: 'How many business days from order confirmation to shipping?'",
+     "Confirmation a sample pack exists and its price — ask client: 'Do you offer a sample pack, and if so what does it cost?'",
+     "Access to the website backend/builder and the email address enquiries should route to"
+    ],
+    "outcome": "A single wholesale page live on eroesclothing.com with a visible MOQ line, a price tier table (e.g. 50-99, 100-299, 300+ units), turnaround time, a 4-step ordering process, a sample pack mention, and a working enquiry form that sends to the client's email.",
+    "post": {
+     "after": "",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Message client to get MOQ, price tiers, turnaround days, and whether a sample pack exists and its price",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Audit current wholesale page: screenshot what's there, note missing fields and broken links",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "Write page copy: MOQ line, price tier table, turnaround, 4-step order process, sample pack CTA",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 60,
+      "t": "Build/edit the page in the website builder: add table block, FAQ accordion, and enquiry form fields (name, company, email, phone, product interest, quantity)",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Add SEO basics on page: title tag 'Wholesale Blank Apparel MOQ & Pricing | Eroe Clothing', meta description, H1 'Wholesale Blanks: MOQ, Pricing & Turnaround'",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Test enquiry form end to end: submit a test entry, confirm it lands in client inbox",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Add internal links from homepage and product pages to the wholesale page",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Final review against checklist and send client the live link for sign-off",
+      "who": "Owner"
+     }
+    ],
+    "what": "Rebuild the wholesale page on eroesclothing.com so it clearly shows MOQ, price tiers, turnaround time and how to order, with an enquiry form at the bottom. This is the #1 fix from our research: right now buyers comparing Eroe to Shaka Wear or Los Angeles Apparel can't tell how much they need to order or what it costs, so they bounce. It's for US printers, DTG/DTF shops and streetwear brand owners who land on this page from Google or Instagram bio link before they ever DM us."
+   },
+   "client": "eroe",
+   "clientName": "Eroe Clothing",
+   "createdAt": 1790956728668,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "website",
+   "origDue": "2026-10-05",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Fix wholesale page with MOQ and tiers"
+  },
+  {
+   "id": "l1r9tx54oc9eqnzcc209",
+   "assignee": "",
+   "client": "omsons",
+   "clientName": "Om Sons",
+   "comments": [
+    {
+     "at": 1791022733292,
+     "text": "upload will be done after shoot",
+     "who": "me"
+    }
+   ],
+   "createdAt": 1790956741232,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "carousel",
+   "month": "2026-10",
+   "origDue": "2026-10-05",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "upload reel"
+  },
+  {
+   "id": "mo1x527o5a9o4cj3nwou",
+   "assignee": "me",
+   "campaign": "cmpmunk2au4",
+   "client": "rkjewellers",
+   "clientName": "RK Jewellers",
+   "createdAt": 1790845557454,
+   "doneMonth": "",
+   "due": "2026-10-08",
+   "itemIdx": 1,
+   "kind": "story",
+   "status": "todo",
+   "title": "Navratri campaign: Navratri countdown teaser"
+  },
+  {
+   "id": "n7jif8k15xzv3nlxxzbv",
+   "assignee": "me",
+   "brief": {
+    "at": 1791023132069,
+    "avoid": [
+     "Don't list more than 10 colours in one grid, it gets cluttered and unreadable on mobile",
+     "Don't let the AI tool render slightly different fabric textures per swatch - regenerate until lighting and texture match",
+     "Don't post this as a carousel; it undercuts the point of one at-a-glance grid"
+    ],
+    "check": [
+     "All swatch colours match what the client actually has in stock right now, not discontinued colours",
+     "GSM, fabric and fit text is visible and correct on the image",
+     "No fake seams, mismatched labels or inconsistent stitching across the AI-generated swatches",
+     "No discount or retail-style sale language anywhere in caption or image",
+     "Caption includes a wholesale CTA (page link or DM), not just a product description"
+    ],
+    "how": [
+     "Format: single image, 4:5 ratio (1080x1350), not a carousel, since this is one grid visual",
+     "Layout: 2 rows x 4-5 columns of folded tees/hoodie flat lays on the same neutral grey or white studio background, identical lighting across all swatches",
+     "On-image text: top-left style name + GSM (e.g. '6.5oz Heavyweight Tee'), small labels under each swatch with colour name only (e.g. 'Black', 'Sand', 'Olive')",
+     "Keep AI details consistent: same seam style, same label position, same fold style across every swatch - check closely, this is where AI models usually glitch",
+     "Caption tone: clean, confident, spec-driven, written to printers and brand owners, no discount or sale language",
+     "CTA: 'DM us for price tiers' or 'Full colour range and specs on our wholesale page' linking to eroesclothing.com",
+     "Hashtags: use the client's set - #blankapparel #wholesaleblanks #heavyweighttee #screenprinting #streetwearbrand #losangeles #merch",
+     "Tool: use the studio's AI image tool after pressing Make prompt on this task - do not generate from a blank prompt"
+    ],
+    "mins": 80,
+    "need": [
+     "Need from client: confirmed in-stock colour list for the chosen style with exact names - message to send: 'Can you confirm the exact colour names currently in stock for [style], and the GSM/fabric/fit text you want on the product page, so we can build an accurate colour swatch grid today?'",
+     "Need from Owner: pick which single style to feature this week"
+    ],
+    "outcome": "One clean square or 4:5 AI image showing 6-10 folded or flat-lay colour swatches of the same style in a grid, each labelled with the colour name, plus GSM/fabric and fit text on the image, posted to @eroes_clothing with a wholesale-page CTA caption.",
+    "post": {
+     "after": "Reply to any DMs asking about specific colours within the hour with price-tier info, save view/reach numbers in the growth log, and reuse this grid format for the next core style next week.",
+     "caption": "Full colour range for our [Style Name] — [GSM]oz, [Fabric], [Fit]. In stock now for wholesale. DM us for price tiers or hit the wholesale page in bio.",
+     "when": "Today, 2026-10-03, around 11am PT (Eroe's buyers are LA-based print shops and brand owners, mid-morning on a weekday gets more business-hours opens)"
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Confirm with client which style and which exact colour names/hex are currently in stock for that style",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Press Make prompt on this task, pick the AI image tool (Midjourney or the studio's set tool), and generate the image from that prompt",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Generate 3-4 variations of the grid and pick the cleanest one with consistent lighting and no seam/label glitches",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Add on-image text: style name, GSM/oz, fabric, fit, and colour labels under each swatch using studio typography preset",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Panda reviews for brand look match and spec accuracy against client-confirmed specs",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Write caption with wholesale CTA and hashtag set, schedule post",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Post and pin a comment with the wholesale page link",
+      "who": "Rajdeep"
+     }
+    ],
+    "what": "Create and post an AI-generated colour swatch grid showing the full colour range Eroe stocks for one core blank style (start with the Boldstack Oversize Tee or the Cotton Brushed Zipper Hoodie, whichever has the most colours confirmed). This is a core pillar post (colours and sizes in stock) for Rajdeep to publish today, aimed at screen printers and brand owners in LA comparing suppliers who need to see the colour range fast before messaging for price tiers."
+   },
+   "client": "eroe",
+   "clientName": "Eroe Clothing",
+   "createdAt": 1791023096419,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "ai",
+   "origDue": "2026-10-03",
+   "priority": "high",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Post AI colour swatch grid visual"
+  },
+  {
+   "id": "qn3dc7fyp4f8snyx8xue",
+   "assignee": "",
+   "brief": {
+    "at": 1790956716775,
+    "avoid": [
+     "Don't generate retail-style 'Halloween sale' discount language — Eroe sells wholesale blanks, not discounted merch",
+     "Don't let AI images drift in lighting/background between the 3 posts; keep the same studio setup so the grid looks like one brand",
+     "Don't post before confirming current stock with the client — a style the client no longer carries would waste the post"
+    ],
+    "check": [
+     "GSM, fabric and fit text is readable and correct on every image",
+     "No fake seams, labels or logos accidentally generated by the AI",
+     "Colours match what the client actually has in stock",
+     "Carousel slides are visually consistent in lighting and background",
+     "Caption has a CTA to wholesale page or DM, no discount language",
+     "Hashtag set matches brand tags plus the 3 seasonal additions"
+    ],
+    "how": [
+     "Format: single product image for post 1 (1080x1350 portrait), swatch grid for post 2 (1080x1350), 4-slide carousel for post 3 (1080x1350 each slide)",
+     "On-image text: GSM/oz, fabric (e.g. 100% cotton, fleece-lined), fit (e.g. oversized, regular) in bottom-third clean sans-serif, matching the Boldstack Oversize Tee style already used",
+     "Background: neutral grey or off-white studio background, same lighting setup across all 3 posts for consistency",
+     "Carousel slide 2 spec sheet: bullet list layout, not paragraph text, so Instagram compresses it without blur",
+     "Caption CTA: always point to wholesale page or 'DM for price tiers', never a discount word",
+     "Hashtags: mix from brand tag list — #blankapparel #wholesaleblanks #heavyweighttee #screenprinting #streetwearbrand #losangeles #merch — plus add #fallmerch #halloweenmerch #blankhoodies for this batch only",
+     "AI tool: use the same tool and settings as the prior two posts (Cotton Brushed Zipper Hoodie, Boldstack Oversize Tee) so the studio look stays consistent"
+    ],
+    "mins": 110,
+    "need": [
+     "Confirm from client which colours/styles are currently in stock for Halloween season: message — 'Which colours and styles do you have in stock right now that work for Halloween/fall orders (black tees, orange/black hoodies, fleece crew)? We want to feature only what you can fulfil.'",
+     "Any new GSM/fabric specs not yet documented, if styles changed since last shoot"
+    ],
+    "outcome": "A set of 3 AI product visuals (one single image, one colour-swatch grid, one carousel spec sheet) ready to post between Oct 3 and Oct 17, each showing a Halloween/fall-relevant blank (black, orange, heavyweight fleece/hoodie) with GSM, fabric and fit visible as on-image text, plus a caption and hashtag set aimed at print shops.",
+    "post": {
+     "after": "Check saves and DM shares on each post after 48 hours (sends per reach matters more than likes), reply to any DM asking about pricing within a few hours, and log which post got the most saves/shares to repeat that format for the Black Friday teaser batch in November.",
+     "caption": "Post 1: 'Heavyweight black tee, 6.5oz 100% cotton, regular fit — built for Halloween and fall print runs. DM for wholesale price tiers.' Post 3 carousel: 'How to order Eroe blanks wholesale in 4 steps — specs, MOQ, turnaround, sample pack.'",
+     "when": "Post 1 on Fri Oct 3, 10am PT; Post 2 on Wed Oct 8, 10am PT; Post 3 (carousel) on Tue Oct 14, 10am PT — these are B2B buyers, so weekday late-morning PT works better than weekend"
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Pick 3 products from Eroe's catalog best suited to fall/Halloween prints: a black heavyweight tee, an orange or black hoodie, and a fleece crewneck",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Press Make prompt on this task, pick the AI image tool, and generate the first product image: black heavyweight tee on neutral grey background, studio lighting, GSM and fabric text overlay",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Generate second image: orange and black hoodie colour-swatch grid (4 colours) on same neutral background, consistent lighting",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "Generate 4-slide carousel set: slide 1 hook image of fleece crewneck, slide 2 spec sheet (GSM, fabric, fit), slide 3 size chart, slide 4 'how to order wholesale in 4 steps'",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Check every image for AI artefacts: seam lines, label text, stitching errors, asymmetry",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Write captions and hashtag sets for all 3 posts, following brand tone (clean, confident, spec-driven)",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Schedule the 3 posts across Oct 3, Oct 8 and Oct 14 in the posting tool",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Message client to confirm current stock and colours still available for these 3 styles before posting",
+      "who": "Owner"
+     }
+    ],
+    "what": "This task is to plan and produce a short run of AI-generated product visuals for Eroe Clothing that push the Halloween/fall merch-drop window, since screen printers and merch brands need to order blanks now to get prints done before Halloween on Oct 31. This is for US-based screen printers, DTG/DTF shops and streetwear brand owners who decide what blanks to buy based on fabric weight, fit and colour, not discounts. Eroe has only posted 5 times this month with almost no reach, so these posts need to carry clear specs and strong hooks to start building discovery with buyers searching blanks right now. Eroe is a US LA client, so the Indian festival calendar (Shradh etc.) does not apply here; normal posting and offers are fine."
+   },
+   "client": "eroe",
+   "clientName": "Eroe Clothing",
+   "comments": [
+    {
+     "at": 1791021958981,
+     "text": "Hold off · 10 Oct: 2 days before halloween not before",
+     "who": "me"
+    }
+   ],
+   "createdAt": 1790956671392,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "ai",
+   "origDue": "2026-10-10",
+   "priority": "high",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Plan Halloween/fall AI product posts"
+  },
+  {
+   "id": "qp3eim2c0s0k0hw2s8ww",
+   "assignee": "me",
+   "client": "rkjewellers",
+   "clientName": "RK Jewellers",
+   "comments": [
+    {
+     "at": 1791021926125,
+     "text": "Hold off · 15 Oct: navratri has time to come it is too early to start campaigning for it",
+     "who": "me"
+    }
+   ],
+   "createdAt": 1790956665217,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "carousel",
+   "origDue": "2026-10-15",
+   "priority": "high",
+   "rolled": 1,
+   "status": "todo",
+   "title": "Post Navratri countdown teaser carousel"
+  },
+  {
+   "id": "td-tdmupd9ex1rzt",
+   "assignee": "me",
+   "brief": {
+    "at": 1790956771137,
+    "avoid": [
+     "Do not turn this into a sale post or add any offer, urgency or discount line before 11 Oct",
+     "Do not write or imply the team filmed anything, this is edited from client clips only",
+     "Do not overstate purity claims, stick to what the client confirms in writing"
+    ],
+    "check": [
+     "No price, discount or 'buy now' language anywhere since we are inside Shradh until 10 Oct",
+     "HUID and hallmark line visible on every website listing",
+     "Reel hook actually appears in the first 3 seconds, not after a logo or intro card",
+     "Subtitles match on-screen text, no spelling errors in Punjabi Roman script",
+     "Cover frame is sharp and shows the product clearly, not a blurry mid-clip frame",
+     "Export is exactly 1080x1920 before uploading"
+    ],
+    "how": [
+     "Reel length: 30-45 seconds, no longer, skip rate on recent reels is over 50% so keep it tight",
+     "First 3 seconds: close-up shot of a rashi/stone piece with on-screen text 'Tuhadi rashi da pathar kehra hai?' spoken or texted, no logo intro first",
+     "On-screen text: short Punjabi Roman script lines per clip, e.g. 'Mesh - Moonga', 'Vrishabh - Heera', keep to 3-4 words per stone so it reads fast",
+     "Subtitles: burn in simple English+Punjabi mix subtitles for the voiceover or text-only narration, white text black outline, bottom third",
+     "Music: warm, traditional-light instrumental, no fast trending beat, this is an education piece not a sale",
+     "Cover frame: pick the clearest close-up of one finished piece on a plain background, no text covering the stone",
+     "Export settings: 9:16, 1080x1920, H.264, under 4K to keep upload fast",
+     "End card text: 'Jaankari layi WhatsApp karo' only, no 'buy now' or 'offer' wording since Shradh is on till 10 Oct"
+    ],
+    "mins": 140,
+    "need": [
+     "Photos and any clips of the astrology/rashi range from the client - message to send: 'Hello ji, astrology range di photos/clips bhej do, naal weight te purity bhi likh dena, website te reel dono layi chahida'",
+     "Weight and purity detail per piece for the website listing and for the HUID line",
+     "Confirm with client if they want rashi-wise grouping or just a general astrology collection name"
+    ],
+    "outcome": "The astrology range is live on rkjewellerskhanna.com with photos and basic details, and a 30-45 second reel is published on Instagram explaining the range as 'know your rashi stone' education, with no price push and no buy-now language.",
+    "post": {
+     "after": "Reply to every comment asking about a specific rashi within a few hours, DM anyone who asks price with a WhatsApp link instead of posting price publicly, save the reach, shares and save numbers after 48 hours to compare against the gold bar reel",
+     "caption": "Tuhadi rashi da pathar kehra hai? Jaano RK Jewellers di astrology range bare, 1997 toh parivar da bharosa. Jaankari layi WhatsApp karo. #RKJewellersKhanna #Khanna #GoldJewellery #HUID",
+     "when": "Friday 2 Oct or Saturday 3 Oct, around 7-8pm, matches when past reels picked up views"
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Message client: ask them to send clear product photos and any close-up clips of the astrology/rashi range pieces, plus weight and purity for each design",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Once photos arrive, write short product descriptions (name, weight, purity, HUID line) for each piece",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "Upload all astrology range pieces to the website shop section with photos and descriptions",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Press Make prompt on this task to get the exact edit brief before cutting the reel",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Pick the best 4-6 clips/photos of the astrology pieces from what the client sent",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 45,
+      "t": "Edit the reel to spec: 30-45 seconds, hook in first 3 seconds, Punjabi Roman script on-screen text, subtitles, cover frame set",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Owner reviews the cut, checks no purity claim is overstated and no urgency language has crept in",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Export 9:16 1080x1920, schedule for the chosen slot, write caption and tags",
+      "who": "Panda"
+     }
+    ],
+    "what": "RK Jewellers has an astrology-based gold range (rashi/zodiac stones) that needs to go live on the website, then be turned into one Instagram reel edited from the client's product clips. This matters now because we are still inside Shradh (26 Sep to 10 Oct), so this has to run as trust and education content, not a sale, and it gives us something fresh to post while we hold off on offers. It is for families in Khanna who are already browsing but will not buy new gold until Navratri starts on 11 Oct."
+   },
+   "client": "rkjewellers",
+   "clientName": "RK Jewellers",
+   "createdAt": 1790907696346,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "website",
+   "origDue": "2026-10-04",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Astrology range for RK: publish the products on the website, then edit a reel of them",
+   "todo": "tdmupd9ex1rzt"
+  },
+  {
+   "id": "td-tdmupdwhn1rsr",
+   "assignee": "me",
+   "brief": {
+    "at": 1790956764762,
+    "avoid": [
+     "Do not use a screenshot of the logo from an old Instagram post, it will be low resolution",
+     "Do not update profile photos with a placeholder while waiting, finish collecting the real file first"
+    ],
+    "check": [
+     "File opens without pixelation when zoomed to 200%",
+     "Background is transparent, not white, so it fits dark carousel templates",
+     "Colours match the brand gold and maroon tones, not a faded print scan",
+     "Logo looks correct when cropped into a circle for profile photos",
+     "Master file is saved in the shared folder before any profile updates happen"
+    ],
+    "how": [
+     "Ask for original vector file first (AI, EPS, SVG or high-res PDF) since this scales cleanly for print and digital without pixelation",
+     "If no vector exists, minimum acceptable is a PNG at least 1000x1000px with transparent background",
+     "For Instagram and WhatsApp profile photo, crop to a square and preview inside the circular frame before uploading, since circular crop cuts edges",
+     "Keep the gold and deep-maroon brand colours in mind if Panda has to recreate or touch up the logo, matching the existing brand look",
+     "Store final files in one shared folder with a locked master copy named om_sons_logo_final_master, separate from any resized exports",
+     "Send the client a one-line WhatsApp message: 'Om Sons ji, saanu tuhada logo da sabh toh vadiya quality wala file chahida hai, jiven AI ya PDF ya fir transparent background wali PNG. Jo vi hove, saanu bhej dyo.'"
+    ],
+    "mins": 65,
+    "need": [
+     "Need the original logo file from the client, message to send: 'Om Sons ji, saanu tuhada logo da sabh toh vadiya quality wala file chahida hai, jiven AI ya PDF ya fir transparent background wali PNG, taan ke asi Instagram, WhatsApp te Google profile sab te sahi logo laga saiye.'",
+     "If client has no digital file, need a clear, well-lit photo of the printed logo (signboard or visiting card) as backup"
+    ],
+    "outcome": "A clean, high-resolution logo file (PNG with transparent background, plus original AI/EPS or vector if available) is saved in the shared drive and applied to Instagram profile photo, WhatsApp Business profile, Google Business Profile and the brand asset folder used for carousels.",
+    "post": {
+     "after": "",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Message client on WhatsApp asking for the final logo file in original format (AI, EPS, PDF or at least a 1000x1000px+ PNG with transparent background)",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "If client cannot find a high-res file, ask them to send the best photo or printed version of the logo they have (signboard, visiting card, invoice)",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Save received file(s) in the shared Om Sons brand folder, named clearly as om_sons_logo_final",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "If only a low-res or printed image is available, ask Panda to clean it up or recreate it as a sharp vector/PNG",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Update Instagram profile photo with the new logo, cropped to fit the circular frame",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Update WhatsApp Business profile photo with the same cropped version",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Update Google Business Profile logo once GBP setup task is complete, using the same file",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Add the final logo file to the shared brand asset folder used for carousel templates so future posts use the correct mark",
+      "who": "Rajdeep"
+     }
+    ],
+    "what": "We need the final, high-resolution logo file from Om Sons so it can replace the low-quality or placeholder version currently used on Instagram, WhatsApp Business, Google Business Profile and any carousels or reels we design. This matters now because two other open tasks (bio fix, GBP setup) and the fabric-to-fitting carousel series depend on having the correct logo for consistent branding before groom-season content ramps up in October. This is for Rajdeep to action directly with the client, not for the editor or Panda."
+   },
+   "client": "omsons",
+   "clientName": "Om Sons",
+   "createdAt": 1790907696346,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "other",
+   "origDue": "2026-10-05",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Om Sons logo: get the final logo file from the client and update it everywhere",
+   "todo": "tdmupdwhn1rsr"
+  },
+  {
+   "id": "top2nn0w0him6e5cextw",
+   "assignee": "me",
+   "client": "omsons",
+   "clientName": "Om Sons",
+   "createdAt": 1791023076099,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "other",
+   "origDue": "2026-10-03",
+   "priority": "high",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Fix bio: add Khanna and booking line"
+  },
+  {
+   "id": "w83u28c2jekwbo2c24ci",
+   "assignee": "me",
+   "brief": {
+    "at": 1791023146405,
+    "avoid": [
+     "Do not add discount or 'offer' language to product descriptions now, since Shradh is still on until 10 Oct; this catalogue is backend setup only, not a public sale.",
+     "Do not use stock or generic jewellery images, use only the client's own photos.",
+     "Do not leave weight or purity fields blank, incomplete data gets ads rejected or distrusted by buyers."
+    ],
+    "check": [
+     "Every product has price, weight and purity filled in, nothing left blank.",
+     "All images are 1:1, clean background, no clutter or collage.",
+     "Descriptions mention 'since 1997' and HUID/hallmark where applicable, no fake urgency language.",
+     "Commerce Manager diagnostics shows zero rejected or pending-review items before the ad goes live.",
+     "Product sets (Bridal, Lightweight Gold, Coins, Gifting) are correctly categorised, no item in the wrong set.",
+     "Panda has reviewed and approved the catalogue link before it is attached to any ad."
+    ],
+    "how": [
+     "Use Meta Commerce Manager, not the old Business Manager catalogue tool, for 2026 feed rules.",
+     "Product images: 1:1 square, minimum 1080x1080px, plain or softly blurred background, no text overlay on the image itself.",
+     "Price field must show exact INR price if fixed, or 'Starting from ₹X' for sets with variable weight.",
+     "Description format example: 'Bridal necklace set, 22K gold, 1997 se vishwaas, HUID certified. 42 grams. WhatsApp karo details layi.'",
+     "Group products into 4 sets so later ads can target bridal buyers separately from gifting buyers.",
+     "Tag each product with weight and purity fields exactly as client sends; never estimate or round purity.",
+     "Keep catalogue to 15-25 pieces only, the actual best sellers, not the full inventory, so ads stay fast to manage."
+    ],
+    "mins": 210,
+    "need": [
+     "Client to send clear photos of their top 20 pieces with price, weight in grams and purity (22K/18K) marked against each photo: message to send - 'RK ji, Dhanteras ads taiyar karan layi sanu tuhade 20 best-selling pieces diyan photos chahida hai, har ik de naal price, weight (grams) te purity (22K/18K) likh ke bhej dyo.'",
+     "Confirm with client if any piece has HUID number available, to mention it in the description for trust."
+    ],
+    "outcome": "A live Meta catalogue with 15-25 products, each with a clean photo, price, weight, purity and HUID mentioned in the description, organised into sets like bridal, lightweight gold, coins and gifting, ready to attach to ad campaigns from 16 Oct.",
+    "post": {
+     "after": "",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Message client: ask for photos, price, weight (grams) and purity (22K/18K) for their 20 best-selling pieces across bridal sets, lightweight daily-wear, gold coins and gifting items",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Set up or confirm Meta Commerce Manager account linked to RK Jewellers' Instagram and Facebook page",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Create a product feed spreadsheet (CSV) with columns: ID, title, description, price, availability, image link, category",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 60,
+      "t": "Crop and clean up each client photo to a plain or near-plain background, square 1:1 ratio, consistent warm-neutral tone matching brand look",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 40,
+      "t": "Write each product title and short description in Punjabi (Roman script) with short English, mentioning 'since 1997', hallmark and HUID where relevant",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 30,
+      "t": "Upload the CSV and images into Commerce Manager, create 4 product sets: Bridal, Lightweight Gold, Coins, Gifting",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Check catalogue for errors or disapprovals in Commerce Manager diagnostics tab and fix flagged items",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Share catalogue link with Panda for review before it is used in the Dhanteras ad campaign",
+      "who": "Rajdeep"
+     }
+    ],
+    "what": "Build a Meta product catalogue in Commerce Manager with RK Jewellers' top 15-25 pieces, ready to power Click-to-WhatsApp and dynamic ads for the Dhanteras campaign going live 16 Oct. This is backend setup, not a public post, so it can be built during Shradh without breaking the no-hard-sell rule. It is for Rajdeep to action this week so ads can launch on time and the team is not scrambling in the last week before Dhanteras."
+   },
+   "client": "rkjewellers",
+   "clientName": "RK Jewellers",
+   "createdAt": 1791023103971,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "ad",
+   "origDue": "2026-10-06",
+   "priority": "medium",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Build Meta catalogue of top pieces"
+  },
+  {
+   "id": "wipm5zr8jll1rykoniwk",
+   "assignee": "me",
+   "brief": {
+    "at": 1790887628330,
+    "avoid": [
+     "Do not invent or round numbers to look better than the real Insights data",
+     "Do not add a hard-sell discount or offer line since Shradh runs till 10 Oct - keep this as proof/trust content with a soft DM AUDIT ask only, not a sale"
+    ],
+    "check": [
+     "Numbers match the client's actual Insights screenshot, not rounded up",
+     "Client has clearly said yes to sharing data",
+     "No client logo, phone number or private info shown without separate consent",
+     "Font, colour and spacing match the existing black-bronze grid posts exactly",
+     "Last slide clearly says DM AUDIT",
+     "Caption and on-screen text are in Punjabi/English mix, not generic English"
+    ],
+    "how": [
+     "Carousel size 1080x1350px, 7 slides, export as JPG or PNG, under 30MB total",
+     "Slide 1: Cover - tall serif headline e.g. 'Ik client. Asli numbers.' with bronze 3D object on black",
+     "Slide 2: Client name + one-line problem, e.g. 'RK Jewellers, Khanna - Instagram reach si almost zero'",
+     "Slide 3: Big bronze number - BEFORE metric only, e.g. '340 reach/month'",
+     "Slide 4: 3 short bullets on what Reach Theory did, no jargon, each under 6 words",
+     "Slide 5: Big bronze number - AFTER metric, e.g. '4,200 reach/month'",
+     "Slide 6: Timeframe line, e.g. 'Sirf 6 hafton ch' (in just 6 weeks)",
+     "Slide 7: CTA on black - 'Tuhade business layi vi ho sakda hai. DM AUDIT.'",
+     "Font: same tall condensed serif used across the grid, no new fonts, keep margins wide and empty space generous"
+    ],
+    "mins": 150,
+    "need": [
+     "Written permission from the client to share their numbers: ask 'Reach Theory page te tuhade result da case study post kariye? Numbers share karan di ijazat de sakde ho?'",
+     "Exact before/after metric from that client's Insights screenshot (reach, enquiries, or engagement, owner's choice)",
+     "Confirmation from owner on final wording before publish since this is the first post of its kind"
+    ],
+    "outcome": "A published 7-slide carousel on Reach Theory's grid, black-cream-bronze style, one AI 3D object, big bronze before/after numbers from one real client, ending with a clear DM AUDIT ask, matching the reference aesthetic the owner shared.",
+    "post": {
+     "after": "Save slide screenshots and post reach/engagement numbers in the team sheet after 48 hours; reply to every comment within a day; if someone DMs AUDIT, send the saved audit reply template; add this carousel to the Results highlight.",
+     "caption": "Numbers nu jhooth nahi bolde. Ik client, real results, 6 hafton ch. Tuhade business layi vi plan banauna hai? DM AUDIT. #ReachTheory #Khanna #PunjabBusiness #DigitalMarketing #SocialMediaMarketing #LocalBusiness",
+     "when": "Today, 2 Oct 2026, around 7-8pm when Khanna business owners are off work and browsing phones"
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Message the client (RK Jewellers or DJ YPS, whichever has stronger recent numbers) asking: 'Reach Theory te apna case study post karna chahunde haan - reach/engagement/enquiry numbers share karan di ijazat de sakde ho?' Get a yes in writing (WhatsApp screenshot is enough).",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Pull the exact before and after numbers from that client's Insights: reach, engagement rate, or enquiries, for a defined period (e.g. 30 days before vs after a campaign).",
+      "who": "Owner"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Write the 7 slide texts (headline, 2 numbers, 3 action bullets, 1 CTA line) in the tall condensed serif style, short phrases only.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Generate one AI 3D object for the cover (spotlight or magnet, bronze, matching the reference grid) at 1080x1350px.",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 60,
+      "t": "Design all 7 slides in black/cream/bronze, same font and spacing as the existing grid posts, export as a carousel set.",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Review for: correct numbers, no client name typo, no overclaiming, permission confirmed, DM AUDIT line present on last slide.",
+      "who": "Panda"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Write caption (Punjabi/English mix) and hashtag set, schedule or publish directly.",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Publish the carousel and pin a comment with the DM AUDIT line.",
+      "who": "Rajdeep"
+     }
+    ],
+    "what": "This is the first proof post for the Reach Theory page itself: a black-and-bronze carousel showing one real client result with real numbers, to back up the 'Consistency builds recall' style posts already live. It is for Khanna-area business owners scrolling Instagram who need proof before they DM for an audit. It is overdue by a day, so it should go out today. Pick either RK Jewellers or DJ YPS, whichever result is cleanest and already approved by the client."
+   },
+   "client": "reachstory",
+   "clientName": "Reach Theory",
+   "comments": [
+    {
+     "at": 1791022839427,
+     "text": "case study in progress",
+     "who": "me"
+    }
+   ],
+   "createdAt": 1790844930670,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "carousel",
+   "origDue": "2026-10-01",
+   "priority": "high",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Publish first case study carousel"
+  },
+  {
+   "id": "z3qyi82mweji17fivd33",
+   "assignee": "me",
+   "brief": {
+    "at": 1790956628234,
+    "avoid": [
+     "Don't list a home address on Google if the owner hasn't approved it publicly — use service area setting instead",
+     "Don't post client numbers in Results highlight without written permission on file, even if impressive"
+    ],
+    "check": [
+     "Bio fits in 150 characters and reads clearly on mobile without truncation",
+     "All 4 highlight covers use only black, cream and bronze — no stray colours from Canva defaults",
+     "Numbers shown in Results highlight match what client approved, no raw screenshots with other sensitive data visible",
+     "GBP category, phone number and hours are accurate and match website/WhatsApp if listed",
+     "GBP photos are not stretched or blurry, all in brand palette where possible",
+     "Bio offer line matches current active offer (Free Instagram audit, DM AUDIT) with no typos"
+    ],
+    "how": [
+     "Bio format: 'We help Khanna & Punjab businesses grow on Instagram' / 'Khanna, Punjab' / 'Free Instagram audit — DM AUDIT'",
+     "Highlight covers: black background, one thin bronze-coloured icon centred, no text, matches grid aesthetic",
+     "Results highlight slides: big bronze number on black (e.g. '3.2x reach in 30 days — RK Jewellers'), only use numbers the client has approved for sharing",
+     "GBP category: primary 'Marketing Agency', secondary 'Internet Marketing Service' and 'Advertising Agency'",
+     "GBP description (750 chars max): mention Khanna, Instagram management, ads, case studies, free audit offer, keep it plain English with one Punjabi line if natural",
+     "Use Canva template sized 1080x1920 for highlight slides, export as PNG, keep black/cream/bronze palette only — no other colours",
+     "GBP address: if no public office, set as service area business centred on Khanna, do not list a home address publicly without owner's confirmation"
+    ],
+    "mins": 125,
+    "need": [
+     "Confirm with owner: is there a physical office address to list on GBP, or should it be service-area only — ask owner directly, not the client",
+     "Get written permission already on file for RK Jewellers and DJ YPS numbers before using them in Results highlight — confirm with Panda it's approved",
+     "WhatsApp business number to use as bio link and GBP contact — confirm with owner which number is public-facing"
+    ],
+    "outcome": "Reach Theory's Instagram bio clearly states who we help, where, and the free audit offer with DM AUDIT; four highlights (Results, Clients, Services, Contact) are live with black-and-bronze covers; and a verified Google Business Profile for Reach Theory is live with category, address, hours, services and at least 3 photos.",
+    "post": {
+     "after": "Once bio and highlights are live, screenshot the new profile and send to owner and Panda for sign-off before telling any client to check the page. Once GBP is submitted, note the verification method (postcard takes 5-7 days) and set a reminder to verify.",
+     "caption": "",
+     "when": ""
+    },
+    "steps": [
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Write final bio copy: line 1 who we help, line 2 where, line 3 the offer with DM AUDIT",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Update Instagram bio text and add website field (use WhatsApp link if no website) and category 'Marketing Agency'",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 25,
+      "t": "Design 4 highlight cover icons in black-and-bronze style (simple line icon on black circle) in Canva, 1080x1920 export cropped to circle",
+      "who": "Editor"
+     },
+     {
+      "done": false,
+      "mins": 15,
+      "t": "Build Results highlight: screenshot 2-3 existing client wins with numbers (RK Jewellers, DJ YPS) as Story slides",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Build Clients highlight: logo or name card for each current client, one slide per client",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Build Services highlight: 3-4 slides listing services (Instagram management, ads, case studies, lead gen)",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 5,
+      "t": "Build Contact highlight: one slide with WhatsApp number, DM AUDIT line, Khanna location",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 20,
+      "t": "Create Google Business Profile for Reach Theory: business name, category, Khanna address or service area, phone, hours, website/WhatsApp link",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Upload 3-5 photos to GBP: studio logo, work samples (case study carousel images), team photo if available",
+      "who": "Rajdeep"
+     },
+     {
+      "done": false,
+      "mins": 10,
+      "t": "Verify GBP listing (postcard or phone verification) and request first review from owner/Panda",
+      "who": "Rajdeep"
+     }
+    ],
+    "what": "This is the foundational fix for Reach Theory's own Instagram and its Google presence, due today 2 Oct 2026. Right now the bio just says 'DM for collaborations' with no link, no proof and no highlights, and September's insights show only 145 views from 7 posts — almost nobody outside existing followers is finding the page. This task is for Rajdeep to make the profile convert a cold visitor into a DM within 5 seconds of landing on it, and to get Reach Theory discoverable on Google Search and Maps for Khanna business owners searching 'marketing agency near me' or 'social media agency Khanna'."
+   },
+   "client": "reachstory",
+   "clientName": "Reach Theory",
+   "createdAt": 1790956605147,
+   "doneMonth": "",
+   "due": "2026-10-16",
+   "kind": "gbp",
+   "origDue": "2026-10-02",
+   "priority": "high",
+   "rolled": 2,
+   "status": "todo",
+   "title": "Set bio: who we help, where, offer: 'Free Instagram audit for Khanna businesses, DM AUDIT'; add highlights Results, Clients, Services, Contact; set up Reach Theory Google Business Profile"
+  }
+ ]
+}
