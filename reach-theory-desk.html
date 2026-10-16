@@ -949,7 +949,7 @@ function similar(a, b){
   return n >= 2 && n / m >= .75 && (m >= 3 || n === m);
 }
 // An open task, or one finished in the last 3 weeks, that says the same thing for the same page.
-const dupOf = (cid, title) => S.tasks.find(t => t.client === cid && (t.status !== 'done' || (t.doneAt && Date.now() - t.doneAt < 21 * 864e5)) && similar(t.title, title));
+const dupOf = (cid, title) => isPlainTitle(title) ? null : S.tasks.find(t => t.client === cid && (t.status !== 'done' || (t.doneAt && Date.now() - t.doneAt < 21 * 864e5)) && similar(t.title, title));
 const recentDone = cid => S.tasks.filter(t => t.client === cid && t.status === 'done' && t.doneAt && Date.now() - t.doneAt < 21 * 864e5).slice(-15).map(t => t.title);
 /* ----- Calm mode: only real deadlines turn red; other dates roll forward ----- */
 const hardTask = t => !!(t.campaign || t.hard);
@@ -957,6 +957,14 @@ const hardTask = t => !!(t.campaign || t.hard);
 const partnerOf = cid => { const p = C(cid)?.partner; return p && p.by && Array.isArray(p.kinds) && p.kinds.length ? p : null; };
 const handledKind = (cid, k) => !!partnerOf(cid)?.kinds.includes(k);
 const isHandled = t => handledKind(t.client, t.kind) && !(asg(t) && asg(t) === meId());
+/* ----- Plain routine posts: "Post reel", with inspiration on request. Festival-linked pieces keep a specific idea. ----- */
+const PLAIN_KINDS = ['reel','carousel','post','story','ai'];
+const PLAIN_TITLE = {reel:'Post reel', carousel:'Post carousel', post:'Post image', story:'Post story', ai:'Post AI visual'};
+const isPlainTitle = s => Object.values(PLAIN_TITLE).includes(String(s || '').trim());
+const THEME_DAYS = 10;
+// A piece is themed when a festival that applies to this page falls from the day before to 10 days after its date.
+const themeFor = (cid, date) => { const d0 = date || today; return EVENTS.find(e => e.who.includes(cid) && daysBetweenISO(d0, e.d) >= -1 && daysBetweenISO(d0, e.d) <= THEME_DAYS) || null; };
+const daysBetweenISO = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5);
 const kindsText = ks => ks.map(k => (SHORT[k] || k).toLowerCase() + 's').join(' and ');
 const isLate = t => t.status !== 'done' && !!t.due && t.due < today && hardTask(t) && !isHandled(t);
 const needsDecision = t => t.status !== 'done' && !isHandled(t) && (isLate(t) || (t.rolled || 0) >= 3);
@@ -2386,7 +2394,7 @@ const tasksCol = () => db.collection('tasks');
 async function addTask(t){
   const c = C(t.client); let id = '';
   const ok = await write(async () => { const r = await tasksCol().add({title:String(t.title).slice(0, 300), client:t.client, clientName:c ? c.name : '', kind:KINDS[t.kind] ? t.kind : 'other',
-    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {}), ...(t.priority ? {priority:t.priority} : {}), ...(t.need ? {need:String(t.need).slice(0, 200)} : {}), ...(t.mins ? {mins:Number(t.mins) || 0} : {}), ...(t.routine ? {routine:t.routine} : {}), ...(t.comments ? {comments:t.comments} : {}), ...(t.hard ? {hard:true} : {})}); id = r && r.id || ''; });
+    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {}), ...(t.priority ? {priority:t.priority} : {}), ...(t.need ? {need:String(t.need).slice(0, 200)} : {}), ...(t.mins ? {mins:Number(t.mins) || 0} : {}), ...(t.routine ? {routine:t.routine} : {}), ...(t.comments ? {comments:t.comments} : {}), ...(t.hard ? {hard:true} : {}), ...(t.plain ? {plain:true} : {})}); id = r && r.id || ''; });
   if (ok && id && t.autoBrief) queueBrief(id);
   return ok ? (id || true) : false;
 }
@@ -2451,8 +2459,11 @@ function planDay(){
       doNotSuggest:(c.noSuggest || []).slice(-30).map(x => x.t + (x.why ? ' (' + x.why + ')' : '')), ownerInstructions:activeNotes(c), openWork:openTasks(c.id).filter(t => !t.waiting && (!t.due || t.due <= plusDays(7))).slice(0, 30).map(t => ({taskId:t.id, title:t.title, due:t.due || '', status:STATUS[t.status], hardDeadline:hardTask(t), late:isLate(t), mins:estMins(t)})), waitingOnClient:openTasks(c.id).filter(t => t.waiting).map(t => t.title).slice(0, 10), finishedRecently:recentDone(c.id), ownerTodo:todosOpen(c).map(x => ({id:x.id, text:x.text, addedDaysAgo:daysSince(x.at)})), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
     const team = S.team.map(m => `${m.name} (${m.role})`);
     ui.dayPlan = [];
-    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Each page's brandRulebook comes first and overrides everything else for that page. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner has ${cp[0].toLowerCase()} for tasks today across all pages. Give ONLY as many tasks as fit in that time: no more than ${pi.max} in total, each with an honest estimate in minutes (15 to 60) that adds up to about that time. Fewer, more important tasks are better than a long list: the team is three people and a long list causes stress. ${pi.recent.length ? 'The owner recently rated past plans: ' + pi.recent.map(x => x.r === 'much' ? 'too much' : x.r === 'little' ? 'too little' : 'about right').join(', ') + '. Respect that. ' : ''}${pi.avg ? 'The team has really been finishing about ' + pi.avg + ' tasks a day, so do not plan much beyond that. ' : ''}At most 2 tasks may be \"high\" priority. Choose by real urgency: client and festive deadlines first, then pages furthest behind target, then growth work. The owner's own to-do items (ownerTodo) are strong candidates, but include one only if it is truly worth doing today; for one you include, keep its meaning, sharpen the wording, put its id in \"todo\" and set \"priority\" (\"high\" must happen today, \"medium\" within 3 days, \"low\" within 7 days); the to-dos you leave out simply stay on the to-do list. Every task in this plan is due today. BUILD THE DAY FROM EXISTING WORK FIRST: each page's openWork lists tasks already on the list. Late tasks and hard deadlines come first; to schedule one, output it with its "taskId" and its exact title. Only when the time is not filled by real existing priorities may you add NEW tasks, and a new task must not repeat anything in openWork, waitingOnClient or finishedRecently, even reworded or split into parts. Never schedule work that is waiting on the client. If a page has nothing that matters today, give it nothing. Obey each page's ownerInstructions exactly (for example work the owner asked to hold until a date, or to do later), and never suggest anything in its doNotSuggest list, even reworded. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; const it = v[0];
+    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Each page's brandRulebook comes first and overrides everything else for that page. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner has ${cp[0].toLowerCase()} for tasks today across all pages. Give ONLY as many tasks as fit in that time: no more than ${pi.max} in total, each with an honest estimate in minutes (15 to 60) that adds up to about that time. Fewer, more important tasks are better than a long list: the team is three people and a long list causes stress. ${pi.recent.length ? 'The owner recently rated past plans: ' + pi.recent.map(x => x.r === 'much' ? 'too much' : x.r === 'little' ? 'too little' : 'about right').join(', ') + '. Respect that. ' : ''}${pi.avg ? 'The team has really been finishing about ' + pi.avg + ' tasks a day, so do not plan much beyond that. ' : ''}At most 2 tasks may be \"high\" priority. Choose by real urgency: client and festive deadlines first, then pages furthest behind target, then growth work. The owner's own to-do items (ownerTodo) are strong candidates, but include one only if it is truly worth doing today; for one you include, keep its meaning, sharpen the wording, put its id in \"todo\" and set \"priority\" (\"high\" must happen today, \"medium\" within 3 days, \"low\" within 7 days); the to-dos you leave out simply stay on the to-do list. Every task in this plan is due today. BUILD THE DAY FROM EXISTING WORK FIRST: each page's openWork lists tasks already on the list. Late tasks and hard deadlines come first; to schedule one, output it with its "taskId" and its exact title. Only when the time is not filled by real existing priorities may you add NEW tasks, and a new task must not repeat anything in openWork, waitingOnClient or finishedRecently, even reworded or split into parts. Never schedule work that is waiting on the client. If a page has nothing that matters today, give it nothing. Obey each page's ownerInstructions exactly (for example work the owner asked to hold until a date, or to do later), and never suggest anything in its doNotSuggest list, even reworded. ROUTINE CONTENT: for an ordinary reel, carousel, photo post, story or AI visual that is NOT tied to a festival or campaign within the next 10 days (see each page's upcoming list), give only the client and the kind: the app writes the task as 'Post reel', 'Post carousel' and so on, so never describe the content, angle, hook or idea. Only for content tied to a festival within 10 days give the specific idea in the title as usual. Practical work (Google profile, SEO, website, ads, client asks) keeps a specific title. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; const it = v[0];
       if (it.existing){ if (ui.dayPlan.some(x => x.existing === it.existing)) return false; it.mins = it.mins || estMins(S.tasks.find(q => q.id === it.existing)); }
+      else if (PLAIN_KINDS.includes(it.kind) && !themeFor(it.client, it.due || today)){
+        if (ui.dayPlan.some(x => x.plain && x.client === it.client && x.kind === it.kind)) return false;   // one routine post of a kind per page per day
+        const pc = C(it.client); Object.assign(it, {title:PLAIN_TITLE[it.kind], plain:true, need:'', why:pc && target(pc) ? `${posted(pc)} of ${target(pc)} posted this month` : ''}); }
       else if (blocked(it.client, it.title)) return false;
       ui.dayPlan.push(it); }, {modelTier:'complex'});
     if (!n) throw {code:'empty'};
@@ -3544,12 +3555,31 @@ function briefPanel(t){
       ${sec('How to do it', b.how)}${sec('What you need', b.need)}${sec('Check before you finish', b.check)}${sec('Avoid', b.avoid)}
       ${b.post && (b.post.when || b.post.caption || b.post.after) ? `<h4>Posting</h4><div class="bpost">${b.post.when ? `<div><span class="muted">When ·</span> ${esc(b.post.when)}</div>` : ''}${b.post.caption ? `<div><span class="muted">Caption angle ·</span> ${esc(b.post.caption)}</div>` : ''}${b.post.after ? `<div><span class="muted">After posting ·</span> ${esc(b.post.after)}</div>` : ''}</div>` : ''}
       <div class="row" style="margin-top:14px"><button class="lnk" data-act="briefCopy">Copy brief</button>${t.status !== 'done' && steps.length && done === steps.length ? '<button class="b pri" data-act="briefDone">All steps done: mark task done</button>' : ''}</div></div>` : '';
-  return `<div class="etform" data-bf="${esc(t.id)}"><div class="row" style="justify-content:space-between"><div class="lab" style="margin:0">Brief${c ? ' · ' + esc(c.name) : ''}</div>
-      <div class="row" style="gap:10px">${sample && b ? `<button class="lnk" data-act="briefAgain" ${ui.busy[k] ? 'disabled' : ''}>Write again</button>` : ''}<button class="lnk" data-act="briefClose">Close</button></div></div>
+  return `<div class="etform" data-bf="${esc(t.id)}"><div class="row" style="justify-content:space-between"><div class="lab" style="margin:0">${t.plain ? 'Steps and inspiration' : 'Brief'}${c ? ' · ' + esc(c.name) : ''}</div>
+      <div class="row" style="gap:10px">${sample && POST_KINDS.includes(t.kind) ? `<button class="lnk" data-act="inspoGet" ${ui.busy['inspo:' + t.id] ? 'disabled' : ''}>${t.inspo ? 'More ideas' : 'Get inspiration'}</button>` : ''}${sample && b ? `<button class="lnk" data-act="briefAgain" ${ui.busy[k] ? 'disabled' : ''}>Write again</button>` : ''}<button class="lnk" data-act="briefClose">Close</button></div></div>
     ${ui.out[k] ? `<p class="late" style="font-size:13px;margin:0">${esc(ui.out[k])}</p>` : ''}
     ${ui.busy[k] ? `<div class="genprog"><span class="spin" aria-hidden="true"></span><span>Writing the brief… <span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span></div>` : ''}
     ${body}
-    ${!b && !ui.busy[k] ? (sample ? `<div class="row"><button class="b pri" data-act="briefAgain">Write the brief</button><span class="muted" style="font-size:12px">What it is, step-by-step, how to do it, what you need and what to check.</span></div>` : '<p class="empty" style="margin:0">No brief written yet. Open the desk in Claude to write one.</p>') : ''}</div>`;
+    ${inspoBlock(t)}
+    ${!b && !ui.busy[k] ? (sample ? `<div class="row"><button class="b pri" data-act="briefAgain">${t.plain ? 'Write the steps' : 'Write the brief'}</button><span class="muted" style="font-size:12px">${t.plain ? 'Optional: step-by-step, what you need and what to check.' : 'What it is, step-by-step, how to do it, what you need and what to check.'}</span></div>` : '<p class="empty" style="margin:0">No brief written yet. Open the desk in Claude to write one.</p>') : ''}</div>`;
+}
+function inspoBlock(t){
+  const k = 'inspo:' + t.id, items = t.inspo?.items || [];
+  if (!items.length && !ui.busy[k] && !ui.out[k]) return '';
+  return `<div class="hf" style="margin:10px 0"><div class="hfl">Inspiration (optional)</div>
+    ${ui.out[k] ? `<p class="late" style="font-size:13px;margin:0">${esc(ui.out[k])}</p>` : ''}
+    ${ui.busy[k] ? `<div class="genprog" style="margin:0"><span class="spin" aria-hidden="true"></span><span>Finding ideas… <span class="mono" data-el="${esc(k)}">${Math.round((Date.now() - (ui.t0[k] || Date.now())) / 1000)}s</span></span></div>` : ''}
+    ${items.map((x, n) => `<div class="bpost"><div><b>${esc(x.angle)}</b></div>${x.hook ? `<div><span class="muted">Hook ·</span> ${esc(x.hook)}</div>` : ''}${x.why ? `<div class="muted" style="font-size:12.5px">${esc(x.why)}</div>` : ''}<div class="row"><button class="b" data-act="inspoUse" data-n="${n}">Use this idea</button></div></div>`).join('')}</div>`;
+}
+function writeInspiration(t){
+  const c = C(t.client); if (!c || !sample) return;
+  const k = 'inspo:' + t.id, ev = themeFor(t.client, t.due || today);
+  run(k, async () => {
+    const r = await sample.json(`${pre(c)}\n\nYou are the creative lead at Reach Theory. The team has to post one ${BRIEF_KINDS[t.kind] || t.kind} for ${c.name} and wants optional inspiration. Give 4 genuinely different ideas, each one angle plus a hook written in the client's language (${c.brand?.language || c.lang || 'English'}). We never film or shoot: reels are edited from clips the client sends${usesAI(c) ? ', and visuals for this page are AI-generated' : ''}. Do not repeat what was posted recently. ${ev ? 'The date is close to ' + ev.name + ' (' + ev.d + '): ' + ev.prep + ' Tie at least two ideas to it. ' : ''}Obey the brand rules.\n\nRecently done: ${JSON.stringify(recentDone(c.id))}\nContext: ${JSON.stringify(clientContext(c, {insights:4}))}\n\nReply with only JSON: {"ideas":[{"angle":"one short line","hook":"first line or on-screen text","why":"one short reason"}]}`, {cache:false});
+    const items = (r && Array.isArray(r.ideas) ? r.ideas : []).filter(o => o && o.angle).slice(0, 5).map(o => ({angle:String(o.angle).slice(0, 200), hook:String(o.hook || '').slice(0, 200), why:String(o.why || '').slice(0, 200)}));
+    if (!items.length) throw {code:'invalid_json'};
+    await write(() => tasksCol().doc(t.id).update({inspo:{items, at:Date.now()}}));
+  });
 }
 function writeBrief(t){
   const c = C(t.client); if (!c || !sample) return;
@@ -3924,7 +3954,10 @@ document.addEventListener('click', async e => {
   if (a === 'cmd'){ openCmd(); return; }
   if (a === 'openBrief'){ const id = b.closest('[data-tid]').dataset.tid, t = S.tasks.find(q => q.id === id); if (!t) return;
     ui.briefOpen[id] = !ui.briefOpen[id];
-    if (ui.briefOpen[id] && !t.brief && sample && !ui.busy['brief:' + id]) writeBrief(t); else render(); return; }
+    if (ui.briefOpen[id] && !t.brief && sample && !t.plain && !ui.busy['brief:' + id]) writeBrief(t); else render(); return; }
+  if (a === 'inspoGet'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf); if (t && !ui.busy['inspo:' + t.id]) writeInspiration(t); return; }
+  if (a === 'inspoUse'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf), x = t?.inspo?.items?.[Number(b.dataset.n)]; if (!x) return;
+    await write(() => tasksCol().doc(t.id).update({title:`${splitTitle(t.title)[0]}: ${x.angle}${x.hook ? ' · ' + x.hook : ''}`.slice(0, 300)}), 'Idea added to the task'); return; }
   if (a === 'briefAgain'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf); if (t && !ui.busy['brief:' + t.id]) writeBrief(t); return; }
   if (a === 'briefClose'){ ui.briefOpen[b.closest('[data-bf]').dataset.bf] = false; render(); return; }
   if (a === 'briefStep'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf); if (!t?.brief) return; const n = Number(b.dataset.n);
@@ -4191,8 +4224,8 @@ document.addEventListener('click', async e => {
       if (a === 'addAllSug' && dupOf(i.client, i.title)){ skipped++; continue; }
       if (a === 'sugReplaceYes'){ const old = S.tasks.find(q => q.id === b.dataset.oldid); if (old){ if (!(await write(() => tasksCol().doc(old.id).delete()))) break; if (old.todo && !i.todo) i.todo = old.todo; } }
       const tdx = i.todo && C(i.client) ? todoOf(i.client, i.todo) : null;
-      if (await addTask({...i, todo: tdx && !todoTask(tdx) ? i.todo : '', assignee:r.querySelector('[data-role="sugWho"]').value, due: key === 'day' ? (i.due || today) : '', autoBrief: key === 'day' && !!sample})) i.added = true; else break; }
-    const msg = (key === 'day' && sample ? (rows.length > 1 ? 'Tasks added. Writing their briefs…' : 'Task added. Writing its brief…') : (rows.length > 1 ? 'Tasks added' : 'Task added')) + (skipped ? ` Skipped ${skipped} already on the list.` : '');
+      if (await addTask({...i, todo: tdx && !todoTask(tdx) ? i.todo : '', assignee:r.querySelector('[data-role="sugWho"]').value, due: key === 'day' ? (i.due || today) : '', autoBrief: key === 'day' && !!sample && !i.plain})) i.added = true; else break; }
+    const msg = (key === 'day' && sample && rows.some(r => { const x = items[Number(r.dataset.n)]; return x && !x.plain && !x.existing; }) ? (rows.length > 1 ? 'Tasks added. Writing their briefs…' : 'Task added. Writing its brief…') : (rows.length > 1 ? 'Tasks added' : 'Task added')) + (skipped ? ` Skipped ${skipped} already on the list.` : '');
     toast(a === 'sugReplaceYes' ? 'Old task replaced. New one added.' : msg); render();
   }
   else if (a === 'editPlan'){ ui.editing = 'plan'; render(); }
