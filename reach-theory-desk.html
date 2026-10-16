@@ -1376,7 +1376,7 @@ function suggestions(key, items){
     ${(() => { const d = i.existing ? null : dupOf(i.client, i.title); return d ? `<div class="s"><span class="late">Already on the list: ${esc(d.title.length > 70 ? d.title.slice(0, 70) + '…' : d.title)}${d.status === 'done' ? ' (done)' : ''}</span></div>` : ''; })()}
     <div class="s">${key === 'day' ? `<span>${dot(c)} ${esc(c?.name || '')}</span>` : ''}${i.existing ? '<span class="k">Already a task</span>' : ''}${i.todo ? '<span class="k ask">Your to-do</span>' : ''}${i.mins ? `<span class="mono muted" style="font-size:12px">~${i.mins} min</span>` : ''}${i.priority ? `<span class="pill ${i.priority === 'high' ? 'bad' : i.priority === 'medium' ? 'warn' : 'neutral'}" style="font-size:11px">${i.priority}</span>` : ''}${key === 'day' && i.due && i.due !== today ? `<span class="mono">due ${esc(fmt(i.due))}</span>` : ''}<span class="k">${esc(SHORT[i.kind] || i.kind)}</span>${i.why ? `<span>${esc(i.why)}</span>` : ''}</div>
     ${i.need ? `<div class="s">Ask client for: ${esc(i.need)}</div>` : ''}</div>
-    <div class="c"><label class="vh" for="sw-${esc(key)}-${i.n}">Assign</label><select id="sw-${esc(key)}-${i.n}" data-role="sugWho">${whoOptions(S.team.find(m => m.name.toLowerCase() === String(i.assignee||'').toLowerCase())?.id || '')}</select>
+    <div class="c"><label class="vh" for="sw-${esc(key)}-${i.n}">Assign</label><select id="sw-${esc(key)}-${i.n}" data-role="sugWho">${whoOptions(defaultOwner(i.client, i.kind, i.due || today) || S.team.find(m => m.name.toLowerCase() === String(i.assignee||'').toLowerCase())?.id || '')}</select>
     ${(() => { if (i.existing) return `<button class="b" data-act="addSug">Move to today</button>`;
       const d = dupOf(i.client, i.title), rk = key + ':' + i.n;
       if (!d) return `<button class="b" data-act="addSug">Add</button>`;
@@ -2360,30 +2360,58 @@ function boardView(list){
         </div>`; }).join('') || '<p class="drophint">Drop a card here</p>'}</div>`; }).join('')}</div>`;
 }
 function teamSection(){
-  const wk = iso(new Date(now.getTime() + 7 * 864e5));
-  return `<div class="sec"><div class="lab">Team workload<span class="acts"><span class="muted">due in the next 7 days</span><button class="lnk" data-go="team">Manage team</button></span></div>
-    <div class="items">${S.team.map(m => { const open = openTasks().filter(t => t.assignee === m.id), soon = open.filter(t => t.due && t.due <= wk).length, heavy = soon > 12;
-      return `<div class="it"><div><div class="t"><span class="av">${initials(m)}</span> ${esc(m.name)} <span class="muted" style="font-size:12px">· ${esc(ROLE_NAME[m.role] || m.role)}</span></div>
-        <div class="load"><i style="width:${Math.min(100, soon / 15 * 100)}%;background:var(--${heavy ? 'bad' : soon > 8 ? 'warn' : 'good'})"></i></div>
-        <div class="s"><span>${open.length} open</span><span class="${heavy ? 'late' : ''}">${soon} due this week${heavy ? ' · overbooked, move some dates' : ''}</span></div></div>
-      <div class="c">${open.length ? `<button class="lnk" data-act="dayList" data-id="${esc(m.id)}">Copy today’s list</button>` : ''}</div></div>`; }).join('')}</div></div>`;
+  return `<div class="sec"><div class="lab">Team workload<span class="acts"><span class="muted">booked in the next 7 days</span><button class="lnk" data-go="team">Manage team</button></span></div>
+    <div class="items">${S.team.map(m => { const open = S.tasks.filter(t => t.status !== 'done' && t.assignee === m.id).length, li = loadInfo(m), away = isAway(m.id, today);
+      return `<div class="it"><div><div class="t"><span class="av">${initials(m)}</span> ${esc(m.name)} <span class="muted" style="font-size:12px">· ${esc(ROLE_NAME[m.role] || m.role)}</span>${away ? ' <span class="k wait">Away today</span>' : ''}</div>
+        <div class="load"><i style="width:${li.pct}%;background:var(--${li.cls})"></i></div>
+        <div class="s"><span>${open} open</span><span class="${li.heavy ? 'late' : ''}">${esc(li.text)}${li.heavy ? ' · overbooked, move some dates' : ''}</span></div></div>
+      <div class="c">${open ? `<button class="lnk" data-act="dayList" data-id="${esc(m.id)}">Copy today’s list</button>` : ''}</div></div>`; }).join('')}</div></div>`;
 }
 const ROLE_NAME = {owner:'Owner', partner:'Partner', editor:'Editor'};
+/* ----- Who normally does what, weekly hours, time off, who finished what ----- */
+const isAway = (mid, date) => { const d = date || today; return !!(M(mid)?.away || []).some(a => a.from <= d && d <= a.to); };
+const defaultOwner = (cid, kind, date) => { const mid = C(cid)?.owners?.[kind]; return mid && M(mid) && !isAway(mid, date) ? mid : ''; };
+const memberHours = m => Number(m?.hours) || 0;
+const loadMins = (mid, to) => S.tasks.filter(t => t.status !== 'done' && t.assignee === mid && (!to || (t.due && t.due <= to))).reduce((a, t) => a + estMins(t), 0);
+const hrs1 = mins => Math.round(mins / 6) / 10;
+function loadInfo(m){
+  const wk = iso(new Date(now.getTime() + 7 * 864e5)), mins = loadMins(m.id, wk), h = memberHours(m);
+  if (h){ const pct = mins / (h * 60) * 100; return {pct:Math.min(100, pct), cls:pct > 100 ? 'bad' : pct > 80 ? 'warn' : 'good', text:`${hrs1(mins)} h of ${h} h booked this week`, heavy:pct > 100}; }
+  const soon = S.tasks.filter(t => t.status !== 'done' && t.assignee === m.id && t.due && t.due <= wk).length;
+  return {pct:Math.min(100, soon / 15 * 100), cls:soon > 8 ? 'warn' : 'good', text:`${soon} due this week. Set their hours for a truer picture`, heavy:false};
+}
+const doneByOf = t => t.doneBy || t.assignee || '';
+function teamStats(m){
+  const d7 = Date.now() - 7 * 864e5, d30 = Date.now() - 30 * 864e5, mine = S.tasks.filter(t => t.status === 'done' && t.doneAt && doneByOf(t) === m.id);
+  const w = mine.filter(t => t.doneAt >= d7), mo = mine.filter(t => t.doneAt >= d30), dated = mo.filter(t => t.due);
+  const ontime = dated.length ? Math.round(dated.filter(t => isoAt(t.doneAt) <= t.due).length / dated.length * 100) : null;
+  return {week:w.length, month:mo.length, ontime, revs:mo.reduce((a, t) => a + (t.revisions || 0), 0)};
+}
 /* ----- Team: add, rename, change role, remove ----- */
 function viewTeam(){
-  const rows = S.team.map(m => { const open = openTasks().filter(t => t.assignee === m.id).length, handles = S.clients.filter(c => partnerOf(c.id)?.by === m.id);
-    return `<div class="it"><div><div class="t"><span class="av">${initials(m)}</span> <b style="font-weight:600">${esc(m.name)}</b> <span class="muted" style="font-size:12px">· ${esc(ROLE_NAME[m.role] || m.role)}</span></div>
-      <div class="s"><span>${open} open task${open === 1 ? '' : 's'}</span>${handles.length ? `<span>Handles ${esc(handles.map(c => c.name).join(', '))} work</span>` : ''}</div>
-      ${m.role === 'owner' ? '' : `<form class="row" data-form="memberEdit" data-id="${esc(m.id)}" style="margin-top:8px"><label class="vh" for="mn-${esc(m.id)}">Name</label><input type="text" id="mn-${esc(m.id)}" value="${esc(m.name)}" style="flex:1 1 160px;max-width:240px"><button class="b" type="submit">Save name</button></form>`}</div>
+  const rows = S.team.map(m => { const open = S.tasks.filter(t => t.status !== 'done' && t.assignee === m.id).length, handles = S.clients.filter(c => partnerOf(c.id)?.by === m.id), li = loadInfo(m), away = (m.away || []).filter(a => a.to >= today).sort((x, y) => x.from.localeCompare(y.from));
+    return `<div class="it"><div><div class="t"><span class="av">${initials(m)}</span> <b style="font-weight:600">${esc(m.name)}</b> <span class="muted" style="font-size:12px">· ${esc(ROLE_NAME[m.role] || m.role)}</span>${isAway(m.id, today) ? ' <span class="k wait">Away today</span>' : ''}</div>
+      <div class="load"><i style="width:${li.pct}%;background:var(--${li.cls})"></i></div>
+      <div class="s"><span>${open} open task${open === 1 ? '' : 's'}</span><span class="${li.heavy ? 'late' : ''}">${esc(li.text)}</span>${handles.length ? `<span>Handles ${esc(handles.map(c => c.name).join(', '))} work</span>` : ''}</div>
+      ${m.role === 'owner' ? '' : `<form class="row" data-form="memberEdit" data-id="${esc(m.id)}" style="margin-top:8px"><label class="vh" for="mn-${esc(m.id)}">Name</label><input type="text" id="mn-${esc(m.id)}" value="${esc(m.name)}" style="flex:1 1 160px;max-width:240px"><button class="b" type="submit">Save name</button></form>`}
+      <form class="row" data-form="memberHours" data-id="${esc(m.id)}" style="margin-top:8px"><label for="mh-${esc(m.id)}" class="muted" style="font-size:12.5px">Hours a week</label><input type="number" id="mh-${esc(m.id)}" min="0" max="80" step="1" value="${memberHours(m) || ''}" placeholder="e.g. 25" style="width:90px"><button class="b" type="submit">Save</button></form>
+      <div style="margin-top:10px"><span class="muted" style="font-size:12.5px">Time off</span>
+        ${away.map((a, n) => { const full = (m.away || []).indexOf(a), cnt = S.tasks.filter(t => t.status !== 'done' && t.assignee === m.id && t.due && t.due >= a.from && t.due <= a.to).length;
+          return `<div class="s" style="margin-top:4px"><span>${esc(fmt(a.from))}${a.to !== a.from ? ' to ' + esc(fmt(a.to)) : ''}${a.note ? ' · ' + esc(a.note) : ''}</span>${cnt ? `<span class="late">${cnt} task${cnt === 1 ? '' : 's'} due then</span><button class="lnk" data-act="awayUnassign" data-id="${esc(m.id)}" data-n="${full}">Unassign them</button>` : ''}<button class="lnk" data-act="awayDel" data-id="${esc(m.id)}" data-n="${full}">Remove</button></div>`; }).join('')}
+        <form class="row" data-form="away" data-id="${esc(m.id)}" style="margin-top:6px"><label class="vh" for="aw-f-${esc(m.id)}">From</label><input type="date" id="aw-f-${esc(m.id)}" value="${today}" min="${today}"><label class="vh" for="aw-t-${esc(m.id)}">To</label><input type="date" id="aw-t-${esc(m.id)}" value="${today}" min="${today}"><label class="vh" for="aw-n-${esc(m.id)}">Note</label><input type="text" id="aw-n-${esc(m.id)}" placeholder="Reason (optional)" style="flex:1 1 140px;max-width:220px"><button class="b" type="submit">Add time off</button></form></div></div>
       <div class="c">${m.role === 'owner' ? '' : `<label class="vh" for="mr-${esc(m.id)}">Role</label><select id="mr-${esc(m.id)}" data-change="memberRole" data-id="${esc(m.id)}"><option value="partner"${m.role === 'partner' ? ' selected' : ''}>Partner</option><option value="editor"${m.role === 'editor' ? ' selected' : ''}>Editor</option></select>
         <button class="x" data-act="delMember" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button>`}</div></div>`; }).join('');
+  const stats = S.team.map(m => ({m, st:teamStats(m)}));
   return `<header class="top"><div><p class="eyebrow">${S.team.length} on the team</p><h1>Team</h1></div></header>
   <div class="sec"><div class="lab">Staff</div><div class="items">${rows || `<p class="empty">${loaded.team ? 'No one yet.' : LOADING}</p>`}</div>
     <form class="row" data-form="member" style="margin-top:12px"><label class="vh" for="m-name">Name</label><input type="text" id="m-name" placeholder="Name of the new team member" style="flex:1 1 200px" required>
       <label class="vh" for="m-role">Role</label><select id="m-role"><option value="editor">Editor (sees only their own tasks)</option><option value="partner">Partner (sees everything)</option></select><button class="b pri" type="submit">Add staff</button></form></div>
+  <div class="sec"><div class="lab">Who finished what<span class="acts muted">from tasks marked done</span></div>
+    <div class="tbl"><table><thead><tr><th>Person</th><th>This week</th><th>Last 30 days</th><th>On time</th><th>Sent back for changes</th></tr></thead><tbody>${stats.map(({m, st}) => `<tr><td>${esc(m.name)}</td><td class="mono">${st.week}</td><td class="mono">${st.month}</td><td class="mono">${st.ontime === null ? '–' : st.ontime + '%'}</td><td class="mono">${st.revs}</td></tr>`).join('')}</tbody></table></div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Counts what each person marked done. Older tasks without a name count for whoever they were assigned to. This is for seeing how the week went, not for chasing anyone.</p></div>
   <div class="sec"><div class="lab">How a person gets in</div>
     <ol class="ls" style="margin:0"><li>Add them here with their name and role.</li><li>Open the page’s <b>Share</b> menu and add their email: <b>Editor</b> access shows them everything, <b>Contributor</b> access shows only their own tasks and the “mark a post as live” buttons.</li><li>They open the link and pick their name once.</li></ol>
-    <p class="muted" style="font-size:12px;margin:10px 0 0">Removing someone unassigns their open tasks, so nothing is lost, and ends any “handled by” rule that named them. Their finished work and logged posts stay in the reports.</p></div>`;
+    <p class="muted" style="font-size:12px;margin:10px 0 0">To set who normally does which kind of work for a client, open that client’s Settings → Who does what. Removing someone unassigns their open tasks and ends any rule that named them. Their finished work stays in the reports.</p></div>`;
 }
 
 /* ----- Editor (Contributor) view ----- */
@@ -2411,7 +2439,7 @@ const tasksCol = () => db.collection('tasks');
 async function addTask(t){
   const c = C(t.client); let id = '';
   const ok = await write(async () => { const r = await tasksCol().add({title:String(t.title).slice(0, 300), client:t.client, clientName:c ? c.name : '', kind:KINDS[t.kind] ? t.kind : 'other',
-    status:'todo', assignee:t.assignee || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {}), ...(t.priority ? {priority:t.priority} : {}), ...(t.need ? {need:String(t.need).slice(0, 200)} : {}), ...(t.mins ? {mins:Number(t.mins) || 0} : {}), ...(t.routine ? {routine:t.routine} : {}), ...(t.comments ? {comments:t.comments} : {}), ...(t.hard ? {hard:true} : {}), ...(t.plain ? {plain:true} : {})}); id = r && r.id || ''; });
+    status:'todo', assignee:t.assignee || defaultOwner(t.client, KINDS[t.kind] ? t.kind : 'other', t.due || today) || '', due:t.due || '', doneMonth:'', createdAt:Date.now(), ...(t.todo ? {todo:t.todo} : {}), ...(t.priority ? {priority:t.priority} : {}), ...(t.need ? {need:String(t.need).slice(0, 200)} : {}), ...(t.mins ? {mins:Number(t.mins) || 0} : {}), ...(t.routine ? {routine:t.routine} : {}), ...(t.comments ? {comments:t.comments} : {}), ...(t.hard ? {hard:true} : {}), ...(t.plain ? {plain:true} : {})}); id = r && r.id || ''; });
   if (ok && id && t.autoBrief) queueBrief(id);
   return ok ? (id || true) : false;
 }
@@ -2473,10 +2501,10 @@ function planDay(){
   const cp = CAPS[ui.cap] || CAPS['2h'], pi = paceInfo(cp[1]);
   run('day', async () => {
     const data = S.clients.filter(c => c.status !== 'paused').map(c => ({id:c.id, brandRulebook:rulesText(c), ...clientContext(c, {insights:4}).client, recentLearnings:clientInsights(c.id).slice(0,4).flatMap(i => i.learnings || []).slice(0,6),
-      doNotSuggest:(c.noSuggest || []).slice(-30).map(x => x.t + (x.why ? ' (' + x.why + ')' : '')), ownerInstructions:activeNotes(c), openWork:openTasks(c.id).filter(t => !t.waiting && (!t.due || t.due <= plusDays(7))).slice(0, 30).map(t => ({taskId:t.id, title:t.title, due:t.due || '', status:STATUS[t.status], hardDeadline:hardTask(t), late:isLate(t), mins:estMins(t)})), waitingOnClient:openTasks(c.id).filter(t => t.waiting).map(t => t.title).slice(0, 10), finishedRecently:recentDone(c.id), ownerTodo:todosOpen(c).map(x => ({id:x.id, text:x.text, addedDaysAgo:daysSince(x.at)})), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
-    const team = S.team.map(m => `${m.name} (${m.role})`);
+      doNotSuggest:(c.noSuggest || []).slice(-30).map(x => x.t + (x.why ? ' (' + x.why + ')' : '')), ownerInstructions:activeNotes(c), whoDoesWhat:Object.entries(c.owners || {}).filter(([, id]) => M(id)).map(([k, id]) => `${SHORT[k] || k}: ${M(id).name}`), openWork:openTasks(c.id).filter(t => !t.waiting && (!t.due || t.due <= plusDays(7))).slice(0, 30).map(t => ({taskId:t.id, title:t.title, due:t.due || '', status:STATUS[t.status], hardDeadline:hardTask(t), late:isLate(t), mins:estMins(t)})), waitingOnClient:openTasks(c.id).filter(t => t.waiting).map(t => t.title).slice(0, 10), finishedRecently:recentDone(c.id), ownerTodo:todosOpen(c).map(x => ({id:x.id, text:x.text, addedDaysAgo:daysSince(x.at)})), upcoming:eventsFor(c.id).slice(0,2).map(e => `${e.d} ${e.name}: ${e.prep}`)}));
+    const wk7 = plusDays(7), team = S.team.map(m => { const h = memberHours(m); return `${m.name} (${m.role}${h ? `, ${h} h a week, ${hrs1(loadMins(m.id, wk7))} h already booked this week` : ''}${isAway(m.id, today) ? ', AWAY today' : ''}${(m.away || []).filter(a => a.to >= today).slice(0, 2).map(a => `, away ${a.from} to ${a.to}`).join('')})`; });
     ui.dayPlan = [];
-    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Each page's brandRulebook comes first and overrides everything else for that page. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner has ${cp[0].toLowerCase()} for tasks today across all pages. Give ONLY as many tasks as fit in that time: no more than ${pi.max} in total, each with an honest estimate in minutes (15 to 60) that adds up to about that time. Fewer, more important tasks are better than a long list: the team is three people and a long list causes stress. ${pi.recent.length ? 'The owner recently rated past plans: ' + pi.recent.map(x => x.r === 'much' ? 'too much' : x.r === 'little' ? 'too little' : 'about right').join(', ') + '. Respect that. ' : ''}${pi.avg ? 'The team has really been finishing about ' + pi.avg + ' tasks a day, so do not plan much beyond that. ' : ''}At most 2 tasks may be \"high\" priority. Choose by real urgency: client and festive deadlines first, then pages furthest behind target, then growth work. The owner's own to-do items (ownerTodo) are strong candidates, but include one only if it is truly worth doing today; for one you include, keep its meaning, sharpen the wording, put its id in \"todo\" and set \"priority\" (\"high\" must happen today, \"medium\" within 3 days, \"low\" within 7 days); the to-dos you leave out simply stay on the to-do list. Every task in this plan is due today. BUILD THE DAY FROM EXISTING WORK FIRST: each page's openWork lists tasks already on the list. Late tasks and hard deadlines come first; to schedule one, output it with its "taskId" and its exact title. Only when the time is not filled by real existing priorities may you add NEW tasks, and a new task must not repeat anything in openWork, waitingOnClient or finishedRecently, even reworded or split into parts. Never schedule work that is waiting on the client. If a page has nothing that matters today, give it nothing. Obey each page's ownerInstructions exactly (for example work the owner asked to hold until a date, or to do later), and never suggest anything in its doNotSuggest list, even reworded. ROUTINE CONTENT: for an ordinary reel, carousel, photo post, story or AI visual that is NOT tied to a festival or campaign within the next 10 days (see each page's upcoming list), give only the client and the kind: the app writes the task as 'Post reel', 'Post carousel' and so on, so never describe the content, angle, hook or idea. Only for content tied to a festival within 10 days give the specific idea in the title as usual. Practical work (Google profile, SEO, website, ads, client asks) keeps a specific title. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; const it = v[0];
+    const n = await streamItems(`${preamble}\n\nYou are the head of strategy. Today is ${today} (day ${day} of ${dim}). Plan today for the whole team across every page below. Each page's brandRulebook comes first and overrides everything else for that page. Prioritise: pages furthest behind their monthly target; festive deadlines coming up (work back from the prep advice); growth work that makes each brand look professionally run (ads, Google profile, SEO, website, client asks). Reach Theory is our own studio page: grow it too, ideally with case studies from client results. The owner has ${cp[0].toLowerCase()} for tasks today across all pages. Give ONLY as many tasks as fit in that time: no more than ${pi.max} in total, each with an honest estimate in minutes (15 to 60) that adds up to about that time. Fewer, more important tasks are better than a long list: the team is three people and a long list causes stress. ${pi.recent.length ? 'The owner recently rated past plans: ' + pi.recent.map(x => x.r === 'much' ? 'too much' : x.r === 'little' ? 'too little' : 'about right').join(', ') + '. Respect that. ' : ''}${pi.avg ? 'The team has really been finishing about ' + pi.avg + ' tasks a day, so do not plan much beyond that. ' : ''}At most 2 tasks may be \"high\" priority. Choose by real urgency: client and festive deadlines first, then pages furthest behind target, then growth work. The owner's own to-do items (ownerTodo) are strong candidates, but include one only if it is truly worth doing today; for one you include, keep its meaning, sharpen the wording, put its id in \"todo\" and set \"priority\" (\"high\" must happen today, \"medium\" within 3 days, \"low\" within 7 days); the to-dos you leave out simply stay on the to-do list. Every task in this plan is due today. BUILD THE DAY FROM EXISTING WORK FIRST: each page's openWork lists tasks already on the list. Late tasks and hard deadlines come first; to schedule one, output it with its "taskId" and its exact title. Only when the time is not filled by real existing priorities may you add NEW tasks, and a new task must not repeat anything in openWork, waitingOnClient or finishedRecently, even reworded or split into parts. Never schedule work that is waiting on the client. If a page has nothing that matters today, give it nothing. Obey each page's ownerInstructions exactly (for example work the owner asked to hold until a date, or to do later), and never suggest anything in its doNotSuggest list, even reworded. TEAM: assign each task using the page's whoDoesWhat when it names someone for that kind. Never assign work to someone who is AWAY on the day, and do not give anyone more than the weekly hours they have left (see the Team line); otherwise leave the assignee empty. ROUTINE CONTENT: for an ordinary reel, carousel, photo post, story or AI visual that is NOT tied to a festival or campaign within the next 10 days (see each page's upcoming list), give only the client and the kind: the app writes the task as 'Post reel', 'Post carousel' and so on, so never describe the content, angle, hook or idea. Only for content tied to a festival within 10 days give the specific idea in the title as usual. Practical work (Google profile, SEO, website, ads, client asks) keeps a specific title. Give editing work to the editor, strategy and client calls to the owner or Panda.\n\nPages:\n${JSON.stringify(data)}\n\nTeam: ${team.join(', ')}\n\n${itemSpec}`, 'day', o => { const v = validItems([o]); if (!v.length) return false; const it = v[0];
       if (it.existing){ if (ui.dayPlan.some(x => x.existing === it.existing)) return false; it.mins = it.mins || estMins(S.tasks.find(q => q.id === it.existing)); }
       else if (PLAIN_KINDS.includes(it.kind) && !themeFor(it.client, it.due || today)){
         if (ui.dayPlan.some(x => x.plain && x.client === it.client && x.kind === it.kind)) return false;   // one routine post of a kind per page per day
@@ -2706,6 +2734,12 @@ function partnerSettings(c){
         <div class="row" style="margin-top:8px;gap:6px 16px">${Object.keys(KINDS).map(k => `<label class="check" style="padding:2px 0"><input type="checkbox" name="pt-k" value="${esc(k)}"${kinds.includes(k) ? ' checked' : ''}><span>${esc(SHORT[k] || k)}</span></label>`).join('')}</div></div>
       <div class="row"><button class="b pri" type="submit">Save</button>${hid ? `<span class="muted" style="font-size:12px">${hid} open task${hid === 1 ? ' is' : 's are'} hidden by this</span>` : ''}</div></form></div>`;
 }
+function ownersSettings(c){
+  const ow = c.owners || {};
+  return `<div class="sec"><div class="lab">Who does what<span class="acts muted">new tasks go to this person</span></div>
+    <form class="form" data-form="owners"><div class="g2">${Object.keys(KINDS).map(k => `<label>${esc(SHORT[k] || k)}<select id="ow-${esc(k)}"><option value="">Nobody in particular</option>${S.team.map(m => `<option value="${esc(m.id)}"${ow[k] === m.id ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>`).join('')}</div>
+      <div class="row"><button class="b pri" type="submit">Save</button><span class="muted" style="font-size:12px">Used for Plan my day, routines and any task you add without choosing a person. Someone on time off is skipped, so the task stays unassigned for you to place.</span></div></form></div>`;
+}
 async function syncPartnerTeam(cid, next){
   const of = c => c.id === cid ? next : c.partner, ok = c => { const q = of(c); return q && q.by && Array.isArray(q.kinds) && q.kinds.length ? q : null; };
   for (const m of S.team){
@@ -2729,6 +2763,7 @@ function tabSettings(c){
     </div><div class="row"><button class="b pri" type="submit">Save details</button>
       ${c.fee ? `<span class="muted" style="font-size:12px">${c.paidMonth === monthKey ? `Paid for ${esc(monthName)}` : `Not marked paid for ${esc(monthName)}`}</span>${c.paidMonth === monthKey ? '' : `<button class="lnk" type="button" data-act="markPaid" data-cid="${esc(c.id)}">Mark paid</button>`}` : ''}</div></form></div>
   ${partnerSettings(c)}
+  ${ownersSettings(c)}
   ${tabBrand(c)}
   <div class="sec"><div class="lab">Strategy timeline<span class="acts muted">${h.length} earlier version${h.length === 1 ? '' : 's'}</span></div>
     <div class="tl">
@@ -3980,7 +4015,7 @@ document.addEventListener('click', async e => {
   if (a === 'briefStep'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf); if (!t?.brief) return; const n = Number(b.dataset.n);
     await write(() => tasksCol().doc(t.id).update({brief:{...t.brief, steps:t.brief.steps.map((x, i) => i === n ? {...x, done:!x.done} : x)}})); return; }
   if (a === 'briefCopy'){ const t = S.tasks.find(q => q.id === b.closest('[data-bf]').dataset.bf); if (!t) return; try { await navigator.clipboard.writeText(briefText(t)); toast('Brief copied'); } catch(_){ const el = document.getElementById('bf-' + t.id); if (el){ const r = document.createRange(); r.selectNodeContents(el); const g = getSelection(); g.removeAllRanges(); g.addRange(r); toast('Selected. Press Ctrl/Cmd + C to copy.'); } } return; }
-  if (a === 'briefDone'){ const id = b.closest('[data-bf]').dataset.bf; await write(() => tasksCol().doc(id).update({status:'done', doneMonth:monthKey, doneAt:Date.now(), statusAt:{done:Date.now()}}), 'Task marked done'); return; }
+  if (a === 'briefDone'){ const id = b.closest('[data-bf]').dataset.bf; await write(() => tasksCol().doc(id).update({status:'done', doneMonth:monthKey, doneAt:Date.now(), doneBy:meId(), statusAt:{done:Date.now()}}), 'Task marked done'); return; }
   if (a === 'taskPrompt'){ const id = b.closest('[data-tid]').dataset.tid, t = S.tasks.find(q => q.id === id); if (!t) return;
     if (ui.tpOpen[id]){ ui.tpOpen[id] = false; render(); return; }
     ui.tpOpen[id] = true; render(); return; }
@@ -4002,7 +4037,7 @@ document.addEventListener('click', async e => {
     if (a === 'qSched'){ const d = document.getElementById('qs-' + tid)?.value || t.due || today;
       if (await write(() => tasksCol().doc(tid).update({post:{schedAt:Date.now(), schedFor:d}, due:d}), 'Marked scheduled for ' + fmt(d))){ ui.qOpen = null; render(); } }
     else { const url = (document.getElementById('qu-' + tid)?.value || '').trim(); if (!/^https?:\/\//i.test(url)){ toast('Paste the Instagram link of the live post first.'); return; }
-      if (await write(() => tasksCol().doc(tid).update({post:{postedUrl:url}, status:'done', doneMonth:monthKey, doneAt:Date.now(), statusAt:{done:Date.now()}}), 'Posted. Task done and counted for the month.')){ ui.qOpen = null; render(); } }
+      if (await write(() => tasksCol().doc(tid).update({post:{postedUrl:url}, status:'done', doneMonth:monthKey, doneAt:Date.now(), doneBy:meId(), statusAt:{done:Date.now()}}), 'Posted. Task done and counted for the month.')){ ui.qOpen = null; render(); } }
     return; }
   if (a === 'qcPick'){ const id = b.closest('[data-post]')?.dataset.post; if (!id) return; ui.pickTarget = 'qc:' + id; const fp = $('#filePick'); fp.multiple = false; fp.click(); return; }
   if (a === 'postOpen'){ ui.postOpen[tid] = !ui.postOpen[tid]; render(); if (ui.postOpen[tid]) setTimeout(() => document.getElementById('po-cap-' + tid)?.focus({preventScroll:true}), 30); return; }
@@ -4034,6 +4069,10 @@ document.addEventListener('click', async e => {
   if (a === 'sugReplace' || a === 'sugReplaceNo'){ const r = b.closest('[data-sug]'); ui.replaceConfirm[r.dataset.sug + ':' + r.dataset.n] = a === 'sugReplace'; render(); return; }
   if (a.startsWith('old')){ await oldAct(a, b); return; }
   if (a === 'rate'){ const l = S.pace?.last; if (!l) return; await write(() => db.doc('meta/pace').set({ratings:[...(S.pace.ratings || []), {d:l.d, r:b.dataset.r, n:l.n}].slice(-14), last:l}), b.dataset.r === 'skip' ? '' : 'Thanks. The next plan will adjust.'); return; }
+  if (a === 'awayDel'){ const m = M(b.dataset.id); if (!m) return; const list = (m.away || []).filter((_, i) => i !== Number(b.dataset.n)); await write(() => db.collection('team').doc(m.id).update({away:list}), 'Time off removed'); return; }
+  if (a === 'awayUnassign'){ const m = M(b.dataset.id), x = m?.away?.[Number(b.dataset.n)]; if (!x) return; let n = 0;
+    for (const t of S.tasks.filter(q => q.status !== 'done' && q.assignee === m.id && q.due && q.due >= x.from && q.due <= x.to)){ if (!(await write(() => tasksCol().doc(t.id).update({assignee:''})))) break; n++; }
+    if (n) toast(`${n} task${n === 1 ? ' is' : 's are'} now unassigned.`); return; }
   if (a === 'focusAll'){ await setFocus([]); return; }
   if (a === 'focusPick'){ const id = b.dataset.cid, cur = focusSet(); await setFocus(cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]); return; }
   if (a === 'partnerPosted'){
@@ -4041,7 +4080,7 @@ document.addEventListener('click', async e => {
     const ok = await write(async () => { const r = await tasksCol().add({title:`${SHORT[kind] || kind} posted${who ? ' by ' + who : ''}`, client:cid, clientName:name, kind, status:'done', assignee:by || '', due:today, doneMonth:monthKey, doneAt:now0, createdAt:now0, logged:true, loggedBy:meId() || by || '', partnerPosted:true}); nid = r && r.id || ''; });
     if (ok) toast(`${name}: ${(SHORT[kind] || kind).toLowerCase()} logged for today.`, nid ? {label:'Undo', run:() => write(() => tasksCol().doc(nid).delete(), 'Removed')} : undefined);
     return; }
-  if (a === 'focusDone'){ const id = b.closest('[data-tid]').dataset.tid; await write(() => tasksCol().doc(id).update({status:'done', doneMonth:monthKey, doneAt:Date.now(), statusAt:{done:Date.now()}}), 'Done. Nice.'); return; }
+  if (a === 'focusDone'){ const id = b.closest('[data-tid]').dataset.tid; await write(() => tasksCol().doc(id).update({status:'done', doneMonth:monthKey, doneAt:Date.now(), doneBy:meId(), statusAt:{done:Date.now()}}), 'Done. Nice.'); return; }
   if (a === 'allDue'){ ui.allDue = true; render(); return; }
   if (a === 'bkSnooze'){ try { localStorage.setItem('rsd-bk-snooze', String(Date.now() + 7 * 864e5)); } catch(e){} render(); return; }
   if (a === 'allTodo'){ ui.allTodo = true; render(); return; }
@@ -4278,6 +4317,7 @@ document.addEventListener('click', async e => {
     if (!(await write(() => db.collection('team').doc(mid).delete()))) return;
     for (const t of theirs) if (!(await write(() => tasksCol().doc(t.id).update({assignee:''})))) break;
     for (const pc of S.clients.filter(c => c.partner?.by === mid)) await upd(pc.id, {partner:null});
+    for (const oc of S.clients.filter(c => Object.values(c.owners || {}).includes(mid))) await upd(oc.id, {owners:Object.fromEntries(Object.entries(oc.owners).filter(([, v]) => v !== mid))});
     toast(theirs.length ? `Removed. ${theirs.length} task${theirs.length === 1 ? ' is' : 's are'} now unassigned.` : 'Removed from the team');
   }
   else if (a === 'claim'){ if (await write(() => db.doc(`data/users/${myUid}/profile`).set({member:b.dataset.id}))){ myMember = b.dataset.id; render(); } }
@@ -4288,7 +4328,7 @@ document.addEventListener('change', async e => {
   if (k === 'status'){ const old = S.tasks.find(q => q.id === tid);
     // Work sent back to editing after review or the client counts as a revision.
     const rev = el.value === 'editing' && old && ['review','sent','approved'].includes(old.status) ? {revisions:(old.revisions || 0) + 1} : {};
-    await write(() => tasksCol().doc(tid).update({...rev, status:el.value, doneMonth: el.value === 'done' ? monthKey : '', doneAt: el.value === 'done' ? Date.now() : 0, statusAt:{[el.value]:Date.now()}})); }
+    await write(() => tasksCol().doc(tid).update({...rev, status:el.value, doneMonth: el.value === 'done' ? monthKey : '', doneAt: el.value === 'done' ? Date.now() : 0, ...(el.value === 'done' ? {doneBy:meId()} : {}), statusAt:{[el.value]:Date.now()}})); }
   else if (k === 'todoDue'){ const row = el.closest('[data-todo]'), tc = C(row.dataset.tcid), x = todoOf(tc?.id, row.dataset.todo); if (x && el.value) await todoSchedule(tc, x, el.value) && toast('Scheduled for ' + fmt(el.value)); }
   else if (k === 'tdhClient'){ ui.keep['tdh-c'] = el.value; }
   else if (k === 'cap'){ ui.cap = el.value; try { localStorage.setItem('rsd-cap', ui.cap); } catch(_){} }
@@ -4328,6 +4368,12 @@ document.addEventListener('submit', async e => {
   if (k === 'partner'){ if (!c) return; const by = v('pt-by'), ks = [...f.querySelectorAll('input[name="pt-k"]:checked')].map(x => x.value), next = by && ks.length ? {by, kinds:ks} : null;
     if (await upd(c.id, {partner:next}, next ? `Saved. ${kindsText(ks)} for ${c.name} are now handled by ${M(by)?.name || 'them'}.` : 'Saved. Everything shows again.')) await syncPartnerTeam(c.id, next); return; }
   if (k === 'memberEdit'){ const id = f.dataset.id, n = v('mn-' + id); if (!n || !M(id)) return; if (S.team.some(m => m.id !== id && m.name.toLowerCase() === n.toLowerCase())){ toast(`${n} is already on the team.`); return; } await write(() => db.collection('team').doc(id).update({name:n.slice(0, 60)}), 'Name saved'); return; }
+  if (k === 'owners'){ if (!c) return; const ow = {}; for (const kd of Object.keys(KINDS)){ const id = v('ow-' + kd); if (id && M(id)) ow[kd] = id; } await upd(c.id, {owners:ow}, 'Saved. New tasks go to the people you chose.'); return; }
+  if (k === 'memberHours'){ const id = f.dataset.id; if (!M(id)) return; const h = Math.max(0, Math.min(80, Number(v('mh-' + id)) || 0)); await write(() => db.collection('team').doc(id).update({hours:h}), h ? `${M(id).name}: ${h} hours a week` : 'Hours cleared'); return; }
+  if (k === 'away'){ const id = f.dataset.id, m = M(id); if (!m) return; const from = v('aw-f-' + id), to = v('aw-t-' + id) || from; if (!from || to < from){ toast('The end date must be on or after the start date.'); return; }
+    const list = [...(m.away || []), {from, to, note:v('aw-n-' + id).slice(0, 80)}].sort((x, y) => x.from.localeCompare(y.from)).slice(-20);
+    const cnt = S.tasks.filter(t => t.status !== 'done' && t.assignee === id && t.due && t.due >= from && t.due <= to).length;
+    await write(() => db.collection('team').doc(id).update({away:list}), cnt ? `Saved. ${cnt} of ${m.name}’s open task${cnt === 1 ? ' falls' : 's fall'} in that time.` : 'Time off saved'); return; }
   if (k === 'todoHome'){ const tc = C(v('tdh-c')), t = v('tdh-t'); if (tc && t && await todoAdd(tc, t)){ ui.keep['tdh-t'] = ''; ui.keep['tdh-c'] = tc.id; render(); } return; }
   if (k === 'campChat'){ const x = S.campaigns.find(q => q.id === ui.campId), t = v('cchat-' + ui.campId); if (x && t && sample && !ui.busy['cchat:' + x.id]) campChat(x, t); return; }
   if (k === 'invoice'){ readInvForm(); render(); return; }
@@ -4373,7 +4419,7 @@ document.addEventListener('submit', async e => {
   if (k === 'post'){ const id = f.dataset.post, t = S.tasks.find(q => q.id === id); if (!t) return;
     const post = {caption:v('po-cap-' + id), tags:v('po-tags-' + id), link:v('po-link-' + id), postedUrl:v('po-url-' + id)};
     const u = {post}, goingLive = post.postedUrl && !t.post?.postedUrl && t.status !== 'done';
-    if (goingLive) Object.assign(u, {status:'done', doneMonth:monthKey, doneAt:Date.now(), statusAt:{done:Date.now()}});
+    if (goingLive) Object.assign(u, {status:'done', doneMonth:monthKey, doneAt:Date.now(), doneBy:meId(), statusAt:{done:Date.now()}});
     if (await write(() => tasksCol().doc(id).update(u), goingLive ? 'Posted. Task marked done.' : 'Post saved')){ for (const x of ['cap','tags','link','url']) delete ui.keep[`po-${x}-${id}`]; if (goingLive) ui.postOpen[id] = false; render(); }
     return; }
   if (k === 'editTask'){ const t = S.tasks.find(q => q.id === f.closest('[data-tid]')?.dataset.tid); if (t) await saveTaskEdit(t, f); return; }
