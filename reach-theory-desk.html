@@ -1075,6 +1075,7 @@ const IC = {
   tasks:'<path d="M10 6h10M10 12h10M10 18h10M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17"/>',
   calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
   clip:'<path d="M20.5 11.5 12 20a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/>',
+  team:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 5.2a3 3 0 0 1 0 5.6M21 20c0-2.6-1.6-4.5-4-5.2"/>',
   clients:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 5.2a3 3 0 0 1 0 5.6M21 20c0-2.6-1.6-4.5-4-5.2"/>',
   search:'<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
@@ -1097,7 +1098,7 @@ function render(){
     `<button data-act="cmd" aria-label="Search">${ico('search')}<span>Search</span></button>`;
   const c = C(ui.cid);
   const v = ui.view === 'client' && c ? viewClient(c) : ui.view === 'report' && c ? viewReport(c) : ui.view === 'invoice' && c ? viewInvoice(c) :
-    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'studio' ? viewStudio() : ui.view === 'campaigns' ? viewCampaigns() : ui.view === 'campaign' && S.campaigns.find(x => x.id === ui.campId) ? viewCampaign(S.campaigns.find(x => x.id === ui.campId)) : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : ui.view === 'focus' ? viewFocus() : ui.view === 'inbox' ? viewInbox() : ui.view === 'settings' ? viewSettings() : ui.view === 'pipeline' ? viewPipeline() : ui.view === 'queue' ? viewQueue() : ui.view === 'doc' ? viewDoc() : viewToday();
+    ui.view === 'clients' ? viewClients() : ui.view === 'reports' ? viewReports() : ui.view === 'studio' ? viewStudio() : ui.view === 'campaigns' ? viewCampaigns() : ui.view === 'campaign' && S.campaigns.find(x => x.id === ui.campId) ? viewCampaign(S.campaigns.find(x => x.id === ui.campId)) : ui.view === 'calendar' ? viewCalendar() : ui.view === 'tasks' ? viewTasks() : ui.view === 'focus' ? viewFocus() : ui.view === 'inbox' ? viewInbox() : ui.view === 'team' ? viewTeam() : ui.view === 'settings' ? viewSettings() : ui.view === 'pipeline' ? viewPipeline() : ui.view === 'queue' ? viewQueue() : ui.view === 'doc' ? viewDoc() : viewToday();
   $('#main').innerHTML = loadErrBanner() + v;
   if (ui.view === 'client' && c && ui.ctab === 'followers') wireChart();
   if (ui.view === 'report') fitRep();
@@ -1128,6 +1129,7 @@ function side(){
     ${navBtn('reports', 'Reports')}
     <div class="grp"><span>Studio</span></div>
     ${navBtn('studio', 'Studio review')}
+    ${navBtn('team', 'Team', S.team.length ? `<span class="ct">${S.team.length}</span>` : '')}
     ${navBtn('clients', 'All clients')}
     ${navBtn('settings', 'Settings')}
     <div class="grp"><span>Clients</span><button class="addc" data-act="newClient" aria-label="Add a client" title="Add a client">${ico('plus')}</button></div>
@@ -1144,6 +1146,7 @@ function side(){
 function cmdItems(){
   const it = [
     {l:'Home', k:'Go to', run:() => go('today')},
+    {l:'Team: add or remove staff', k:'Go to', run:() => go('team')},
     {l:'Inbox: client asks and my to-dos', k:'Go to', run:() => go('inbox')},
     {l:'Capture a client ask, update or to-do', k:'Action', run:() => { go('inbox'); setTimeout(() => $('#cap-t')?.focus(), 30); }},
     {l:'Focus', k:'Go to', run:() => go('focus')},
@@ -2358,15 +2361,29 @@ function boardView(list){
 }
 function teamSection(){
   const wk = iso(new Date(now.getTime() + 7 * 864e5));
-  return `<div class="sec"><div class="lab">Team and workload<span class="acts muted">due in the next 7 days</span></div>
+  return `<div class="sec"><div class="lab">Team workload<span class="acts"><span class="muted">due in the next 7 days</span><button class="lnk" data-go="team">Manage team</button></span></div>
     <div class="items">${S.team.map(m => { const open = openTasks().filter(t => t.assignee === m.id), soon = open.filter(t => t.due && t.due <= wk).length, heavy = soon > 12;
-      return `<div class="it"><div><div class="t"><span class="av">${initials(m)}</span> ${esc(m.name)} <span class="muted" style="font-size:12px">· ${esc({owner:'Owner', partner:'Partner', editor:'Editor · sees only their tasks'}[m.role] || m.role)}</span></div>
+      return `<div class="it"><div><div class="t"><span class="av">${initials(m)}</span> ${esc(m.name)} <span class="muted" style="font-size:12px">· ${esc(ROLE_NAME[m.role] || m.role)}</span></div>
         <div class="load"><i style="width:${Math.min(100, soon / 15 * 100)}%;background:var(--${heavy ? 'bad' : soon > 8 ? 'warn' : 'good'})"></i></div>
         <div class="s"><span>${open.length} open</span><span class="${heavy ? 'late' : ''}">${soon} due this week${heavy ? ' · overbooked, move some dates' : ''}</span></div></div>
-      <div class="c">${open.length ? `<button class="lnk" data-act="dayList" data-id="${esc(m.id)}">Copy today’s list</button>` : ''}${m.role === 'owner' ? '' : `<button class="x" data-act="delMember" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button>`}</div></div>`; }).join('')}</div>
-    <form class="row" data-form="member" style="margin-top:10px"><label class="vh" for="m-name">Name</label><input type="text" id="m-name" placeholder="Add a team member" style="flex:1 1 160px">
-      <label class="vh" for="m-role">Role</label><select id="m-role"><option value="editor">Editor (own tasks only)</option><option value="partner">Partner (everything)</option></select><button class="b" type="submit">Add</button></form>
-    <p class="muted" style="font-size:12px;margin:8px 0 0">Share from the Share menu: partners as <b>Editor</b>, editors as <b>Contributor</b>.</p></div>`;
+      <div class="c">${open.length ? `<button class="lnk" data-act="dayList" data-id="${esc(m.id)}">Copy today’s list</button>` : ''}</div></div>`; }).join('')}</div></div>`;
+}
+const ROLE_NAME = {owner:'Owner', partner:'Partner', editor:'Editor'};
+/* ----- Team: add, rename, change role, remove ----- */
+function viewTeam(){
+  const rows = S.team.map(m => { const open = openTasks().filter(t => t.assignee === m.id).length, handles = S.clients.filter(c => partnerOf(c.id)?.by === m.id);
+    return `<div class="it"><div><div class="t"><span class="av">${initials(m)}</span> <b style="font-weight:600">${esc(m.name)}</b> <span class="muted" style="font-size:12px">· ${esc(ROLE_NAME[m.role] || m.role)}</span></div>
+      <div class="s"><span>${open} open task${open === 1 ? '' : 's'}</span>${handles.length ? `<span>Handles ${esc(handles.map(c => c.name).join(', '))} work</span>` : ''}</div>
+      ${m.role === 'owner' ? '' : `<form class="row" data-form="memberEdit" data-id="${esc(m.id)}" style="margin-top:8px"><label class="vh" for="mn-${esc(m.id)}">Name</label><input type="text" id="mn-${esc(m.id)}" value="${esc(m.name)}" style="flex:1 1 160px;max-width:240px"><button class="b" type="submit">Save name</button></form>`}</div>
+      <div class="c">${m.role === 'owner' ? '' : `<label class="vh" for="mr-${esc(m.id)}">Role</label><select id="mr-${esc(m.id)}" data-change="memberRole" data-id="${esc(m.id)}"><option value="partner"${m.role === 'partner' ? ' selected' : ''}>Partner</option><option value="editor"${m.role === 'editor' ? ' selected' : ''}>Editor</option></select>
+        <button class="x" data-act="delMember" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button>`}</div></div>`; }).join('');
+  return `<header class="top"><div><p class="eyebrow">${S.team.length} on the team</p><h1>Team</h1></div></header>
+  <div class="sec"><div class="lab">Staff</div><div class="items">${rows || `<p class="empty">${loaded.team ? 'No one yet.' : LOADING}</p>`}</div>
+    <form class="row" data-form="member" style="margin-top:12px"><label class="vh" for="m-name">Name</label><input type="text" id="m-name" placeholder="Name of the new team member" style="flex:1 1 200px" required>
+      <label class="vh" for="m-role">Role</label><select id="m-role"><option value="editor">Editor (sees only their own tasks)</option><option value="partner">Partner (sees everything)</option></select><button class="b pri" type="submit">Add staff</button></form></div>
+  <div class="sec"><div class="lab">How a person gets in</div>
+    <ol class="ls" style="margin:0"><li>Add them here with their name and role.</li><li>Open the page’s <b>Share</b> menu and add their email: <b>Editor</b> access shows them everything, <b>Contributor</b> access shows only their own tasks and the “mark a post as live” buttons.</li><li>They open the link and pick their name once.</li></ol>
+    <p class="muted" style="font-size:12px;margin:10px 0 0">Removing someone unassigns their open tasks, so nothing is lost, and ends any “handled by” rule that named them. Their finished work and logged posts stay in the reports.</p></div>`;
 }
 
 /* ----- Editor (Contributor) view ----- */
@@ -4260,6 +4277,7 @@ document.addEventListener('click', async e => {
     if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = theirs.length ? `Remove? ${theirs.length} open task${theirs.length === 1 ? ' becomes' : 's become'} unassigned` : 'Remove?'; b.style.fontSize = '12px'; setTimeout(() => { if (b.isConnected){ b.dataset.confirm = ''; b.textContent = '×'; b.style.fontSize = ''; } }, 4000); return; }
     if (!(await write(() => db.collection('team').doc(mid).delete()))) return;
     for (const t of theirs) if (!(await write(() => tasksCol().doc(t.id).update({assignee:''})))) break;
+    for (const pc of S.clients.filter(c => c.partner?.by === mid)) await upd(pc.id, {partner:null});
     toast(theirs.length ? `Removed. ${theirs.length} task${theirs.length === 1 ? ' is' : 's are'} now unassigned.` : 'Removed from the team');
   }
   else if (a === 'claim'){ if (await write(() => db.doc(`data/users/${myUid}/profile`).set({member:b.dataset.id}))){ myMember = b.dataset.id; render(); } }
@@ -4274,6 +4292,7 @@ document.addEventListener('change', async e => {
   else if (k === 'todoDue'){ const row = el.closest('[data-todo]'), tc = C(row.dataset.tcid), x = todoOf(tc?.id, row.dataset.todo); if (x && el.value) await todoSchedule(tc, x, el.value) && toast('Scheduled for ' + fmt(el.value)); }
   else if (k === 'tdhClient'){ ui.keep['tdh-c'] = el.value; }
   else if (k === 'cap'){ ui.cap = el.value; try { localStorage.setItem('rsd-cap', ui.cap); } catch(_){} }
+  else if (k === 'memberRole'){ const m = M(el.dataset.id); if (m && m.role !== 'owner' && ['partner','editor'].includes(el.value)) await write(() => db.collection('team').doc(m.id).update({role:el.value}), `${m.name} is now ${ROLE_NAME[el.value]}`); }
   else if (k === 'assign') await write(() => tasksCol().doc(tid).update({assignee:el.value}));
   else if (k === 'whoami'){ myMember = el.value; if (myUid) await write(() => db.doc(`data/users/${myUid}/profile`).set({member:el.value})); render(); }
   else if (k === 'repMonth'){ ui.rMonth = el.value; render(); }
@@ -4308,6 +4327,7 @@ document.addEventListener('submit', async e => {
     return; }
   if (k === 'partner'){ if (!c) return; const by = v('pt-by'), ks = [...f.querySelectorAll('input[name="pt-k"]:checked')].map(x => x.value), next = by && ks.length ? {by, kinds:ks} : null;
     if (await upd(c.id, {partner:next}, next ? `Saved. ${kindsText(ks)} for ${c.name} are now handled by ${M(by)?.name || 'them'}.` : 'Saved. Everything shows again.')) await syncPartnerTeam(c.id, next); return; }
+  if (k === 'memberEdit'){ const id = f.dataset.id, n = v('mn-' + id); if (!n || !M(id)) return; if (S.team.some(m => m.id !== id && m.name.toLowerCase() === n.toLowerCase())){ toast(`${n} is already on the team.`); return; } await write(() => db.collection('team').doc(id).update({name:n.slice(0, 60)}), 'Name saved'); return; }
   if (k === 'todoHome'){ const tc = C(v('tdh-c')), t = v('tdh-t'); if (tc && t && await todoAdd(tc, t)){ ui.keep['tdh-t'] = ''; ui.keep['tdh-c'] = tc.id; render(); } return; }
   if (k === 'campChat'){ const x = S.campaigns.find(q => q.id === ui.campId), t = v('cchat-' + ui.campId); if (x && t && sample && !ui.busy['cchat:' + x.id]) campChat(x, t); return; }
   if (k === 'invoice'){ readInvForm(); render(); return; }
@@ -4418,7 +4438,7 @@ document.addEventListener('submit', async e => {
   else if (k === 'brand') await upd(c.id, {brand:{identity:v('b-ident'), tone:v('b-tone'), language:v('b-lang'), look:v('b-look'), always:v('b-do'), never:v('b-dont'), tags:v('b-tags')}}, 'Brand kit saved');
   else if (k === 'seo'){ const kws = (c.seo?.keywords || []).map((x, n) => { const rank = v('kr-' + n); return {kw:v('kw-' + n), page:v('kp-' + n), rank, prev: rank !== (x.rank || '') && x.rank ? x.rank : (x.prev || '')}; }).filter(x => x.kw); await upd(c.id, {seo:{keywords:kws}}, 'Rankings saved'); }
   else if (k === 'comp'){ const n = v('cp-n'); if (!n) return; await upd(c.id, {competitors:[...(c.competitors || []), {name:n, note:v('cp-note')}]}, 'Added'); }
-  else if (k === 'member'){ const n = v('m-name'); if (!n) return; await write(() => db.collection('team').add({name:n, role:v('m-role'), createdAt:Date.now()}), 'Member added'); }
+  else if (k === 'member'){ const n = v('m-name'); if (!n) return; if (S.team.some(m => m.name.toLowerCase() === n.toLowerCase())){ toast(`${n} is already on the team.`); return; } if (await write(() => db.collection('team').add({name:n.slice(0, 60), role:v('m-role') === 'partner' ? 'partner' : 'editor', createdAt:Date.now()}), `${n} added. Now share the page with them.`)){ const inp = document.getElementById('m-name'); if (inp) inp.value = ''; } }
 });
 $('#filePick').addEventListener('change', e => { e.target.accept = 'image/png,image/jpeg,image/webp,image/gif';
   if (String(ui.pickTarget || '').startsWith('audit:')){ const p = (S.pipeline || []).find(q => q.id === ui.pickTarget.slice(6)), fs = [...e.target.files].filter(f => /^image\//.test(f.type)); ui.pickTarget = ''; e.target.value = '';
