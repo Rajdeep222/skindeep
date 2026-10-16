@@ -1125,7 +1125,7 @@ function side(){
     ${navBtn('queue', 'Ready to schedule', (() => { const n = toSchedule().length; return n ? `<span class="ct">${n}</span>` : ''; })())}
     <div class="grp"><span>Marketing</span></div>
     ${navBtn('campaigns', 'Campaigns', (() => { const n = S.campaigns.filter(x => campState(x)[1].startsWith('Live')).length; return n ? `<span class="ct">${n} live</span>` : ''; })())}
-    ${navBtn('pipeline', 'Growth', (() => { const n = pipeDue().length; return n ? `<span class="ct" title="${n} follow-ups due">${n}</span>` : ''; })())}
+    ${navBtn('pipeline', 'New clients', (() => { const n = pipeDue().length; return n ? `<span class="ct" title="${n} follow-ups due">${n}</span>` : ''; })())}
     ${navBtn('reports', 'Reports')}
     <div class="grp"><span>Studio</span></div>
     ${navBtn('studio', 'Studio review')}
@@ -1151,7 +1151,7 @@ function cmdItems(){
     {l:'Capture a client ask, update or to-do', k:'Action', run:() => { go('inbox'); setTimeout(() => $('#cap-t')?.focus(), 30); }},
     {l:'Focus', k:'Go to', run:() => go('focus')},
     {l:'Ready to schedule: approved posts for Business Suite', k:'Go to', run:() => go('queue')},
-    {l:'Growth: new clients, upsells, referrals, case studies', k:'Go to', run:() => go('pipeline')},
+    {l:'New clients: prospects, outreach, referrals, case studies', k:'Go to', run:() => go('pipeline')},
     {l:'Studio settings: agency rules and routines', k:'Go to', run:() => go('settings')},
     {l:'Ready for review', k:'Go to', run:() => { ui.filt = {client:'', who:'', done:false, preset:'review'}; go('tasks'); }},
     {l:'Waiting on client', k:'Go to', run:() => { ui.filt = {client:'', who:'', done:false, preset:'waiting'}; go('tasks'); }},
@@ -1942,9 +1942,9 @@ const pipeDue = () => (S.pipeline || []).filter(p => !['won','lost'].includes(p.
 function viewPipeline(){
   const items = S.pipeline || [], open = items.filter(p => !['won','lost'].includes(p.stage));
   const val = open.reduce((a, p) => a + (num(p.value) || 0), 0);
-  return `<header class="top"><div><p class="eyebrow">Winning new pages for Reach Theory · ${open.length} open${val ? ' · ₹' + fmtN(Math.round(val)) + '/month if all sign' : ''}</p><h1>Growth</h1></div></header>
+  return `<header class="top"><div><p class="eyebrow">Winning new pages for Reach Theory · ${open.length} open${val ? ' · ₹' + fmtN(Math.round(val)) + '/month if all sign' : ''}</p><h1>New clients</h1></div></header>
   ${growthTop(items)}
-  <div class="sec"><div class="lab">Add a prospect</div>
+  <div class="sec" id="pr-form"><div class="lab">Add a prospect</div>
     <form class="form" data-form="prospect"><div class="g2">
       <label>Business<input type="text" id="pr-n" data-keep="pr-n" value="${esc(keep('pr-n'))}" placeholder="e.g. Sharma Sweets" required></label>
       <label>What they do and where<input type="text" id="pr-b" data-keep="pr-b" value="${esc(keep('pr-b'))}" placeholder="e.g. Sweet shop, GT Road Khanna"></label>
@@ -1968,9 +1968,11 @@ function viewPipeline(){
           <label class="vh" for="pd-${esc(p.id)}">Next follow-up</label><input type="date" id="pd-${esc(p.id)}" data-change="pDate" value="${esc(p.nextDate || '')}" title="Next follow-up" style="font-size:12px;padding:3px 6px">
           ${sample && !['won','lost'].includes(s) ? `<button class="lnk" data-act="pPitch" ${ui.busy[k] ? 'disabled' : ''}>${p.pitch ? 'Rewrite message' : 'Write first message'}</button>` : ''}
           ${s === 'won' ? '<button class="b" data-act="pConvert">Make client</button>' : ''}<button class="x" data-act="pDel" aria-label="Delete prospect">×</button></div></div>`; }).join('')}</div></div>`; }).join('') || '<div class="sec"><p class="empty">No prospects yet. Add a Khanna business that would grow with your help.</p></div>'}
+  ${growthMore(items)}
   <p class="muted" style="font-size:12px">Tip: a free 5-point Instagram audit is the easiest opener. Win a page, then press “Make client” to set it up with its onboarding checklist.</p>`;
 }
 /* ----- Growth tools. Each block is folded until opened, so the page stays calm. ----- */
+const OUTREACH_GOAL = 10;
 const LOST = ['Price', 'Timing / not now', 'Trust / want to see results', 'No reply', 'Went with someone else', 'Other'];
 // Rule-based upsell ideas from data you already have. No AI needed to spot them; Claude only writes the pitch.
 function upsells(){
@@ -1989,15 +1991,27 @@ function growthTop(items){
   const wonM = items.filter(p => p.stage === 'won' && (p.stageAt ? isoAt(p.stageAt).slice(0, 7) === monthKey : false)).length;
   const refs = items.filter(p => p.ref).length, lost = items.filter(p => p.stage === 'lost' && p.lost);
   const lc = {}; lost.forEach(p => lc[p.lost] = (lc[p.lost] || 0) + 1); const topLost = Object.entries(lc).sort((a, b) => b[1] - a[1])[0];
-  const ups = upsells(), refOk = S.clients.filter(c => c.status !== 'paused' && c.id !== 'reachstory' && health(c).score >= 75 && (!c.fee || c.paidMonth === monthKey || !Number(c.billingDay) || day < Number(c.billingDay)));
+  const sentWeek = items.filter(p => p.sentAt && Date.now() - p.sentAt < 7 * 864e5).length;
+  const ideas = ui.prospectIdeas || [], fk = 'find';
+  return `<div class="quick" style="margin-top:12px"><span class="qchip"><b>${items.filter(p => !['won','lost'].includes(p.stage)).length}</b>open prospects</span><span class="qchip"><b>${sentWeek}</b>of ${OUTREACH_GOAL} messaged this week</span><span class="qchip"><b>${wonM}</b>won this month</span><span class="qchip"><b>${refs}</b>from referrals</span>${topLost ? `<span class="qchip warn"><b>${topLost[1]}</b>lost on ${esc(topLost[0].toLowerCase())}</span>` : ''}</div>
+  <details class="sec gfold" ${ui.gOpen?.find === false ? '' : 'open'} data-fold="find"><summary class="lab" style="cursor:pointer;margin:0">Find new clients<span class="acts muted">who to approach next</span></summary>
+    <p class="muted" style="font-size:12.5px;margin:8px 0">Claude can’t browse the web, so it suggests the kinds of local business to look for, exactly how to find them in ten minutes, what a weak page looks like and what to say first. You find the real names, then add them below.</p>
+    <div class="row"><button class="b pri" data-act="findProspects" ${!sample || ui.busy[fk] ? 'disabled' : ''}>${ui.busy[fk] ? 'Thinking…' : ideas.length ? 'Suggest more' : 'Suggest who to approach'}</button></div>
+    ${ui.busy[fk] ? progress(fk) : ''}${ui.out[fk] ? `<p class="late" style="font-size:13px">${esc(ui.out[fk])}</p>` : ''}
+    <div class="items" style="margin-top:8px">${ideas.map((x, n) => `<div class="it"><div><div class="t"><b style="font-weight:500">${esc(x.type)}</b>${x.area ? ` <span class="muted">· ${esc(x.area)}</span>` : ''}</div>
+      ${x.find ? `<div class="s"><span>Find them: ${esc(x.find)}</span></div>` : ''}${x.signal ? `<div class="s"><span>A weak page looks like: ${esc(x.signal)}</span></div>` : ''}${x.fit ? `<div class="s"><span>Why us: ${esc(x.fit)}</span></div>` : ''}
+      ${x.opener ? `<div class="out" id="idea-${n}" style="font-size:13px;margin-top:6px">${esc(x.opener)}</div><div class="row"><button class="lnk" data-act="copy" data-src="idea-${n}">Copy message</button></div>` : ''}</div>
+      <div class="c"><button class="b" data-act="ideaUse" data-n="${n}">Add as prospect</button></div></div>`).join('')}</div>
+    <form class="form" data-form="prospectBulk" style="margin-top:12px"><label>Found several? Paste them, one per line (name, then @handle or area if you have it)<textarea id="pb-t" rows="3" data-keep="pb-t" placeholder="Sharma Sweets, @sharmasweetskhanna&#10;Gill Opticals, GT Road">${esc(keep('pb-t'))}</textarea></label>
+      <div class="row"><button class="b" type="submit">Add all as prospects</button><span class="muted" style="font-size:12px">Each one gets a first-message follow-up due today.</span></div></form></details>
+`;
+}
+function growthMore(items){
+  const lost = items.filter(p => p.stage === 'lost' && p.lost), lc = {}; lost.forEach(p => lc[p.lost] = (lc[p.lost] || 0) + 1); const topLost = Object.entries(lc).sort((a, b) => b[1] - a[1])[0];
+  const refOk = S.clients.filter(c => c.status !== 'paused' && c.id !== 'reachstory' && health(c).score >= 75 && (!c.fee || c.paidMonth === monthKey || !Number(c.billingDay) || day < Number(c.billingDay)));
   const areas = {}; items.forEach(p => { if (!p.area) return; const a = areas[p.area] = areas[p.area] || {all:0, talked:0, won:0}; a.all++; if (p.stage !== 'lead') a.talked++; if (p.stage === 'won') a.won++; });
   const cs = ui.caseStudy, csK = 'case';
-  return `<div class="quick" style="margin-top:12px"><span class="qchip"><b>${items.filter(p => !['won','lost'].includes(p.stage)).length}</b>open prospects</span><span class="qchip"><b>${wonM}</b>won this month</span><span class="qchip"><b>${refs}</b>from referrals</span>${topLost ? `<span class="qchip warn"><b>${topLost[1]}</b>lost on ${esc(topLost[0].toLowerCase())}</span>` : ''}</div>
-  <details class="sec gfold" ${ui.gOpen?.up ? 'open' : ''} data-fold="up"><summary class="lab" style="cursor:pointer;margin:0">Grow your clients<span class="acts muted">${ups.length} idea${ups.length === 1 ? '' : 's'}</span></summary>
-    <div class="items" style="margin-top:8px">${ups.map((u, n) => { const k = 'up:' + u.c.id + ':' + u.k; return `<div class="it"><div><div class="t">${dot(u.c)} <b style="font-weight:500">${esc(u.c.name)}</b> · ${esc(u.t)}</div><div class="s"><span>${esc(u.why)}</span></div>
-      ${ui.upPitch?.[k] ? `<div class="out" id="upp-${n}" style="font-size:13px;margin-top:6px">${esc(ui.upPitch[k])}</div><div class="row"><button class="lnk" data-act="copy" data-src="upp-${n}">Copy message</button></div>` : ''}${ui.busy[k] ? progress(k) : ''}${ui.out[k] ? `<p class="late" style="font-size:13px">${esc(ui.out[k])}</p>` : ''}</div>
-      <div class="c">${sample ? `<button class="lnk" data-act="upPitch" data-cid="${esc(u.c.id)}" data-k="${esc(u.k)}" data-t="${esc(u.t)}" data-why="${esc(u.why)}" ${ui.busy[k] ? 'disabled' : ''}>${ui.upPitch?.[k] ? 'Rewrite' : 'Write the pitch'}</button>` : ''}</div></div>`; }).join('') || '<p class="empty" style="margin:0">No obvious add-ons right now.</p>'}</div></details>
-  <details class="sec gfold" ${ui.gOpen?.ref ? 'open' : ''} data-fold="ref"><summary class="lab" style="cursor:pointer;margin:0">Ask for referrals<span class="acts muted">${refOk.length} happy client${refOk.length === 1 ? '' : 's'}</span></summary>
+  return `<details class="sec gfold" ${ui.gOpen?.ref ? 'open' : ''} data-fold="ref"><summary class="lab" style="cursor:pointer;margin:0">Ask happy clients to introduce someone<span class="acts muted">${refOk.length} could</span></summary>
     <p class="muted" style="font-size:12.5px;margin:6px 0">Clients with health 75+ and fees up to date. Local businesses know other local businesses.</p>
     <div class="items">${refOk.map(c => { const n = items.filter(p => p.ref === c.id).length; return `<div class="it"><div><div class="t">${dot(c)} ${esc(c.name)}</div><div class="s"><span>Health ${health(c).score}</span>${n ? `<span>${n} referral${n === 1 ? '' : 's'} so far</span>` : ''}</div></div><div class="c"><button class="lnk" data-act="refAsk" data-cid="${esc(c.id)}">Copy referral ask</button></div></div>`; }).join('') || '<p class="empty" style="margin:0">Nobody is in great shape to ask right now. Fix health scores first.</p>'}</div></details>
   <details class="sec gfold" ${ui.gOpen?.cs ? 'open' : ''} data-fold="cs"><summary class="lab" style="cursor:pointer;margin:0">Case study<span class="acts muted">turn a client’s results into proof</span></summary>
@@ -2016,6 +2030,15 @@ async function upPitch(c, key, title, why){
     const st = folStats(folSorted(c)), mk = monthKey, d = reportData(c, prevMonth(mk));
     const {text} = await sample(`${pre(c)}\n\nWrite a short WhatsApp message (under 100 words) from Reach Theory to ${c.name} suggesting one add-on: ${title}. Why now: ${why}. Mention one real result from their numbers if there is one, say plainly what we would do and what it gets them, and end with one easy question. No price unless asked, warm and confident, in the client's language. Only the message.\n\nTheir numbers: ${JSON.stringify({followersNow:st?.last?.n || null, followers30d:st ? Math.round(st.ch30) : null, lastMonth:d.cur.val})}`, {cache:false});
     ui.upPitch = {...(ui.upPitch || {}), ['up:' + c.id + ':' + key]:String(text).trim()};
+  });
+}
+function findProspects(){
+  run('find', async () => {
+    const have = (S.pipeline || []).map(p => `${p.name} (${p.business || ''})`).slice(-40), mine = S.clients.filter(c => c.id !== 'reachstory').map(c => ({business:c.tag, followersNow:folSorted(c).at(-1)?.n || null, city:c.city}));
+    const r = await sample.json(`${preamble}\n\nYou are Reach Theory's new-business lead. We are a small marketing studio in Khanna, Punjab, and we want NEW paying clients, not more work for current ones. Our current clients: ${JSON.stringify(mine)}. Prospects already on our list (do not repeat them): ${JSON.stringify(have)}. Suggest 8 kinds of local business in Khanna and nearby towns (Samrala, Doraha, Ludhiana side) that would gain most from better Instagram and Google presence and could pay roughly 8,000 to 20,000 rupees a month. You cannot browse, so never invent a named business. For each give: the type, the area, a concrete way to find them in ten minutes (what to search on Instagram or Google Maps), what a weak page looks like (the sign they need us), why we are a fit (tie it to our current clients), and a first WhatsApp message in Roman-script Punjabi with a little simple English, under 70 words, that offers a free 5-point Instagram audit, no hard selling, never claiming we shoot or film. Reply with only JSON: {"ideas":[{"type":"","area":"","find":"","signal":"","fit":"","opener":""}]}`, {cache:false});
+    const list = (r && Array.isArray(r.ideas) ? r.ideas : []).filter(x => x && x.type).slice(0, 10).map(x => ({type:String(x.type).slice(0, 80), area:String(x.area || '').slice(0, 60), find:String(x.find || '').slice(0, 220), signal:String(x.signal || '').slice(0, 220), fit:String(x.fit || '').slice(0, 220), opener:String(x.opener || '').slice(0, 500)}));
+    if (!list.length) throw {code:'invalid_json'};
+    ui.prospectIdeas = [...(ui.prospectIdeas || []), ...list].slice(-16);
   });
 }
 function caseStudy(c, mk){
@@ -4188,6 +4211,8 @@ document.addEventListener('click', async e => {
   else if (a === 'pkgDel'){ const id = b.closest('[data-pk]').dataset.pk;
     if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Delete? Clients keep their fee'; b.style.fontSize = '12px'; setTimeout(() => { if (b.isConnected){ b.dataset.confirm = ''; b.textContent = '×'; b.style.fontSize = ''; } }, 3000); return; }
     await write(() => db.doc('meta/studio').set({...(S.studio || {}), packages:pkgs().filter(k => k.id !== id)}), 'Package deleted'); }
+  else if (a === 'findProspects'){ if (sample && !ui.busy.find) findProspects(); }
+  else if (a === 'ideaUse'){ const x = (ui.prospectIdeas || [])[Number(b.dataset.n)]; if (!x) return; ui.keep['pr-b'] = [x.type, x.area].filter(Boolean).join(', '); ui.keep['pr-a'] = x.area; ui.keep['pr-w'] = x.signal; ui.scrollTo = 'pr-form'; render(); toast('Type the business name below, then Add prospect.'); }
   else if (a === 'upPitch'){ const uc = C(b.dataset.cid); if (uc) upPitch(uc, b.dataset.k, b.dataset.t, b.dataset.why); }
   else if (a === 'refAsk'){ const rc = C(b.dataset.cid); if (!rc) return;
     const msg = `Namaste ji 🙏 It’s been great working on ${rc.name} with you. If you know another business owner who wants more customers from Instagram and Google, we’d love an introduction. We’ll give them a free audit of their page, no pressure. Thank you for trusting Reach Theory!`;
@@ -4344,7 +4369,7 @@ document.addEventListener('change', async e => {
   else if (k === 'repSec'){ const c = C(ui.cid), mk = ui.rMonth || monthKey, hide = new Set(repDoc(c, mk)?.hide || []); el.checked ? hide.delete(el.dataset.k) : hide.add(el.dataset.k); await saveRep(c, mk, {hide:[...hide]}); }
   else if (k === 'filt'){ ui.filt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); }
   else if (k === 'pStage' || k === 'pDate'){ const id = el.closest('[data-pid2]')?.dataset.pid2;
-    const items = (S.pipeline || []).map(q => q.id !== id ? q : k === 'pStage' ? {...q, stage:el.value, ...(['won','lost'].includes(el.value) ? {} : {nextDate:q.nextDate || plusDays(3)}), stageAt:Date.now()} : {...q, nextDate:el.value});
+    const items = (S.pipeline || []).map(q => q.id !== id ? q : k === 'pStage' ? {...q, stage:el.value, ...(['won','lost'].includes(el.value) ? {} : {nextDate:q.nextDate || plusDays(3)}), ...(el.value === 'contacted' && !q.sentAt ? {sentAt:Date.now()} : {}), stageAt:Date.now()} : {...q, nextDate:el.value});
     await savePipe(items, k === 'pStage' ? (el.value === 'won' ? 'Won. Press “Make client” to set them up.' : 'Moved to ' + stageL(el.value)) : 'Follow-up date saved'); }
   else if (k === 'onboard'){ const oc = C(ui.cid); if (!oc) return; const it = (oc.onboard || []).map((x, n) => n === Number(el.dataset.n) ? {...x, done:el.checked} : x);
     await upd(oc.id, {onboard:it, ...(it.every(x => x.done) ? {onboardDoneAt:Date.now()} : {})}, it.every(x => x.done) ? 'Onboarding complete' : ''); }
@@ -4393,6 +4418,14 @@ document.addEventListener('submit', async e => {
     if ((c.rules || []).some(r => r.t.toLowerCase() === t.toLowerCase())){ toast('That rule is already in the rulebook.'); return; }
     const scope = RSCOPE[v('ru-s')] ? v('ru-s') : 'all';
     if (await ruleSave(c, [...(c.rules || []), {t, scope, by:meId(), at:Date.now()}], {a:'add', t}, 'Rule added. Claude follows it from the next request.')){ delete ui.keep['ru-t-' + c.id]; render(); }
+    return; }
+  if (k === 'prospectBulk'){ const lines = String(document.getElementById('pb-t')?.value || '').split('\n').map(x => x.trim()).filter(Boolean).slice(0, 40); if (!lines.length) return;
+    const exist = new Set((S.pipeline || []).map(p => p.name.toLowerCase())), add = [];
+    for (const ln of lines){ const parts = ln.split(/[,|\t]/).map(x => x.trim()).filter(Boolean), name = parts[0]; if (!name || exist.has(name.toLowerCase())) continue; exist.add(name.toLowerCase());
+      const handle = parts.find((x, i) => i && x.startsWith('@')) || '', area = parts.find((x, i) => i && !x.startsWith('@')) || '';
+      add.push({id:'pr' + Date.now().toString(36) + add.length, name:name.slice(0, 80), business:'', handle:handle.slice(0, 80), value:'', why:'', stage:'lead', next:'Send first message', nextDate:today, at:Date.now(), by:meId(), area:area.slice(0, 60), ref:''}); }
+    if (!add.length){ toast('Nothing new to add. Those names are already on the list.'); return; }
+    if (await savePipe([...(S.pipeline || []), ...add], `${add.length} prospect${add.length === 1 ? '' : 's'} added. First messages are due today.`)){ delete ui.keep['pb-t']; render(); }
     return; }
   if (k === 'prospect'){ const name = v('pr-n'); if (!name) return;
     const p = {id:'pr' + Date.now().toString(36), name:name.slice(0, 80), business:v('pr-b').slice(0, 120), handle:v('pr-h').slice(0, 80), value:v('pr-v').slice(0, 40), why:v('pr-w').slice(0, 200), stage:'lead', next:'Send first message', nextDate:today, at:Date.now(), by:meId(), area:v('pr-a').slice(0, 60), ref:v('pr-r')};
