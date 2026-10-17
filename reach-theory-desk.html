@@ -1974,19 +1974,6 @@ function viewPipeline(){
 /* ----- Growth tools. Each block is folded until opened, so the page stays calm. ----- */
 const OUTREACH_GOAL = 10;
 const LOST = ['Price', 'Timing / not now', 'Trust / want to see results', 'No reply', 'Went with someone else', 'Other'];
-// Rule-based upsell ideas from data you already have. No AI needed to spot them; Claude only writes the pitch.
-function upsells(){
-  const out = [];
-  for (const c of S.clients.filter(c => c.status !== 'paused' && c.id !== 'reachstory')){
-    if (health(c).score < 50) continue;
-    const st = folStats(folSorted(c)), local = c.local?.items || [];
-    if (!hasBudget(c)) out.push({c, k:'ads', t:'Meta ads (Click-to-WhatsApp)', why:'No ad budget yet. Ads turn the content you already make into enquiries.'});
-    if (!usesAI(c) && local.length && local.filter(i => i.done).length / local.length < .5) out.push({c, k:'gbp', t:'Google Business Profile and reviews', why:'Local profile is under half set up. Walk-in customers search Google first.'});
-    if (!c.website) out.push({c, k:'web', t:'Simple website or landing page', why:'No website. A one-page site with WhatsApp and Google Maps makes them look established.'});
-    if (st && st.pct30 >= 5) out.push({c, k:'more', t:'More posts per month', why:`Followers up ${st.pct30.toFixed(0)}% in 30 days. The page is working: more output means more growth.`});
-  }
-  return out;
-}
 function growthTop(items){
   const wonM = items.filter(p => p.stage === 'won' && (p.stageAt ? isoAt(p.stageAt).slice(0, 7) === monthKey : false)).length;
   const refs = items.filter(p => p.ref).length, lost = items.filter(p => p.stage === 'lost' && p.lost);
@@ -2024,13 +2011,6 @@ function growthMore(items){
   ${Object.keys(areas).length || topLost ? `<div class="sec"><div class="lab">Where you’re winning</div><div class="g2">
     <div>${Object.keys(areas).length ? `<p class="muted" style="margin:0 0 6px;font-size:12.5px">By area</p><div class="tbl"><table style="min-width:0"><thead><tr><th>Area</th><th>Prospects</th><th>Talked</th><th>Won</th></tr></thead><tbody>${Object.entries(areas).sort((a, b) => b[1].all - a[1].all).map(([a, x]) => `<tr><td>${esc(a)}</td><td class="mono">${x.all}</td><td class="mono">${x.talked}</td><td class="mono">${x.won}</td></tr>`).join('')}</tbody></table></div>` : ''}</div>
     <div>${Object.keys(lc).length ? `<p class="muted" style="margin:0 0 6px;font-size:12.5px">Why prospects said no</p><ul class="ls">${Object.entries(lc).sort((a, b) => b[1] - a[1]).map(([r, n]) => `<li>${esc(r)} · <span class="mono">${n}</span></li>`).join('')}</ul>` : ''}</div></div></div>` : ''}`;
-}
-async function upPitch(c, key, title, why){
-  run('up:' + c.id + ':' + key, async () => {
-    const st = folStats(folSorted(c)), mk = monthKey, d = reportData(c, prevMonth(mk));
-    const {text} = await sample(`${pre(c)}\n\nWrite a short WhatsApp message (under 100 words) from Reach Theory to ${c.name} suggesting one add-on: ${title}. Why now: ${why}. Mention one real result from their numbers if there is one, say plainly what we would do and what it gets them, and end with one easy question. No price unless asked, warm and confident, in the client's language. Only the message.\n\nTheir numbers: ${JSON.stringify({followersNow:st?.last?.n || null, followers30d:st ? Math.round(st.ch30) : null, lastMonth:d.cur.val})}`, {cache:false});
-    ui.upPitch = {...(ui.upPitch || {}), ['up:' + c.id + ':' + key]:String(text).trim()};
-  });
 }
 function findProspects(){
   run('find', async () => {
@@ -4213,7 +4193,6 @@ document.addEventListener('click', async e => {
     await write(() => db.doc('meta/studio').set({...(S.studio || {}), packages:pkgs().filter(k => k.id !== id)}), 'Package deleted'); }
   else if (a === 'findProspects'){ if (sample && !ui.busy.find) findProspects(); }
   else if (a === 'ideaUse'){ const x = (ui.prospectIdeas || [])[Number(b.dataset.n)]; if (!x) return; ui.keep['pr-b'] = [x.type, x.area].filter(Boolean).join(', '); ui.keep['pr-a'] = x.area; ui.keep['pr-w'] = x.signal; ui.scrollTo = 'pr-form'; render(); toast('Type the business name below, then Add prospect.'); }
-  else if (a === 'upPitch'){ const uc = C(b.dataset.cid); if (uc) upPitch(uc, b.dataset.k, b.dataset.t, b.dataset.why); }
   else if (a === 'refAsk'){ const rc = C(b.dataset.cid); if (!rc) return;
     const msg = `Namaste ji 🙏 It’s been great working on ${rc.name} with you. If you know another business owner who wants more customers from Instagram and Google, we’d love an introduction. We’ll give them a free audit of their page, no pressure. Thank you for trusting Reach Theory!`;
     try { await navigator.clipboard.writeText(msg); toast('Referral ask copied. When they refer someone, choose them in “Referred by”.'); } catch(_){ toast('Copy isn’t allowed here.'); } }
